@@ -286,6 +286,18 @@ const API = 'https://rolefigz-backend-production.up.railway.app/api';
 let token = localStorage.getItem('rfToken') || null;
 let productos = [], categorias = [], carrito = [];
 
+function previewImagen(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('imgNombre').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('imgPreview').src = e.target.result;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
 async function init() {
   await checkAPI();
   await loadProductos();
@@ -553,26 +565,41 @@ async function adminTab(tab, el) {
     } catch { content.innerHTML='<div class="msg error">Error</div>'; }
   }
 
-  if (tab==='nuevo') {
-    await loadCategorias();
-    content.innerHTML=`
-      <div class="admin-form-title">NUEVO PRODUCTO</div>
-      <div class="form-row">
-        <div class="field"><label>Nombre *</label><input id="pNombre" type="text" placeholder="Figura Goku..."/></div>
-        <div class="field"><label>Precio (€) *</label><input id="pPrecio" type="number" step="0.01" placeholder="24.99"/></div>
+  if (tab === 'nuevo') {
+  await loadCategorias();
+  content.innerHTML = `
+    <div class="admin-form-title">NUEVO PRODUCTO</div>
+    <div class="form-row">
+      <div class="field"><label>Nombre *</label><input id="pNombre" type="text" placeholder="Figura Goku..."/></div>
+      <div class="field"><label>Precio (€) *</label><input id="pPrecio" type="number" step="0.01" placeholder="24.99"/></div>
+    </div>
+    <div class="field"><label>Descripción</label><textarea id="pDesc" placeholder="Descripción..."></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>Stock</label><input id="pStock" type="number" placeholder="10"/></div>
+      <div class="field"><label>Categoría</label>
+        <select id="pCat"><option value="">Sin categoría</option>
+          ${categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('')}
+        </select>
       </div>
-      <div class="field"><label>Descripción</label><textarea id="pDesc" placeholder="Descripción..."></textarea></div>
-      <div class="form-row">
-        <div class="field"><label>Stock</label><input id="pStock" type="number" placeholder="10"/></div>
-        <div class="field"><label>Categoría</label>
-          <select id="pCat"><option value="">Sin categoría</option>
-            ${categorias.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}
-          </select>
-        </div>
+    </div>
+
+    <!-- 👇 NUEVO: selector de imagen -->
+    <div class="field">
+      <label>Imagen del producto</label>
+      <div id="imgPreviewWrap" style="display:none;margin-bottom:12px">
+        <img id="imgPreview" style="width:100%;max-height:200px;object-fit:cover;border:1px solid var(--border)"/>
       </div>
-      <button class="btn-submit" onclick="crearProductoAdmin()">CREAR PRODUCTO</button>
-      <div id="productoMsg"></div>`;
-  }
+      <input type="file" id="pImagen" accept="image/jpeg,image/png,image/webp"
+        style="display:none" onchange="previewImagen(this)"/>
+      <button type="button" class="add-btn" onclick="document.getElementById('pImagen').click()">
+        📁 SELECCIONAR IMAGEN
+      </button>
+      <div id="imgNombre" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px"></div>
+    </div>
+
+    <button class="btn-submit" onclick="crearProductoAdmin()">CREAR PRODUCTO</button>
+    <div id="productoMsg"></div>`;
+}
 
   if (tab==='categorias') {
     await loadCategorias();
@@ -603,17 +630,50 @@ async function updateEstado(id, estado) {
 async function loadCategorias() { try { const r=await fetch(`${API}/categorias`); categorias=await r.json(); } catch {} }
 
 async function crearProductoAdmin() {
-  const nombre=document.getElementById('pNombre').value;
-  const precio=document.getElementById('pPrecio').value;
-  if (!nombre||!precio) { showMsg('productoMsg','Nombre y precio obligatorios','error'); return; }
+  const nombre = document.getElementById('pNombre').value;
+  const precio = document.getElementById('pPrecio').value;
+  if (!nombre || !precio) { showMsg('productoMsg','Nombre y precio obligatorios','error'); return; }
+
   try {
-    const r=await fetch(`${API}/productos`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
-      body:JSON.stringify({nombre,precio:parseFloat(precio),descripcion:document.getElementById('pDesc').value,stock:parseInt(document.getElementById('pStock').value||0),categoria_id:document.getElementById('pCat').value||null})});
-    const data=await r.json();
+    // 1. Crear el producto
+    const r = await fetch(`${API}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        nombre, precio: parseFloat(precio),
+        descripcion: document.getElementById('pDesc').value,
+        stock: parseInt(document.getElementById('pStock').value || 0),
+        categoria_id: document.getElementById('pCat').value || null
+      })
+    });
+    const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    showMsg('productoMsg',`✓ "${data.producto.nombre}" creado`,'success');
+
+    // 2. Si hay imagen, subirla
+    const fileInput = document.getElementById('pImagen');
+    if (fileInput.files[0]) {
+      const formData = new FormData();
+      formData.append('imagen', fileInput.files[0]);
+      await fetch(`${API}/productos/${data.producto.id}/imagen`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+    }
+
+    showMsg('productoMsg', `✅ "${data.producto.nombre}" creado correctamente`, 'success');
     loadProductos();
-  } catch(e) { showMsg('productoMsg',e.message,'error'); }
+
+    // Reset form
+    document.getElementById('pNombre').value = '';
+    document.getElementById('pPrecio').value = '';
+    document.getElementById('pDesc').value = '';
+    document.getElementById('pStock').value = '';
+    document.getElementById('pImagen').value = '';
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+    document.getElementById('imgNombre').textContent = '';
+
+  } catch(e) { showMsg('productoMsg', e.message, 'error'); }
 }
 
 async function crearCategoriaAdmin() {
