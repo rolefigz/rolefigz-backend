@@ -20,9 +20,12 @@ const crearOrden = async (req, res) => {
       if (producto.stock < item.cantidad)
         throw new Error(`Stock insuficiente para "${producto.nombre}" (disponible: ${producto.stock})`);
 
-      const subtotal = parseFloat(producto.precio) * item.cantidad;
+      const precioBase = parseFloat(producto.precio);
+      const precioEnviado = item.precio_unidad ? parseFloat(item.precio_unidad) : precioBase;
+      const precio_unidad = precioEnviado >= precioBase ? precioEnviado : precioBase;
+      const subtotal = precio_unidad * item.cantidad;
       total += subtotal;
-      detalles.push({ producto, cantidad: item.cantidad, precio_unidad: producto.precio, subtotal });
+      detalles.push({ producto, cantidad: item.cantidad, precio_unidad, subtotal });
     }
 
     // Crear orden

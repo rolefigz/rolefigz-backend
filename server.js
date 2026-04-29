@@ -8,6 +8,7 @@ const authRoutes        = require("./src/routers/authRoutes");
 const productosRoutes   = require("./src/routers/productosRoutes");
 const categoriasRoutes  = require("./src/routers/categoriasRoutes");
 const ordenesRoutes     = require("./src/routers/ordenesRoutes");
+const resenasRoutes     = require("./src/routers/resenasRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/auth",       limitAuth, authRoutes);   // rate limit estricto en a
 app.use("/api/productos",  productosRoutes);
 app.use("/api/categorias", categoriasRoutes);
 app.use("/api/ordenes",    ordenesRoutes);
+app.use("/api/resenas",    resenasRoutes);
 
 // ── Error handler global ──────────────────────────────────
 app.use((err, req, res, next) => {
