@@ -1,0 +1,128 @@
+const i18n = {
+  it: {
+    nav_shop:'NEGOZIO', nav_cart:'CARRELLO', nav_account:'IL MIO ACCOUNT',
+    nav_login:'ACCEDI', nav_logout:'ESCI',
+    hero_eyebrow:'Stampa 3D professionale',
+    hero_title:'OGGETTI\nUNICI\nPER TE',
+    hero_desc:'Figure, merchandising aziendale, segnaposto personalizzati, lightbox e molto altro. Qualità artigianale con tecnologia di precisione.',
+    hero_products:'PRODOTTI DISPONIBILI',
+    cta_catalogue:'VEDI CATALOGO', cta_account:'CREA ACCOUNT',
+    how_eyebrow:'// Il nostro processo', how_title:'COME\nFUNZIONA',
+    step1_title:'Scegli', step1_desc:'Sfoglia il catalogo o contattaci per un progetto su misura.',
+    step2_title:'Personalizziamo', step2_desc:'Ottimizziamo il modello 3D e scegliamo materiali e finiture.',
+    step3_title:'Consegniamo', step3_desc:'Stampiamo, controlliamo la qualità e spediamo direttamente a casa tua.',
+    cats_eyebrow:'// Cosa facciamo', cats_title:'CATEGORIE',
+    catalogue_title:'CATALOGO', search_placeholder:'Cerca prodotto...',
+    why_eyebrow:'// La nostra qualità', why_title:'PERCHÉ\nROLEFIGZ',
+    why1_title:'Precisione', why1_desc:'Stampa FDM e SLA con tolleranze al decimo di millimetro.',
+    why2_title:'Velocità', why2_desc:'Tempi di produzione rapidi senza compromettere la qualità.',
+    why3_title:'Personalizzazione', why3_desc:'Dal logo aziendale alla figura: realizziamo qualsiasi oggetto.',
+    why4_title:'Artigianalità', why4_desc:'Ogni prodotto è fatto a mano da un team appassionato.',
+    footer_nav:'Navigazione', footer_catalogue:'Catalogo', footer_account:'Crea account',
+    footer_login:'Accedi', footer_contact:'Contatti',
+    cart_title:'CARRELLO', cart_total:'TOTALE', cart_checkout:'ORDINA',
+    cart_empty:'// CARRELLO VUOTO',
+    auth_title:'ACCESSO', auth_login:'ACCEDI', auth_register:'REGISTRATI',
+    auth_register_btn:'CREA ACCOUNT',
+    checkout_title:'IL TUO ORDINE', checkout_sub:'// DATI DI SPEDIZIONE',
+    checkout_confirm:'CONFERMA ORDINE',
+    field_email:'Email', field_password:'Password', field_name:'Nome completo',
+    field_phone:'Telefono', field_address:'Indirizzo di spedizione', field_notes:'Note',
+    add_to_cart:'+ AGGIUNGI AL CARRELLO', sold_out:'ESAURITO',
+    cancel:'ANNULLA', save:'SALVA MODIFICHE',
+    perfil_orders:'I miei ordini', perfil_data:'I miei dati',
+    status_api:'API CONNESSA', status_no_session:'NESSUNA SESSIONE',
+    status_admin:'ADMIN', status_client:'CLIENTE',
+    nav_blog:'BLOG', blog_title:'ARTICOLI',
+  },
+  es: {
+    nav_shop:'TIENDA', nav_cart:'CARRITO', nav_account:'MI CUENTA',
+    nav_login:'ENTRAR', nav_logout:'SALIR',
+    hero_eyebrow:'Impresión 3D profesional',
+    hero_title:'OBJETOS\nÚNICOS\nPARA TI',
+    hero_desc:'Figuras, merchandising empresarial, marcasitios personalizados, lightbox y mucho más. Calidad artesanal con tecnología de precisión.',
+    hero_products:'PRODUCTOS DISPONIBLES',
+    cta_catalogue:'VER CATÁLOGO', cta_account:'CREAR CUENTA',
+    how_eyebrow:'// Nuestro proceso', how_title:'CÓMO\nFUNCIONA',
+    step1_title:'Elige', step1_desc:'Navega el catálogo o contáctanos para un proyecto a medida.',
+    step2_title:'Personalizamos', step2_desc:'Optimizamos el modelo 3D y elegimos materiales y acabados.',
+    step3_title:'Entregamos', step3_desc:'Imprimimos, controlamos la calidad y enviamos directamente a tu casa.',
+    cats_eyebrow:'// Lo que hacemos', cats_title:'CATEGORÍAS',
+    catalogue_title:'CATÁLOGO', search_placeholder:'Buscar producto...',
+    why_eyebrow:'// Nuestra calidad', why_title:'POR QUÉ\nROLEFIGZ',
+    why1_title:'Precisión', why1_desc:'Impresión FDM y SLA con tolerancias al décimo de milímetro.',
+    why2_title:'Velocidad', why2_desc:'Tiempos de producción rápidos sin comprometer la calidad.',
+    why3_title:'Personalización', why3_desc:'Del logo empresarial a la figura: realizamos cualquier objeto.',
+    why4_title:'Artesanía', why4_desc:'Cada producto está hecho a mano por un equipo apasionado.',
+    footer_nav:'Navegación', footer_catalogue:'Catálogo', footer_account:'Crear cuenta',
+    footer_login:'Entrar', footer_contact:'Contacto',
+    cart_title:'CARRITO', cart_total:'TOTAL', cart_checkout:'HACER PEDIDO',
+    cart_empty:'// CARRITO VACÍO',
+    auth_title:'ACCESO', auth_login:'ENTRAR', auth_register:'REGISTRARSE',
+    auth_register_btn:'CREAR CUENTA',
+    checkout_title:'TU PEDIDO', checkout_sub:'// DATOS DE ENVÍO',
+    checkout_confirm:'CONFIRMAR PEDIDO',
+    field_email:'Email', field_password:'Contraseña', field_name:'Nombre completo',
+    field_phone:'Teléfono', field_address:'Dirección de envío', field_notes:'Notas',
+    add_to_cart:'+ AÑADIR AL CARRITO', sold_out:'AGOTADO',
+    cancel:'CANCELAR', save:'GUARDAR CAMBIOS',
+    perfil_orders:'Mis pedidos', perfil_data:'Mis datos',
+    status_api:'API CONECTADA', status_no_session:'SIN SESIÓN',
+    status_admin:'ADMIN', status_client:'CLIENTE',
+    nav_blog:'BLOG', blog_title:'ARTÍCULOS',
+  },
+  en: {
+    nav_shop:'SHOP', nav_cart:'CART', nav_account:'MY ACCOUNT',
+    nav_login:'LOGIN', nav_logout:'LOGOUT',
+    hero_eyebrow:'Professional 3D Printing',
+    hero_title:'UNIQUE\nOBJECTS\nFOR YOU',
+    hero_desc:'Figures, corporate merchandise, personalized place cards, lightboxes and much more. Artisan quality with precision technology.',
+    hero_products:'PRODUCTS AVAILABLE',
+    cta_catalogue:'VIEW CATALOGUE', cta_account:'CREATE ACCOUNT',
+    how_eyebrow:'// Our process', how_title:'HOW IT\nWORKS',
+    step1_title:'Choose', step1_desc:'Browse the catalogue or contact us for a custom project.',
+    step2_title:'We customize', step2_desc:'We optimize the 3D model and choose the best materials and finishes.',
+    step3_title:'We deliver', step3_desc:'We print, quality check and ship directly to your door.',
+    cats_eyebrow:'// What we do', cats_title:'CATEGORIES',
+    catalogue_title:'CATALOGUE', search_placeholder:'Search product...',
+    why_eyebrow:'// Our quality', why_title:'WHY\nROLEFIGZ',
+    why1_title:'Precision', why1_desc:'FDM and SLA printing with tolerances to the tenth of a millimeter.',
+    why2_title:'Speed', why2_desc:'Fast production times without compromising quality.',
+    why3_title:'Customization', why3_desc:'From company logo to figures: we make any object from your design.',
+    why4_title:'Craftsmanship', why4_desc:'Every product is handmade by a passionate team.',
+    footer_nav:'Navigation', footer_catalogue:'Catalogue', footer_account:'Create account',
+    footer_login:'Login', footer_contact:'Contact',
+    cart_title:'CART', cart_total:'TOTAL', cart_checkout:'CHECKOUT',
+    cart_empty:'// EMPTY CART',
+    auth_title:'LOGIN', auth_login:'LOGIN', auth_register:'REGISTER',
+    auth_register_btn:'CREATE ACCOUNT',
+    checkout_title:'YOUR ORDER', checkout_sub:'// SHIPPING DETAILS',
+    checkout_confirm:'CONFIRM ORDER',
+    field_email:'Email', field_password:'Password', field_name:'Full name',
+    field_phone:'Phone', field_address:'Shipping address', field_notes:'Notes',
+    add_to_cart:'+ ADD TO CART', sold_out:'SOLD OUT',
+    cancel:'CANCEL', save:'SAVE CHANGES',
+    perfil_orders:'My orders', perfil_data:'My data',
+    status_api:'API CONNECTED', status_no_session:'NO SESSION',
+    status_admin:'ADMIN', status_client:'CLIENT',
+    nav_blog:'BLOG', blog_title:'ARTICLES',
+  }
+};
+
+function t(key) {
+  return (i18n[currentLang] && i18n[currentLang][key]) || (i18n['it'][key]) || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('rfLang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  renderProductos();
+}

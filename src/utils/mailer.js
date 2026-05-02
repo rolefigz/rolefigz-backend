@@ -12,7 +12,10 @@ const transporter = nodemailer.createTransport({
 const emailConfirmacionPedido = async (orden, detalles) => {
   const lineas = detalles.map(d => `
     <tr>
-      <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ccc">${d.Producto?.nombre || "Producto"}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ccc">
+        ${d.Producto?.nombre || "Producto"}
+        ${d.variante ? `<div style="font-size:10px;color:#666;margin-top:3px;letter-spacing:1px">${d.variante}</div>` : ""}
+      </td>
       <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ccc;text-align:center">${d.cantidad}</td>
       <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ff3c00;text-align:right;font-weight:bold">€${parseFloat(d.subtotal).toFixed(2)}</td>
     </tr>`).join("");
@@ -147,4 +150,65 @@ const emailNuevoPedidoAdmin = async (orden) => {
   });
 };
 
-module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin };
+const emailVerificacion = async (email, codigo, nombre) => {
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head><meta charset="UTF-8"/></head>
+  <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+      <tr><td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="padding:32px 40px;border-bottom:1px solid #222">
+              <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">
+                ROLE<span style="color:#C17F3A">FIGZ</span>
+              </span>
+            </td>
+          </tr>
+
+          <!-- HERO -->
+          <tr>
+            <td style="padding:40px 40px 24px;background:#0f0f0f">
+              <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#C17F3A;text-transform:uppercase">// Verifica account</p>
+              <h1 style="margin:0;font-size:32px;font-weight:900;letter-spacing:2px;color:#f0ece4">CIAO, ${nombre}!</h1>
+            </td>
+          </tr>
+
+          <!-- CODICE -->
+          <tr>
+            <td style="padding:40px;text-align:center;border-bottom:1px solid #222">
+              <p style="margin:0 0 16px;font-size:11px;letter-spacing:3px;color:#666;text-transform:uppercase">Il tuo codice di verifica</p>
+              <div style="font-size:48px;font-weight:900;letter-spacing:12px;color:#C17F3A;background:#0a0a0a;padding:24px;border:1px solid #222;display:inline-block">${codigo}</div>
+              <p style="margin:16px 0 0;font-size:11px;letter-spacing:2px;color:#666">Il tuo codice scade in 15 minuti</p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:28px 40px;background:#0a0a0a">
+              <p style="margin:0;font-size:12px;color:#444;line-height:1.7">
+                Se non hai richiesto questo codice, ignora questa email.<br>
+                Il tuo account non sarà attivato senza verifica.
+              </p>
+              <p style="margin:16px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
+            </td>
+          </tr>
+
+        </table>
+      </td></tr>
+    </table>
+  </body>
+  </html>`;
+
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      email,
+    subject: `Codice di verifica RoleFigz — ${codigo}`,
+    html,
+  });
+};
+
+module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailVerificacion };

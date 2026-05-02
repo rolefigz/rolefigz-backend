@@ -8,7 +8,8 @@ const Producto = sequelize.define("Producto", {
   precio:      { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   stock:       { type: DataTypes.INTEGER, defaultValue: 0 },
   imagen:      { type: DataTypes.STRING },
-  activo:      { type: DataTypes.BOOLEAN, defaultValue: true }
+  activo:      { type: DataTypes.BOOLEAN, defaultValue: true },
+  slug:        { type: DataTypes.STRING, unique: true }
 }, { tableName: "productos" });
 
 Producto.belongsTo(Categoria, { foreignKey: "categoria_id" });

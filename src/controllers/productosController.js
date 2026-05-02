@@ -31,11 +31,23 @@ const getProductoById = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
+function generarSlug(nombre) {
+  return nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 // POST /api/productos — crear (admin)
 const crearProducto = async (req, res) => {
   try {
     const { nombre, descripcion, precio, stock, imagen, categoria_id } = req.body;
-    const producto = await Producto.create({ nombre, descripcion, precio, stock, imagen, categoria_id });
+    let slug = generarSlug(nombre);
+    const existe = await Producto.findOne({ where: { slug } });
+    if (existe) slug = slug + "-" + Date.now();
+    const producto = await Producto.create({ nombre, descripcion, precio, stock, imagen, categoria_id, slug });
     res.status(201).json({ mensaje: "Producto creado", producto });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };

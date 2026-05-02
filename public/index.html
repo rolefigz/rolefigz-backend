@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoleFigz — Stampa 3D &amp; Personalizzazione</title>
+  <meta name="description" content="Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione."/>
+  <meta property="og:title" content="RoleFigz — Stampa 3D"/>
+  <meta property="og:description" content="Figure e oggetti personalizzati stampati in 3D. Qualità artigianale, made in Italy."/>
+  <meta property="og:image" content="/assets/logo.png"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="RoleFigz"/>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <img class="logo-img" src="/assets/logo.png" alt="Rolefigz" onclick="tornaAlNegozio()" style="cursor:pointer">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="nav-btn" onclick="showView('tienda')" data-i18n="nav_shop">NEGOZIO</button>
+    <button class="nav-btn primary" onclick="openAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
+    <button class="nav-btn" onclick="doLogout()" id="headerLogoutBtn" style="display:none" data-i18n="nav_logout">ESCI</button>
+    <button class="menu-toggle" id="menuToggle" onclick="openNavPanel()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ══ NAV OVERLAY ══ -->
+<div class="nav-overlay" id="navOverlay" onclick="closeNavPanel()"></div>
+
+<!-- ══ NAV PANEL ══ -->
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <span class="nav-panel-brand">MENU</span>
+    <button class="nav-panel-close" onclick="closeNavPanel()">✕</button>
+  </div>
+
+  <div class="nav-panel-section">
+    <div class="nav-panel-label">LINGUA</div>
+    <div class="lang-btns">
+      <button class="lang-btn active" onclick="setLang('it')">IT</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+
+  <div class="nav-panel-section">
+    <div class="nav-panel-label">NAVIGAZIONE</div>
+    <button class="nav-panel-btn" id="navTienda" onclick="showView('tienda');closeNavPanel()" data-i18n="nav_shop">
+      <iconify-icon icon="mdi:storefront-outline" width="14"></iconify-icon> NEGOZIO
+    </button>
+    <button class="nav-panel-btn" onclick="showView('blog');loadArticoli();closeNavPanel()" data-i18n="nav_blog">
+      <iconify-icon icon="mdi:post-outline" width="14"></iconify-icon> BLOG
+    </button>
+    <button class="nav-panel-btn cart-btn" onclick="closeNavPanel();openCart()">
+      <iconify-icon icon="mdi:cart-outline" width="14"></iconify-icon>
+      <span data-i18n="nav_cart">CARRELLO</span>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+  </div>
+
+  <div class="nav-panel-section">
+    <div class="nav-panel-label">ACCOUNT</div>
+    <button class="nav-panel-btn primary" onclick="openAuth('login');closeNavPanel()" id="loginBtn" data-i18n="nav_login">
+      <iconify-icon icon="mdi:login" width="14"></iconify-icon> ACCEDI
+    </button>
+    <button class="nav-panel-btn" onclick="showView('perfil');closeNavPanel()" id="perfilBtn" style="display:none" data-i18n="nav_account">
+      <iconify-icon icon="mdi:account-outline" width="14"></iconify-icon> IL MIO ACCOUNT
+    </button>
+    <button class="nav-panel-btn" onclick="window.location.href='/admin.html'" id="adminBtn" style="display:none">
+      <iconify-icon icon="mdi:shield-account-outline" width="14"></iconify-icon> ADMIN
+    </button>
+    <button class="nav-panel-btn" onclick="doLogout()" id="logoutBtn" style="display:none" data-i18n="nav_logout">
+      <iconify-icon icon="mdi:logout" width="14"></iconify-icon> ESCI
+    </button>
+  </div>
+</div>
+
+<!-- ══ STATUS BAR ══ -->
+<div class="status-bar" id="statusBar" style="display:none">
+  <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONNESSIONE...</span></div>
+  <div class="si"><div class="sd" id="authDot"></div><span id="authStatus">NESSUNA SESSIONE</span></div>
+  <div class="si"><span id="productCount">— PRODOTTI</span></div>
+  <div class="si"><span id="cartCount">CARRELLO VUOTO</span></div>
+</div>
+
+<!-- ══ VIEW: TIENDA ══ -->
+<div class="view active" id="view-tienda">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow" data-i18n="hero_eyebrow">Stampa 3D professionale</div>
+      <h1 class="hero-h1" id="heroTitle">OGGETTI<br><em>UNICI</em><br>PER TE</h1>
+      <p class="hero-p" id="heroDesc">Figure, merchandising aziendale, segnaposto personalizzati, lightbox e molto altro. Qualità artigianale con tecnologia di precisione.</p>
+      <div class="hero-ctas">
+        <button class="cta-dark" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})" data-i18n="cta_catalogue">VEDI CATALOGO</button>
+        <button class="cta-outline" onclick="openAuth('register')" data-i18n="cta_account">CREA ACCOUNT</button>
+      </div>
+      <div class="hero-fatto">fatto a mano · stampato in 3D · made in Italy</div>
+    </div>
+    <div class="hero-right">
+      <img class="hero-bg-img" src="/assets/impresoras.jpeg" alt="Hero Background">
+      <div class="hero-overlay"></div>
+      <img class="hero-logo" src="/assets/logo.png" alt="Logo RoleFigz">
+      <div class="hero-counter">
+        <strong id="heroCounter">—</strong>
+        <span data-i18n="hero_products">PRODOTTI DISPONIBILI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="section-eyebrow" data-i18n="how_eyebrow">// Il nostro processo</div>
+    <div class="section-title" id="howTitle">COME<br>FUNZIONA</div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title" data-i18n="step1_title">Scegli</div>
+        <div class="step-desc" data-i18n="step1_desc">Sfoglia il catalogo o contattaci per un progetto su misura. Figure, loghi, oggetti personalizzati: realizziamo tutto.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title" data-i18n="step2_title">Personalizziamo</div>
+        <div class="step-desc" data-i18n="step2_desc">Il nostro team ottimizza il modello 3D, sceglie i materiali e le finiture più adatte al tuo prodotto.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title" data-i18n="step3_title">Consegniamo</div>
+        <div class="step-desc" data-i18n="step3_desc">Stampiamo, controlliamo la qualità e spediamo direttamente a casa tua. Ogni pezzo è unico e certificato.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="cats-section">
+    <div class="section-eyebrow" data-i18n="cats_eyebrow">// Cosa facciamo</div>
+    <div class="section-title" style="color:var(--dark)" id="catsTitle">CATEGORIE</div>
+    <div class="cats-grid" id="catsGrid"></div>
+  </div>
+
+  <!-- CATALOGUE -->
+  <div class="catalogue-section" id="catalogo">
+    <div class="catalogue-header">
+      <div class="catalogue-title" data-i18n="catalogue_title">CATALOGO</div>
+      <div class="search-wrap">
+        <span class="search-icon"><iconify-icon icon="mdi:magnify" width="16"></iconify-icon></span>
+        <input type="text" id="searchInput" placeholder="Cerca prodotto..." oninput="filterProductos(this.value)" data-i18n-placeholder="search_placeholder"/>
+      </div>
+    </div>
+    <div id="productosList"></div>
+  </div>
+
+  <!-- WHY US -->
+  <div class="why-section">
+    <div class="section-eyebrow" data-i18n="why_eyebrow">// La nostra qualità</div>
+    <div class="section-title" style="color:var(--dark)" id="whyTitle">PERCHÉ<br>ROLEFIGZ</div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><iconify-icon icon="mdi:target" width="32"></iconify-icon></div>
+        <div class="why-title" data-i18n="why1_title">Precisione</div>
+        <div class="why-desc" data-i18n="why1_desc">Stampa FDM e SLA con tolleranze al decimo di millimetro. Ogni pezzo è controllato manualmente prima della spedizione.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><iconify-icon icon="mdi:lightning-bolt" width="32"></iconify-icon></div>
+        <div class="why-title" data-i18n="why2_title">Velocità</div>
+        <div class="why-desc" data-i18n="why2_desc">Tempi di produzione rapidi senza compromettere la qualità. Consegne express disponibili su richiesta.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><iconify-icon icon="mdi:pencil-ruler" width="32"></iconify-icon></div>
+        <div class="why-title" data-i18n="why3_title">Personalizzazione</div>
+        <div class="why-desc" data-i18n="why3_desc">Dal logo aziendale alla figura di un personaggio: realizziamo qualsiasi oggetto a partire dal tuo design o dal tuo brief.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><iconify-icon icon="mdi:handshake-outline" width="32"></iconify-icon></div>
+        <div class="why-title" data-i18n="why4_title">Artigianalità</div>
+        <div class="why-desc" data-i18n="why4_desc">Ogni prodotto è fatto a mano da un team appassionato. Non siamo una fabbrica: siamo un atelier di stampa 3D.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEÑAS DESTACADAS -->
+  <div class="resenas-dest-section" id="resenasDestacadas">
+    <div class="section-eyebrow">// Clienti soddisfatti</div>
+    <div class="section-title" style="color:#fff">COSA DICONO<br><em>I NOSTRI CLIENTI</em></div>
+    <div class="resenas-dest-grid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <img class="footer-logo" src="/assets/logo.png" alt="Rolefigz">
+        <p class="footer-tagline">Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.</p>
+      </div>
+      <div>
+        <div class="footer-col-title" data-i18n="footer_nav">Navigazione</div>
+        <a class="footer-link" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})" data-i18n="footer_catalogue">Catalogo</a>
+        <a class="footer-link" onclick="openAuth('register')" data-i18n="footer_account">Crea account</a>
+        <a class="footer-link" onclick="openAuth('login')" data-i18n="footer_login">Accedi</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title" data-i18n="footer_contact">Contatti</div>
+        <a class="footer-link"><iconify-icon icon="mdi:email-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>rolefigz@gmail.com</a>
+        <a class="footer-link"><iconify-icon icon="mdi:map-marker-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Italia, Piacenza</a>
+        <a class="footer-link"><iconify-icon icon="mdi:printer-3d" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Stampa 3D Premium</a>
+        <a class="footer-link"><iconify-icon icon="mdi:truck-delivery-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Spedizione in tutta Italia e Europa</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 ROLEFIGZ — TUTTI I DIRITTI RISERVATI</div>
+      <div class="footer-fatto">fatto a mano · stampato in 3D</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ══ VIEW: BLOG ══ -->
+<div class="view" id="view-blog">
+  <div style="padding:72px 48px">
+    <div class="section-eyebrow">// Idee e Ispirazione</div>
+    <div class="section-title" style="color:var(--dark);margin-bottom:40px" id="blogTitle">ARTICOLI</div>
+    <div id="articoliGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border)"></div>
+  </div>
+</div>
+
+<!-- ══ VIEW: ARTICOLO ══ -->
+<div class="view" id="view-articolo">
+  <div style="max-width:800px;margin:0 auto;padding:72px 48px" id="articoloContent"></div>
+</div>
+
+<!-- ══ VIEW: PRODUCTO ══ -->
+<div class="view" id="view-producto">
+  <div class="producto-layout" id="productoLayout"></div>
+</div>
+
+<!-- ══ VIEW: PERFIL ══ -->
+<div class="view" id="view-perfil">
+  <div style="padding:40px">
+    <div class="perfil-grid">
+      <div class="perfil-sidebar">
+        <div class="perfil-avatar" id="perfilAvatar">?</div>
+        <div class="perfil-name" id="perfilNombre">—</div>
+        <div class="perfil-email" id="perfilEmail">—</div>
+        <div class="perfil-menu-item active" onclick="perfilTab('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> <span data-i18n="perfil_orders">I miei ordini</span></div>
+        <div class="perfil-menu-item" onclick="perfilTab('datos',this)"><iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> <span data-i18n="perfil_data">I miei dati</span></div>
+      </div>
+      <div class="perfil-content" id="perfilContent"><div class="loading">CARICAMENTO</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-header">
+    <div class="drawer-title" data-i18n="cart_title">CARRELLO</div>
+    <button class="x-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-body" id="cartItems"></div>
+  <div class="drawer-footer">
+    <div class="total-row">
+      <div class="total-label" data-i18n="cart_total">TOTALE</div>
+      <div class="total-val" id="cartTotal">€0.00</div>
+    </div>
+    <button class="big-btn" onclick="openCheckout()" id="checkoutBtn" disabled data-i18n="cart_checkout">ORDINA</button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-bg" id="authModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hd">
+      <div class="modal-title" id="authModalTitle" data-i18n="auth_title">ACCESSO</div>
+      <div class="modal-sub">// ROLEFIGZ</div>
+    </div>
+    <div class="modal-bd">
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')" data-i18n="auth_login">ACCEDI</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')" data-i18n="auth_register">REGISTRATI</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-panel active" id="panelLogin">
+        <div class="field"><label data-i18n="field_email">Email</label><input type="email" id="loginEmail" placeholder="tu@email.com"/></div>
+        <div class="field">
+          <label data-i18n="field_password">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button type="button" class="pass-toggle" onclick="togglePass('loginPass','eyeLogin')" tabindex="-1">
+              <iconify-icon id="eyeLogin" icon="mdi:eye-off" width="18"></iconify-icon>
+            </button>
+          </div>
+        </div>
+        <button class="btn-full" onclick="doLogin()" id="loginSubmit" data-i18n="auth_login">ACCEDI</button>
+        <div id="loginMsg"></div>
+        <button type="button" class="forgot-link" onclick="showRecupera()">Password dimenticata?</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="auth-panel" id="panelRegister">
+        <div class="field"><label data-i18n="field_name">Nome completo</label><input type="text" id="regNombre" placeholder="Mario Rossi"/></div>
+        <div class="field"><label data-i18n="field_email">Email</label><input type="email" id="regEmail" placeholder="tu@email.com"/></div>
+        <div class="field">
+          <label data-i18n="field_password">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="regPass" placeholder="Minimo 6 caratteri"/>
+            <button type="button" class="pass-toggle" onclick="togglePass('regPass','eyeReg')" tabindex="-1">
+              <iconify-icon id="eyeReg" icon="mdi:eye-off" width="18"></iconify-icon>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Conferma password</label>
+          <div class="pass-wrap">
+            <input type="password" id="regPassConfirm" placeholder="Ripeti la password"/>
+            <button type="button" class="pass-toggle" onclick="togglePass('regPassConfirm','eyeRegC')" tabindex="-1">
+              <iconify-icon id="eyeRegC" icon="mdi:eye-off" width="18"></iconify-icon>
+            </button>
+          </div>
+        </div>
+        <button class="btn-full" onclick="doRegister()" id="registerSubmit" data-i18n="auth_register_btn">CREA ACCOUNT</button>
+        <div id="registerMsg"></div>
+      </div>
+
+      <!-- VERIFICA CODICE -->
+      <div class="auth-panel" id="panelVerifica">
+        <div class="auth-info-box">
+          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CODICE INVIATO A</div>
+          <div class="auth-info-value" id="emailVerifica"></div>
+          <div class="auth-info-sub">Controlla la casella email e inserisci il codice qui sotto</div>
+        </div>
+        <div class="field">
+          <label style="letter-spacing:2px">CODICE A 6 CIFRE</label>
+          <input type="text" id="codigoInput" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input" onkeydown="if(event.key==='Enter')doVerificar()"/>
+        </div>
+        <button class="btn-full" onclick="doVerificar()" id="verificarBtn" style="margin-top:8px">VERIFICA E ACCEDI</button>
+        <div id="verificaMsg"></div>
+      </div>
+
+      <!-- RECUPERA PASSWORD — step 1: inserisci email -->
+      <div class="auth-panel" id="panelRecupera">
+        <div class="field"><label>Email del tuo account</label><input type="email" id="recuperaEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')enviarRecupera()"/></div>
+        <button class="btn-full" onclick="enviarRecupera()" id="recuperaBtn">INVIA CODICE</button>
+        <div id="recuperaMsg"></div>
+        <button type="button" class="forgot-link" onclick="switchAuthTab('login')">← Torna al login</button>
+      </div>
+
+      <!-- RECUPERA PASSWORD — step 2: inserisci codice + nuova password -->
+      <div class="auth-panel" id="panelResetPass">
+        <div class="auth-info-box">
+          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CODICE INVIATO A</div>
+          <div class="auth-info-value" id="emailReset"></div>
+        </div>
+        <div class="field">
+          <label>CODICE A 6 CIFRE</label>
+          <input type="text" id="resetCodigo" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input"/>
+        </div>
+        <div class="field">
+          <label>Nuova password</label>
+          <div class="pass-wrap">
+            <input type="password" id="resetPass" placeholder="Minimo 6 caratteri"/>
+            <button type="button" class="pass-toggle" onclick="togglePass('resetPass','eyeReset')" tabindex="-1">
+              <iconify-icon id="eyeReset" icon="mdi:eye-off" width="18"></iconify-icon>
+            </button>
+          </div>
+        </div>
+        <button class="btn-full" onclick="doResetPass()" id="resetBtn">REIMPOSTA PASSWORD</button>
+        <div id="resetMsg"></div>
+      </div>
+
+      <button class="btn-ghost" onclick="closeAuthModal()" data-i18n="cancel">ANNULLA</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-bg" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" data-i18n="checkout_title">IL TUO ORDINE</div>
+      <div class="modal-sub" data-i18n="checkout_sub">// DATI DI SPEDIZIONE</div>
+    </div>
+    <div class="modal-bd" id="checkoutBody">
+      <div class="osummary" id="orderSummary"></div>
+      <div class="field"><label data-i18n="field_name">Nome completo *</label><input type="text" id="chkNombre" placeholder="Mario Rossi"/></div>
+      <div class="field"><label data-i18n="field_email">Email *</label><input type="email" id="chkEmail" placeholder="mario@email.com"/></div>
+      <div class="field">
+        <label data-i18n="field_phone">Telefono</label>
+        <div class="phone-wrap">
+          <select id="chkPrefijo" class="phone-prefix">
+            <option value="+39">🇮🇹 +39</option>
+            <option value="+34">🇪🇸 +34</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+54">🇦🇷 +54</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+55">🇧🇷 +55</option>
+            <option value="+351">🇵🇹 +351</option>
+            <option value="+41">🇨🇭 +41</option>
+            <option value="+31">🇳🇱 +31</option>
+            <option value="+32">🇧🇪 +32</option>
+            <option value="+61">🇦🇺 +61</option>
+            <option value="+81">🇯🇵 +81</option>
+          </select>
+          <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
+        </div>
+      </div>
+      <div class="field"><label data-i18n="field_address">Indirizzo di spedizione</label><textarea id="chkDireccion" placeholder="Via Roma 1, 00100 Roma"></textarea></div>
+      <div class="field"><label data-i18n="field_notes">Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
+      <div id="checkoutMsg"></div>
+      <button class="btn-full" onclick="confirmarPedido()" id="confirmarBtn" data-i18n="checkout_confirm">CONFERMA ORDINE</button>
+      <button class="btn-ghost" onclick="closeCheckout()" data-i18n="cancel">ANNULLA</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHAT FAB ══ -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Supporto">
+  <iconify-icon icon="mdi:chat-outline" width="22"></iconify-icon>
+  <span class="chat-fab-badge" id="chatFabBadge"></span>
+</button>
+
+<!-- ══ CHAT PANEL ══ -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header">
+    <div>
+      <div class="chat-panel-title">SUPPORTO</div>
+      <div class="chat-panel-sub">// ROLEFIGZ</div>
+    </div>
+    <button class="chat-close-btn" onclick="closeChat()">✕</button>
+  </div>
+
+  <!-- Lista ticket -->
+  <div class="chat-list-view" id="chatListView">
+    <button class="chat-new-btn" onclick="chatShowNewForm()">
+      <iconify-icon icon="mdi:plus" width="14" style="margin-right:6px;vertical-align:middle"></iconify-icon>NUOVO TICKET
+    </button>
+    <div class="chat-tickets-list" id="chatTicketsList">
+      <div class="chat-empty">CARICAMENTO...</div>
+    </div>
+  </div>
+
+  <!-- Nuovo ticket -->
+  <div class="chat-new-form" id="chatNewForm">
+    <div class="field" style="margin-bottom:10px">
+      <label>OGGETTO</label>
+      <input type="text" id="chatAsunto" placeholder="Come possiamo aiutarti?" onkeydown="if(event.key==='Enter')document.getElementById('chatPrimerMsg').focus()"/>
+    </div>
+    <div class="field" style="margin-bottom:10px;flex:1;display:flex;flex-direction:column">
+      <label>MESSAGGIO</label>
+      <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')crearTicket()"></textarea>
+    </div>
+    <button class="chat-new-btn" id="chatCreateBtn" onclick="crearTicket()">INVIA</button>
+    <button class="chat-back-btn" style="margin:6px 0" onclick="chatShowListView()">← Indietro</button>
+  </div>
+
+  <!-- Conversazione -->
+  <div class="chat-conv-view" id="chatConvView">
+    <div class="chat-conv-top">
+      <button class="chat-back-btn" onclick="chatBack()">←</button>
+      <span class="chat-conv-title" id="chatConvTitle"></span>
+    </div>
+    <div class="chat-closed-notice" id="chatClosedNotice" style="display:none">
+      <iconify-icon icon="mdi:lock-outline" width="11" style="margin-right:4px;vertical-align:middle"></iconify-icon>TICKET CHIUSO
+    </div>
+    <div class="chat-messages" id="chatMensajes"></div>
+    <div class="chat-input-area" id="chatConvInput">
+      <textarea id="chatMsgInput" placeholder="Scrivi un messaggio... (Invio per a capo)" onkeydown="if(event.ctrlKey&&event.key==='Enter')enviarMensaje()"></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="enviarMensaje()">
+        <iconify-icon icon="mdi:send" width="16"></iconify-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/cart.js"></script>
+<script src="/js/productos.js"></script>
+<script src="/js/checkout.js"></script>
+<script src="/js/perfil.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/blog.js"></script>
+<script src="/js/resenas.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -5,8 +5,9 @@ const Producto = require("./Producto");
 
 const DetalleOrden = sequelize.define("DetalleOrden", {
   cantidad:       { type: DataTypes.INTEGER, allowNull: false },
-  precio_unidad:  { type: DataTypes.DECIMAL(10,2), allowNull: false }, // precio en el momento de compra
-  subtotal:       { type: DataTypes.DECIMAL(10,2), allowNull: false }
+  precio_unidad:  { type: DataTypes.DECIMAL(10,2), allowNull: false },
+  subtotal:       { type: DataTypes.DECIMAL(10,2), allowNull: false },
+  variante:       { type: DataTypes.STRING }
 }, { tableName: "detalles_orden" });
 
 DetalleOrden.belongsTo(Orden,    { foreignKey: "orden_id" });

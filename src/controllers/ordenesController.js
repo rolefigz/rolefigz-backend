@@ -1,10 +1,21 @@
+const jwt = require("jsonwebtoken");
 const { Orden, DetalleOrden, Producto } = require("../models");
 const { emailConfirmacionPedido, emailNuevoPedidoAdmin } = require("../utils/mailer");
-// POST /api/ordenes — crear pedido (público)
+// POST /api/ordenes — crear pedido (público, pero vincula usuario si hay token)
 const crearOrden = async (req, res) => {
   const t = await require("../config/db").transaction();
   try {
     const { nombre_cliente, email_cliente, telefono, direccion, notas, items } = req.body;
+
+    let usuario_id = null;
+    const authHeader = req.headers["authorization"];
+    const tkn = authHeader && authHeader.split(" ")[1];
+    if (tkn) {
+      try {
+        const decoded = jwt.verify(tkn, process.env.JWT_SECRET);
+        usuario_id = decoded.id;
+      } catch {}
+    }
 
     // items: [{ producto_id, cantidad }]
     if (!items || !items.length)
@@ -25,12 +36,12 @@ const crearOrden = async (req, res) => {
       const precio_unidad = precioEnviado >= precioBase ? precioEnviado : precioBase;
       const subtotal = precio_unidad * item.cantidad;
       total += subtotal;
-      detalles.push({ producto, cantidad: item.cantidad, precio_unidad, subtotal });
+      detalles.push({ producto, cantidad: item.cantidad, precio_unidad, subtotal, variante: item.variante || null });
     }
 
     // Crear orden
     const orden = await Orden.create({
-      nombre_cliente, email_cliente, telefono, direccion, notas, total
+      nombre_cliente, email_cliente, telefono, direccion, notas, total, usuario_id
     }, { transaction: t });
 
     // Crear detalles y descontar stock
@@ -40,7 +51,8 @@ const crearOrden = async (req, res) => {
         producto_id:   d.producto.id,
         cantidad:      d.cantidad,
         precio_unidad: d.precio_unidad,
-        subtotal:      d.subtotal
+        subtotal:      d.subtotal,
+        variante:      d.variante,
       }, { transaction: t });
 
       await d.producto.update(

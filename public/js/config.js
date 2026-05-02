@@ -1,0 +1,10 @@
+const API = 'http://localhost:3000/api';
+let token = localStorage.getItem('rfToken') || null;
+let usuario = null;
+let productos = [];
+let categorias = [];
+let carrito = [];
+let currentLang = localStorage.getItem('rfLang') || 'it';
+let productoActual = null;
+let varianteSeleccionada = {};
+let cantidadSeleccionada = 1;

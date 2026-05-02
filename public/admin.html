@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoleFigz — Admin</title>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <link rel="stylesheet" href="/css/admin.css"/>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script>
+    (function() {
+      const token = localStorage.getItem('rfToken');
+      if (!token) {
+        document.documentElement.style.display = 'none';
+        window.location.href = '/index.html';
+        return;
+      }
+      try {
+        const p = JSON.parse(atob(token.split('.')[1]));
+        if (p.exp * 1000 < Date.now() || p.rol !== 'admin') {
+          document.documentElement.style.display = 'none';
+          window.location.href = '/index.html';
+        }
+      } catch(e) {
+        document.documentElement.style.display = 'none';
+        window.location.href = '/index.html';
+      }
+    })();
+  </script>
+</head>
+<body>
+
+<div id="adminGuard" style="position:fixed;inset:0;background:#141412;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'DM Mono',monospace;font-size:11px;color:#666;letter-spacing:3px;">
+  VERIFICA ACCESSO...
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <img class="logo-img" src="/assets/logo.png" alt="Rolefigz" onclick="window.location.href='/index.html'" style="cursor:pointer">
+  <nav>
+    <button class="nav-btn" onclick="window.location.href='/index.html'">VER TIENDA</button>
+    <button class="nav-btn primary" onclick="doLogout()">ESCI</button>
+  </nav>
+</header>
+
+<!-- ══ STATUS BAR ══ -->
+<div class="status-bar">
+  <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONNESSIONE...</span></div>
+  <div class="si"><span style="font-family:'DM Mono',monospace;letter-spacing:2px">// PANNELLO ADMIN</span></div>
+</div>
+
+<!-- ══ ADMIN PANEL ══ -->
+<div style="padding:40px">
+  <div class="admin-grid">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-title">// PANNELLO ADMIN</div>
+      <div class="admin-menu-item active" onclick="adminTab('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> Ordini</div>
+      <div class="admin-menu-item" onclick="adminTab('productos',this)"><iconify-icon icon="mdi:package-variant-closed" width="15"></iconify-icon> Prodotti</div>
+      <div class="admin-menu-item" onclick="adminTab('nuevo',this)"><iconify-icon icon="mdi:plus-circle-outline" width="15"></iconify-icon> Nuovo Prodotto</div>
+      <div class="admin-menu-item" onclick="adminTab('categorias',this)"><iconify-icon icon="mdi:tag-outline" width="15"></iconify-icon> Categorie</div>
+      <div class="admin-menu-item" onclick="adminTab('clientes',this)"><iconify-icon icon="mdi:account-group-outline" width="15"></iconify-icon> Clienti</div>
+      <div class="admin-menu-item" onclick="adminTab('blog',this)"><iconify-icon icon="mdi:pencil-outline" width="15"></iconify-icon> Blog</div>
+      <div class="admin-menu-item" onclick="adminTab('resenas',this)"><iconify-icon icon="mdi:star-outline" width="15"></iconify-icon> Recensioni</div>
+      <div class="admin-menu-item" onclick="adminTab('analytics',this)"><iconify-icon icon="mdi:chart-bar" width="15"></iconify-icon> Analytics</div>
+      <div class="admin-menu-item" onclick="adminTab('tickets',this)" id="adminTicketsItem"><iconify-icon icon="mdi:chat-outline" width="15"></iconify-icon> Messaggi <span class="admin-menu-badge" id="adminTicketsBadge" style="display:none"></span></div>
+    </div>
+    <div class="admin-content" id="adminContent">
+      <div class="loading">CARICAMENTO</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/admin-app.js"></script>
+</body>
+</html>

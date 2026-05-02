@@ -10,10 +10,33 @@ const {
 
 router.get("/",              getProductos);
 router.get("/admin/todos",   verifyToken, soloAdmin, getTodosProductos);
+router.get("/slug/:slug", async (req, res) => {
+  try {
+    const { Categoria, VarianteProducto, ImagenProducto } = require("../models");
+    const producto = await Producto.findOne({
+      where: { slug: req.params.slug, activo: true },
+      include: [
+        { model: Categoria,        attributes: ["id", "nombre"] },
+        { model: VarianteProducto, as: "variantes" },
+        { model: ImagenProducto,   as: "imagenes", order: [["orden", "ASC"]] }
+      ]
+    });
+    if (!producto) return res.status(404).json({ error: "Prodotto non trovato" });
+    res.json(producto);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 router.get("/:id",           getProductoById);
 router.post("/",    verifyToken, soloAdmin, validarProducto, crearProducto);
 router.put("/:id",  verifyToken, soloAdmin, editarProducto);
-router.delete("/:id", verifyToken, soloAdmin, eliminarProducto);
+router.delete("/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const { Producto } = require("../models");
+    const producto = await Producto.findByPk(req.params.id);
+    if (!producto) return res.status(404).json({ error: "Prodotto non trovato" });
+    await producto.destroy();
+    res.json({ mensaje: "Prodotto eliminato" });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 router.post("/:id/imagen", verifyToken, soloAdmin, upload.single("imagen"), async (req, res) => {
   try {

@@ -8,7 +8,10 @@ const Usuario = sequelize.define("Usuario", {
   rol:       { type: DataTypes.ENUM("admin", "user"), defaultValue: "user" },
   telefono:  { type: DataTypes.STRING },
   direccion: { type: DataTypes.TEXT },
-  activo:    { type: DataTypes.BOOLEAN, defaultValue: true }
+  activo:              { type: DataTypes.BOOLEAN, defaultValue: true },
+  verificado:          { type: DataTypes.BOOLEAN, defaultValue: false },
+  codigoVerificacion:  { type: DataTypes.STRING },
+  codigoExpira:        { type: DataTypes.DATE }
 }, { tableName: "usuarios" });
 
 module.exports = Usuario;

@@ -14,22 +14,35 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Rate limit general — 100 req / 15 min por IP
+// Rate limit general — 300 req / 15 min por IP (excluye estáticos)
 const limitGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: "Demasiadas peticiones, espera unos minutos" },
+  max: 300,
+  message: { error: "Troppe richieste, riprova tra qualche minuto" },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.path.startsWith('/css') ||
+           req.path.startsWith('/js') ||
+           req.path.startsWith('/assets') ||
+           req.path.startsWith('/uploads');
+  }
 });
 
-// Rate limit estricto para auth — 10 intentos / 15 min
+// Rate limit estricto para auth — 20 intentos / 15 min
 const limitAuth = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: "Demasiados intentos de login, espera 15 minutos" },
+  max: 20,
+  message: { error: "Troppi tentativi di accesso, riprova tra 15 minuti" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-module.exports = { corsOptions, limitGeneral, limitAuth };
+// Rate limit para rutas API — 200 req / 15 min
+const limitAPI = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { error: "Troppe richieste API, riprova tra qualche minuto" },
+});
+
+module.exports = { corsOptions, limitGeneral, limitAuth, limitAPI };
