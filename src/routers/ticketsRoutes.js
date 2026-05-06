@@ -8,17 +8,17 @@ const {
 } = require("../controllers/ticketsController");
 
 // Cliente
-router.post("/",                verifyToken,            crearTicket);
-router.get("/mis",              verifyToken,            getMisTickets);
-router.get("/unread",           verifyToken,            getUnreadCliente);
+router.post("/",              verifyToken,            crearTicket);
+router.get("/mis",            verifyToken,            getMisTickets);
+router.get("/unread",         verifyToken,            getUnreadCliente);
 
 // Admin
-router.get("/admin/unread",     verifyToken, soloAdmin, getUnreadAdmin);
-router.get("/",                 verifyToken, soloAdmin, getAllTickets);
-router.patch("/:id/estado",     verifyToken, soloAdmin, cambiarEstado);
+router.get("/admin/unread",   verifyToken, soloAdmin, getUnreadAdmin);
+router.get("/",               verifyToken, soloAdmin, getAllTickets);
+router.patch("/:id/estado",   verifyToken, soloAdmin, cambiarEstado);
 
-// Compartido (verifica ownership dentro del controller)
-router.get("/:id/mensajes",     verifyToken,            getMensajes);
-router.post("/:id/mensajes",    verifyToken,            enviarMensaje);
+// Condiviso (verifica proprietà nel controller)
+router.get("/:id/mensajes",   verifyToken,            getMensajes);
+router.post("/:id/mensajes",  verifyToken,            enviarMensaje);
 
 module.exports = router;

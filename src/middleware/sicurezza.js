@@ -1,20 +1,20 @@
-const cors       = require("cors");
-const helmet     = require("helmet");
-const rateLimit  = require("express-rate-limit");
+const cors      = require("cors");
+const helmet    = require("helmet");
+const rateLimit = require("express-rate-limit");
 
-// CORS — dominios permitidos
+// CORS — domini consentiti
 const corsOptions = {
   origin: [
     "http://localhost:3000",
-    "http://127.0.0.1:5500",   // Live Server de VS Code
+    "http://127.0.0.1:5500",   // Live Server di VS Code
     "http://localhost:5500",
-    // "https://tudominio.com"  // añadir en producción
+    // "https://tuodominio.com"  // aggiungere in produzione
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Rate limit general — 300 req / 15 min por IP (excluye estáticos)
+// Rate limit generale — 300 req / 15 min per IP (esclude file statici)
 const limitGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -29,7 +29,7 @@ const limitGeneral = rateLimit({
   }
 });
 
-// Rate limit estricto para auth — 20 intentos / 15 min
+// Rate limit rigoroso per auth — 20 tentativi / 15 min
 const limitAuth = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -38,7 +38,7 @@ const limitAuth = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limit para rutas API — 200 req / 15 min
+// Rate limit per route API — 200 req / 15 min
 const limitAPI = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,

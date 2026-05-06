@@ -1,67 +1,67 @@
-let chatTicketActual   = null;
-let chatPollInterval   = null;
+let chatTicketCorrente = null;
+let chatPollingInterval = null;
 let chatFabInterval    = null;
 
-// ── FAB & Panel ─────────────────────────────────────────────────────────────
+// ── FAB & Pannello ───────────────────────────────────────────────────────────
 
-function toggleChat() {
+function alternaChat() {
   const panel = document.getElementById('chatPanel');
-  if (panel.classList.contains('on')) closeChat();
-  else openChat();
+  if (panel.classList.contains('on')) chiudiChat();
+  else apriChat();
 }
 
-function openChat() {
+function apriChat() {
   document.getElementById('chatPanel').classList.add('on');
-  chatShowListView();
-  loadMisTickets();
-  startFabPolling();
+  chatMostraLista();
+  caricaMieiTicket();
+  avviaPollingFab();
 }
 
-function closeChat() {
+function chiudiChat() {
   document.getElementById('chatPanel').classList.remove('on');
-  chatTicketActual = null;
-  stopChatPoll();
+  chatTicketCorrente = null;
+  fermaPollingChat();
 }
 
-// ── Vistas ───────────────────────────────────────────────────────────────────
+// ── Viste ────────────────────────────────────────────────────────────────────
 
-function chatShowListView() {
+function chatMostraLista() {
   document.getElementById('chatListView').style.display  = '';
   document.getElementById('chatNewForm').classList.remove('on');
   document.getElementById('chatConvView').classList.remove('on');
 }
 
-function chatShowNewForm() {
+function chatMostraNuovoForm() {
   document.getElementById('chatListView').style.display  = 'none';
   document.getElementById('chatNewForm').classList.add('on');
   document.getElementById('chatConvView').classList.remove('on');
-  document.getElementById('chatAsunto').value   = '';
+  document.getElementById('chatAsunto').value    = '';
   document.getElementById('chatPrimerMsg').value = '';
   setTimeout(() => document.getElementById('chatAsunto').focus(), 50);
 }
 
-function chatShowConvView() {
+function chatMostraConversazione() {
   document.getElementById('chatListView').style.display  = 'none';
   document.getElementById('chatNewForm').classList.remove('on');
   document.getElementById('chatConvView').classList.add('on');
 }
 
-// ── Lista de tickets ─────────────────────────────────────────────────────────
+// ── Lista ticket ─────────────────────────────────────────────────────────────
 
-async function loadMisTickets() {
+async function caricaMieiTicket() {
   const el = document.getElementById('chatTicketsList');
   if (!token) return;
   try {
     const r = await fetch(`${API}/tickets/mis`, { headers: { Authorization: `Bearer ${token}` } });
-    const list = await r.json();
+    const lista = await r.json();
 
-    if (!list.length) {
+    if (!lista.length) {
       el.innerHTML = '<div class="chat-empty">NESSUN TICKET<br><small style="font-size:8px;letter-spacing:1px;margin-top:6px;display:block">Crea il tuo primo ticket</small></div>';
       return;
     }
 
-    el.innerHTML = list.map(t => `
-      <div class="chat-ticket-item${t.no_leidos > 0 ? ' unread' : ''}" onclick="openTicket(${t.id})">
+    el.innerHTML = lista.map(t => `
+      <div class="chat-ticket-item${t.no_leidos > 0 ? ' unread' : ''}" onclick="apriTicket(${t.id})">
         <span class="chat-ticket-asunto">${t.asunto}</span>
         <div class="chat-ticket-preview">${t.ultimo_mensaje || '—'}</div>
         <div class="chat-ticket-foot">
@@ -72,126 +72,123 @@ async function loadMisTickets() {
   } catch {}
 }
 
-// ── Conversación ─────────────────────────────────────────────────────────────
+// ── Conversazione ─────────────────────────────────────────────────────────────
 
-async function openTicket(id) {
-  chatTicketActual = id;
-  chatShowConvView();
-  await cargarMensajes(id);
-  startChatPoll(id);
+async function apriTicket(id) {
+  chatTicketCorrente = id;
+  chatMostraConversazione();
+  await caricaMessaggi(id);
+  avviaPollingChat(id);
 }
 
-function chatBack() {
-  chatTicketActual = null;
-  stopChatPoll();
-  chatShowListView();
-  loadMisTickets();
+function tornaListaChat() {
+  chatTicketCorrente = null;
+  fermaPollingChat();
+  chatMostraLista();
+  caricaMieiTicket();
 }
 
-async function cargarMensajes(id) {
+async function caricaMessaggi(id) {
   if (!token) return;
   try {
     const r = await fetch(`${API}/tickets/${id}/mensajes`, { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) return;
     const data = await r.json();
-    renderMensajes(data.mensajes, data.ticket);
-    actualizarFabBadge();
+    renderMessaggi(data.mensajes, data.ticket);
+    aggiornaBadgeFab();
   } catch {}
 }
 
-function renderMensajes(mensajes, ticket) {
+function renderMessaggi(messaggi, ticket) {
   const titleEl = document.getElementById('chatConvTitle');
   if (titleEl) titleEl.textContent = ticket.asunto;
 
-  const cerrado = ticket.estado === 'cerrado';
+  const chiuso = ticket.estado === 'cerrado';
   const noticeEl = document.getElementById('chatClosedNotice');
-  if (noticeEl) noticeEl.style.display = cerrado ? 'block' : 'none';
+  if (noticeEl) noticeEl.style.display = chiuso ? 'block' : 'none';
   const inputEl = document.getElementById('chatConvInput');
-  if (inputEl) inputEl.style.display = cerrado ? 'none' : '';
+  if (inputEl) inputEl.style.display = chiuso ? 'none' : '';
 
   const el = document.getElementById('chatMensajes');
-  if (!mensajes.length) {
+  if (!messaggi.length) {
     el.innerHTML = '<div class="chat-empty">Nessun messaggio</div>';
     return;
   }
 
-  const prevScroll = el.scrollHeight - el.scrollTop;
-  el.innerHTML = mensajes.map(m => `
+  el.innerHTML = messaggi.map(m => `
     <div class="chat-msg ${m.remitente === 'cliente' ? 'mine' : 'theirs'}">
       ${m.remitente === 'admin' ? `<div class="chat-msg-sender">SUPPORTO ROLEFIGZ</div>` : ''}
       <div class="chat-msg-bubble">${escapeHtml(m.texto)}</div>
-      <div class="chat-msg-time">${formatChatTime(m.createdAt)}</div>
+      <div class="chat-msg-time">${formattaOrarioChat(m.createdAt)}</div>
     </div>`).join('');
 
-  // Scroll al fondo si ya estaba abajo
-  if (prevScroll < 80) el.scrollTop = el.scrollHeight;
-  else el.scrollTop = el.scrollHeight;
+  el.scrollTop = el.scrollHeight;
 }
 
-async function enviarMensaje() {
+async function inviaMessaggio() {
   const input = document.getElementById('chatMsgInput');
-  const texto = input?.value.trim();
-  if (!texto || !chatTicketActual) return;
+  const testo = input?.value.trim();
+  if (!testo || !chatTicketCorrente) return;
 
   const btn = document.getElementById('chatSendBtn');
   if (btn) btn.disabled = true;
   try {
-    const r = await fetch(`${API}/tickets/${chatTicketActual}/mensajes`, {
+    const r = await fetch(`${API}/tickets/${chatTicketCorrente}/mensajes`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ texto })
+      body:    JSON.stringify({ texto: testo })
     });
     if (!r.ok) throw new Error();
     input.value = '';
-    await cargarMensajes(chatTicketActual);
+    await caricaMessaggi(chatTicketCorrente);
   } catch {}
   if (btn) btn.disabled = false;
 }
 
-// ── Crear ticket ─────────────────────────────────────────────────────────────
+// ── Crea ticket ───────────────────────────────────────────────────────────────
 
-async function crearTicket() {
+async function creaTicket() {
   const asunto = document.getElementById('chatAsunto').value.trim();
-  const texto  = document.getElementById('chatPrimerMsg').value.trim();
+  const testo  = document.getElementById('chatPrimerMsg').value.trim();
   const btn    = document.getElementById('chatCreateBtn');
-  if (!asunto || !texto) return;
+  if (!asunto || !testo) return;
 
   btn.disabled = true; btn.textContent = '...';
   try {
     const r = await fetch(`${API}/tickets`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ asunto, texto })
+      body:    JSON.stringify({ asunto, texto: testo })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    openTicket(data.ticket.id);
+    apriTicket(data.ticket.id);
   } catch {}
   btn.disabled = false; btn.textContent = 'INVIA';
 }
 
 // ── Polling & badge ───────────────────────────────────────────────────────────
 
-function startChatPoll(id) {
-  stopChatPoll();
-  chatPollInterval = setInterval(() => cargarMensajes(id), 4000);
+function avviaPollingChat(id) {
+  fermaPollingChat();
+  chatPollingInterval = setInterval(() => caricaMessaggi(id), 4000);
 }
 
-function stopChatPoll() {
-  if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
+function fermaPollingChat() {
+  if (chatPollingInterval) { clearInterval(chatPollingInterval); chatPollingInterval = null; }
 }
 
-function startFabPolling() {
-  stopFabPolling();
-  actualizarFabBadge();
-  chatFabInterval = setInterval(actualizarFabBadge, 30000);
+function avviaPollingFab() {
+  fermaPollingFab();
+  aggiornaBadgeFab();
+  chatFabInterval = setInterval(aggiornaBadgeFab, 30000);
 }
 
-function stopFabPolling() {
+function fermaPollingFab() {
   if (chatFabInterval) { clearInterval(chatFabInterval); chatFabInterval = null; }
 }
 
-async function actualizarFabBadge() {
+async function aggiornaBadgeFab() {
   if (!token) return;
   try {
     const r = await fetch(`${API}/tickets/unread`, { headers: { Authorization: `Bearer ${token}` } });
@@ -204,17 +201,17 @@ async function actualizarFabBadge() {
   } catch {}
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Utilità ───────────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function formatChatTime(iso) {
+function formattaOrarioChat(iso) {
   const d = new Date(iso);
-  const hoy = new Date();
-  const esHoy = d.toDateString() === hoy.toDateString();
-  if (esHoy) return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const oggi = new Date();
+  const eOggi = d.toDateString() === oggi.toDateString();
+  if (eOggi) return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' +
          d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }

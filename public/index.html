@@ -20,43 +20,43 @@
 <header>
   <img class="logo-img" src="/assets/logo.png" alt="Rolefigz" onclick="tornaAlNegozio()" style="cursor:pointer">
   <div style="display:flex;align-items:center;gap:8px">
-    <button class="nav-btn" onclick="showView('tienda')" data-i18n="nav_shop">NEGOZIO</button>
-    <button class="nav-btn primary" onclick="openAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
-    <button class="nav-btn" onclick="doLogout()" id="headerLogoutBtn" style="display:none" data-i18n="nav_logout">ESCI</button>
-    <button class="menu-toggle" id="menuToggle" onclick="openNavPanel()" aria-label="Menu">
+    <button class="nav-btn" onclick="mostraVista('tienda')" data-i18n="nav_shop">NEGOZIO</button>
+    <button class="nav-btn primary" onclick="apriAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
+    <button class="nav-btn" onclick="disconnetti()" id="headerLogoutBtn" style="display:none" data-i18n="nav_logout">ESCI</button>
+    <button class="menu-toggle" id="menuToggle" onclick="apriMenuNav()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
 </header>
 
 <!-- ══ NAV OVERLAY ══ -->
-<div class="nav-overlay" id="navOverlay" onclick="closeNavPanel()"></div>
+<div class="nav-overlay" id="navOverlay" onclick="chiudiMenuNav()"></div>
 
 <!-- ══ NAV PANEL ══ -->
 <div class="nav-panel" id="navPanel">
   <div class="nav-panel-header">
     <span class="nav-panel-brand">MENU</span>
-    <button class="nav-panel-close" onclick="closeNavPanel()">✕</button>
+    <button class="nav-panel-close" onclick="chiudiMenuNav()">✕</button>
   </div>
 
   <div class="nav-panel-section">
     <div class="nav-panel-label">LINGUA</div>
     <div class="lang-btns">
-      <button class="lang-btn active" onclick="setLang('it')">IT</button>
-      <button class="lang-btn" onclick="setLang('es')">ES</button>
-      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn active" onclick="impostaLingua('it')">IT</button>
+      <button class="lang-btn" onclick="impostaLingua('es')">ES</button>
+      <button class="lang-btn" onclick="impostaLingua('en')">EN</button>
     </div>
   </div>
 
   <div class="nav-panel-section">
     <div class="nav-panel-label">NAVIGAZIONE</div>
-    <button class="nav-panel-btn" id="navTienda" onclick="showView('tienda');closeNavPanel()" data-i18n="nav_shop">
+    <button class="nav-panel-btn" id="navTienda" onclick="mostraVista('tienda');chiudiMenuNav()" data-i18n="nav_shop">
       <iconify-icon icon="mdi:storefront-outline" width="14"></iconify-icon> NEGOZIO
     </button>
-    <button class="nav-panel-btn" onclick="showView('blog');loadArticoli();closeNavPanel()" data-i18n="nav_blog">
+    <button class="nav-panel-btn" onclick="mostraVista('blog');loadArticoli();chiudiMenuNav()" data-i18n="nav_blog">
       <iconify-icon icon="mdi:post-outline" width="14"></iconify-icon> BLOG
     </button>
-    <button class="nav-panel-btn cart-btn" onclick="closeNavPanel();openCart()">
+    <button class="nav-panel-btn cart-btn" onclick="chiudiMenuNav();apriCarrello()">
       <iconify-icon icon="mdi:cart-outline" width="14"></iconify-icon>
       <span data-i18n="nav_cart">CARRELLO</span>
       <span class="cart-badge" id="cartBadge">0</span>
@@ -65,22 +65,22 @@
 
   <div class="nav-panel-section">
     <div class="nav-panel-label">ACCOUNT</div>
-    <button class="nav-panel-btn primary" onclick="openAuth('login');closeNavPanel()" id="loginBtn" data-i18n="nav_login">
+    <button class="nav-panel-btn primary" onclick="apriAuth('login');chiudiMenuNav()" id="loginBtn" data-i18n="nav_login">
       <iconify-icon icon="mdi:login" width="14"></iconify-icon> ACCEDI
     </button>
-    <button class="nav-panel-btn" onclick="showView('perfil');closeNavPanel()" id="perfilBtn" style="display:none" data-i18n="nav_account">
+    <button class="nav-panel-btn" onclick="mostraVista('perfil');chiudiMenuNav()" id="perfilBtn" style="display:none" data-i18n="nav_account">
       <iconify-icon icon="mdi:account-outline" width="14"></iconify-icon> IL MIO ACCOUNT
     </button>
     <button class="nav-panel-btn" onclick="window.location.href='/admin.html'" id="adminBtn" style="display:none">
       <iconify-icon icon="mdi:shield-account-outline" width="14"></iconify-icon> ADMIN
     </button>
-    <button class="nav-panel-btn" onclick="doLogout()" id="logoutBtn" style="display:none" data-i18n="nav_logout">
+    <button class="nav-panel-btn" onclick="disconnetti()" id="logoutBtn" style="display:none" data-i18n="nav_logout">
       <iconify-icon icon="mdi:logout" width="14"></iconify-icon> ESCI
     </button>
   </div>
 </div>
 
-<!-- ══ STATUS BAR ══ -->
+<!-- ══ BARRA DI STATO ══ -->
 <div class="status-bar" id="statusBar" style="display:none">
   <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONNESSIONE...</span></div>
   <div class="si"><div class="sd" id="authDot"></div><span id="authStatus">NESSUNA SESSIONE</span></div>
@@ -88,7 +88,7 @@
   <div class="si"><span id="cartCount">CARRELLO VUOTO</span></div>
 </div>
 
-<!-- ══ VIEW: TIENDA ══ -->
+<!-- ══ VISTA: NEGOZIO ══ -->
 <div class="view active" id="view-tienda">
 
   <!-- HERO -->
@@ -99,7 +99,7 @@
       <p class="hero-p" id="heroDesc">Figure, merchandising aziendale, segnaposto personalizzati, lightbox e molto altro. Qualità artigianale con tecnologia di precisione.</p>
       <div class="hero-ctas">
         <button class="cta-dark" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})" data-i18n="cta_catalogue">VEDI CATALOGO</button>
-        <button class="cta-outline" onclick="openAuth('register')" data-i18n="cta_account">CREA ACCOUNT</button>
+        <button class="cta-outline" onclick="apriAuth('register')" data-i18n="cta_account">CREA ACCOUNT</button>
       </div>
       <div class="hero-fatto">fatto a mano · stampato in 3D · made in Italy</div>
     </div>
@@ -114,7 +114,7 @@
     </div>
   </div>
 
-  <!-- HOW IT WORKS -->
+  <!-- COME FUNZIONA -->
   <div class="how-section">
     <div class="section-eyebrow" data-i18n="how_eyebrow">// Il nostro processo</div>
     <div class="section-title" id="howTitle">COME<br>FUNZIONA</div>
@@ -137,26 +137,26 @@
     </div>
   </div>
 
-  <!-- CATEGORIES -->
+  <!-- CATEGORIE -->
   <div class="cats-section">
     <div class="section-eyebrow" data-i18n="cats_eyebrow">// Cosa facciamo</div>
     <div class="section-title" style="color:var(--dark)" id="catsTitle">CATEGORIE</div>
     <div class="cats-grid" id="catsGrid"></div>
   </div>
 
-  <!-- CATALOGUE -->
+  <!-- CATALOGO -->
   <div class="catalogue-section" id="catalogo">
     <div class="catalogue-header">
       <div class="catalogue-title" data-i18n="catalogue_title">CATALOGO</div>
       <div class="search-wrap">
         <span class="search-icon"><iconify-icon icon="mdi:magnify" width="16"></iconify-icon></span>
-        <input type="text" id="searchInput" placeholder="Cerca prodotto..." oninput="filterProductos(this.value)" data-i18n-placeholder="search_placeholder"/>
+        <input type="text" id="searchInput" placeholder="Cerca prodotto..." oninput="filtraProdotti(this.value)" data-i18n-placeholder="search_placeholder"/>
       </div>
     </div>
     <div id="productosList"></div>
   </div>
 
-  <!-- WHY US -->
+  <!-- PERCHÉ NOI -->
   <div class="why-section">
     <div class="section-eyebrow" data-i18n="why_eyebrow">// La nostra qualità</div>
     <div class="section-title" style="color:var(--dark)" id="whyTitle">PERCHÉ<br>ROLEFIGZ</div>
@@ -184,7 +184,7 @@
     </div>
   </div>
 
-  <!-- RESEÑAS DESTACADAS -->
+  <!-- RECENSIONI IN EVIDENZA -->
   <div class="resenas-dest-section" id="resenasDestacadas">
     <div class="section-eyebrow">// Clienti soddisfatti</div>
     <div class="section-title" style="color:#fff">COSA DICONO<br><em>I NOSTRI CLIENTI</em></div>
@@ -201,8 +201,8 @@
       <div>
         <div class="footer-col-title" data-i18n="footer_nav">Navigazione</div>
         <a class="footer-link" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})" data-i18n="footer_catalogue">Catalogo</a>
-        <a class="footer-link" onclick="openAuth('register')" data-i18n="footer_account">Crea account</a>
-        <a class="footer-link" onclick="openAuth('login')" data-i18n="footer_login">Accedi</a>
+        <a class="footer-link" onclick="apriAuth('register')" data-i18n="footer_account">Crea account</a>
+        <a class="footer-link" onclick="apriAuth('login')" data-i18n="footer_login">Accedi</a>
       </div>
 
       <div>
@@ -220,7 +220,7 @@
   </footer>
 </div>
 
-<!-- ══ VIEW: BLOG ══ -->
+<!-- ══ VISTA: BLOG ══ -->
 <div class="view" id="view-blog">
   <div style="padding:72px 48px">
     <div class="section-eyebrow">// Idee e Ispirazione</div>
@@ -229,17 +229,17 @@
   </div>
 </div>
 
-<!-- ══ VIEW: ARTICOLO ══ -->
+<!-- ══ VISTA: ARTICOLO ══ -->
 <div class="view" id="view-articolo">
   <div style="max-width:800px;margin:0 auto;padding:72px 48px" id="articoloContent"></div>
 </div>
 
-<!-- ══ VIEW: PRODUCTO ══ -->
+<!-- ══ VISTA: PRODOTTO ══ -->
 <div class="view" id="view-producto">
   <div class="producto-layout" id="productoLayout"></div>
 </div>
 
-<!-- ══ VIEW: PERFIL ══ -->
+<!-- ══ VISTA: PROFILO ══ -->
 <div class="view" id="view-perfil">
   <div style="padding:40px">
     <div class="perfil-grid">
@@ -247,20 +247,20 @@
         <div class="perfil-avatar" id="perfilAvatar">?</div>
         <div class="perfil-name" id="perfilNombre">—</div>
         <div class="perfil-email" id="perfilEmail">—</div>
-        <div class="perfil-menu-item active" onclick="perfilTab('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> <span data-i18n="perfil_orders">I miei ordini</span></div>
-        <div class="perfil-menu-item" onclick="perfilTab('datos',this)"><iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> <span data-i18n="perfil_data">I miei dati</span></div>
+        <div class="perfil-menu-item active" onclick="tabProfilo('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> <span data-i18n="perfil_orders">I miei ordini</span></div>
+        <div class="perfil-menu-item" onclick="tabProfilo('datos',this)"><iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> <span data-i18n="perfil_data">I miei dati</span></div>
       </div>
       <div class="perfil-content" id="perfilContent"><div class="loading">CARICAMENTO</div></div>
     </div>
   </div>
 </div>
 
-<!-- CART DRAWER -->
-<div class="overlay" id="cartOverlay" onclick="closeCart()"></div>
+<!-- CARRELLO -->
+<div class="overlay" id="cartOverlay" onclick="chiudiCarrello()"></div>
 <div class="drawer" id="cartDrawer">
   <div class="drawer-header">
     <div class="drawer-title" data-i18n="cart_title">CARRELLO</div>
-    <button class="x-btn" onclick="closeCart()">✕</button>
+    <button class="x-btn" onclick="chiudiCarrello()">✕</button>
   </div>
   <div class="drawer-body" id="cartItems"></div>
   <div class="drawer-footer">
@@ -268,11 +268,11 @@
       <div class="total-label" data-i18n="cart_total">TOTALE</div>
       <div class="total-val" id="cartTotal">€0.00</div>
     </div>
-    <button class="big-btn" onclick="openCheckout()" id="checkoutBtn" disabled data-i18n="cart_checkout">ORDINA</button>
+    <button class="big-btn" onclick="apriCheckout()" id="checkoutBtn" disabled data-i18n="cart_checkout">ORDINA</button>
   </div>
 </div>
 
-<!-- AUTH MODAL -->
+<!-- MODALE AUTH -->
 <div class="modal-bg" id="authModal">
   <div class="modal" style="max-width:420px">
     <div class="modal-hd">
@@ -281,8 +281,8 @@
     </div>
     <div class="modal-bd">
       <div class="auth-tabs" id="authTabs">
-        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')" data-i18n="auth_login">ACCEDI</button>
-        <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')" data-i18n="auth_register">REGISTRATI</button>
+        <button class="auth-tab active" id="tabLogin" onclick="cambiaTabAuth('login')" data-i18n="auth_login">ACCEDI</button>
+        <button class="auth-tab" id="tabRegister" onclick="cambiaTabAuth('register')" data-i18n="auth_register">REGISTRATI</button>
       </div>
 
       <!-- LOGIN -->
@@ -291,18 +291,20 @@
         <div class="field">
           <label data-i18n="field_password">Password</label>
           <div class="pass-wrap">
-            <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
-            <button type="button" class="pass-toggle" onclick="togglePass('loginPass','eyeLogin')" tabindex="-1">
+            <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')accedi()"/>
+            <button type="button" class="pass-toggle" onclick="alternaMostraPassword('loginPass','eyeLogin')" tabindex="-1">
               <iconify-icon id="eyeLogin" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
         </div>
-        <button class="btn-full" onclick="doLogin()" id="loginSubmit" data-i18n="auth_login">ACCEDI</button>
+        <button class="btn-full" onclick="accedi()" id="loginSubmit" data-i18n="auth_login">ACCEDI</button>
         <div id="loginMsg"></div>
-        <button type="button" class="forgot-link" onclick="showRecupera()">Password dimenticata?</button>
+        <div class="auth-divider"><span>oppure</span></div>
+        <div id="googleBtnLogin" class="google-btn-wrap"></div>
+        <button type="button" class="forgot-link" onclick="mostraRecupera()">Password dimenticata?</button>
       </div>
 
-      <!-- REGISTER -->
+      <!-- REGISTRAZIONE -->
       <div class="auth-panel" id="panelRegister">
         <div class="field"><label data-i18n="field_name">Nome completo</label><input type="text" id="regNombre" placeholder="Mario Rossi"/></div>
         <div class="field"><label data-i18n="field_email">Email</label><input type="email" id="regEmail" placeholder="tu@email.com"/></div>
@@ -310,7 +312,7 @@
           <label data-i18n="field_password">Password</label>
           <div class="pass-wrap">
             <input type="password" id="regPass" placeholder="Minimo 6 caratteri"/>
-            <button type="button" class="pass-toggle" onclick="togglePass('regPass','eyeReg')" tabindex="-1">
+            <button type="button" class="pass-toggle" onclick="alternaMostraPassword('regPass','eyeReg')" tabindex="-1">
               <iconify-icon id="eyeReg" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
@@ -319,13 +321,15 @@
           <label>Conferma password</label>
           <div class="pass-wrap">
             <input type="password" id="regPassConfirm" placeholder="Ripeti la password"/>
-            <button type="button" class="pass-toggle" onclick="togglePass('regPassConfirm','eyeRegC')" tabindex="-1">
+            <button type="button" class="pass-toggle" onclick="alternaMostraPassword('regPassConfirm','eyeRegC')" tabindex="-1">
               <iconify-icon id="eyeRegC" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
         </div>
-        <button class="btn-full" onclick="doRegister()" id="registerSubmit" data-i18n="auth_register_btn">CREA ACCOUNT</button>
+        <button class="btn-full" onclick="registrati()" id="registerSubmit" data-i18n="auth_register_btn">CREA ACCOUNT</button>
         <div id="registerMsg"></div>
+        <div class="auth-divider"><span>oppure</span></div>
+        <div id="googleBtnRegister" class="google-btn-wrap"></div>
       </div>
 
       <!-- VERIFICA CODICE -->
@@ -337,21 +341,21 @@
         </div>
         <div class="field">
           <label style="letter-spacing:2px">CODICE A 6 CIFRE</label>
-          <input type="text" id="codigoInput" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input" onkeydown="if(event.key==='Enter')doVerificar()"/>
+          <input type="text" id="codigoInput" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input" onkeydown="if(event.key==='Enter')verificaCodice()"/>
         </div>
-        <button class="btn-full" onclick="doVerificar()" id="verificarBtn" style="margin-top:8px">VERIFICA E ACCEDI</button>
+        <button class="btn-full" onclick="verificaCodice()" id="verificarBtn" style="margin-top:8px">VERIFICA E ACCEDI</button>
         <div id="verificaMsg"></div>
       </div>
 
-      <!-- RECUPERA PASSWORD — step 1: inserisci email -->
+      <!-- RECUPERO PASSWORD — passo 1: inserisci email -->
       <div class="auth-panel" id="panelRecupera">
-        <div class="field"><label>Email del tuo account</label><input type="email" id="recuperaEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')enviarRecupera()"/></div>
-        <button class="btn-full" onclick="enviarRecupera()" id="recuperaBtn">INVIA CODICE</button>
+        <div class="field"><label>Email del tuo account</label><input type="email" id="recuperaEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')inviaRecupera()"/></div>
+        <button class="btn-full" onclick="inviaRecupera()" id="recuperaBtn">INVIA CODICE</button>
         <div id="recuperaMsg"></div>
-        <button type="button" class="forgot-link" onclick="switchAuthTab('login')">← Torna al login</button>
+        <button type="button" class="forgot-link" onclick="cambiaTabAuth('login')">← Torna al login</button>
       </div>
 
-      <!-- RECUPERA PASSWORD — step 2: inserisci codice + nuova password -->
+      <!-- RECUPERO PASSWORD — passo 2: inserisci codice + nuova password -->
       <div class="auth-panel" id="panelResetPass">
         <div class="auth-info-box">
           <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CODICE INVIATO A</div>
@@ -365,21 +369,21 @@
           <label>Nuova password</label>
           <div class="pass-wrap">
             <input type="password" id="resetPass" placeholder="Minimo 6 caratteri"/>
-            <button type="button" class="pass-toggle" onclick="togglePass('resetPass','eyeReset')" tabindex="-1">
+            <button type="button" class="pass-toggle" onclick="alternaMostraPassword('resetPass','eyeReset')" tabindex="-1">
               <iconify-icon id="eyeReset" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
         </div>
-        <button class="btn-full" onclick="doResetPass()" id="resetBtn">REIMPOSTA PASSWORD</button>
+        <button class="btn-full" onclick="reimpostaPassword()" id="resetBtn">REIMPOSTA PASSWORD</button>
         <div id="resetMsg"></div>
       </div>
 
-      <button class="btn-ghost" onclick="closeAuthModal()" data-i18n="cancel">ANNULLA</button>
+      <button class="btn-ghost" onclick="chiudiModalAuth()" data-i18n="cancel">ANNULLA</button>
     </div>
   </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
+<!-- MODALE ORDINE -->
 <div class="modal-bg" id="checkoutModal">
   <div class="modal">
     <div class="modal-hd">
@@ -413,34 +417,59 @@
           <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
         </div>
       </div>
-      <div class="field"><label data-i18n="field_address">Indirizzo di spedizione</label><textarea id="chkDireccion" placeholder="Via Roma 1, 00100 Roma"></textarea></div>
-      <div class="field"><label data-i18n="field_notes">Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
+      <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1" oninput="resetSpedizione()"/></div>
+      <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:8px">
+        <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Milano" oninput="resetSpedizione()"/></div>
+        <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="20100" maxlength="10" oninput="resetSpedizione()"/></div>
+        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="MI" maxlength="3" oninput="resetSpedizione()"/></div>
+      </div>
+      <div class="field"><label>Paese</label>
+        <select id="chkNazione" onchange="resetSpedizione()">
+          <option value="IT">🇮🇹 Italia</option>
+          <option value="ES">🇪🇸 Spagna</option>
+          <option value="DE">🇩🇪 Germania</option>
+          <option value="FR">🇫🇷 Francia</option>
+          <option value="CH">🇨🇭 Svizzera</option>
+          <option value="GB">🇬🇧 Regno Unito</option>
+          <option value="NL">🇳🇱 Paesi Bassi</option>
+          <option value="BE">🇧🇪 Belgio</option>
+          <option value="AT">🇦🇹 Austria</option>
+          <option value="PT">🇵🇹 Portogallo</option>
+          <option value="US">🇺🇸 USA</option>
+        </select>
+      </div>
+      <button type="button" class="btn-spediz-calc" onclick="calcolaSpedizioneCheckout()">
+        <iconify-icon icon="mdi:truck-fast-outline" width="15" style="vertical-align:middle;margin-right:6px"></iconify-icon>
+        CALCOLA SPEDIZIONE
+      </button>
+      <div id="spedizioneOpzioni"></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="field_notes">Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
       <div id="checkoutMsg"></div>
-      <button class="btn-full" onclick="confirmarPedido()" id="confirmarBtn" data-i18n="checkout_confirm">CONFERMA ORDINE</button>
-      <button class="btn-ghost" onclick="closeCheckout()" data-i18n="cancel">ANNULLA</button>
+      <button class="btn-full" onclick="confermaOrdine()" id="confirmarBtn" data-i18n="checkout_confirm">CONFERMA ORDINE</button>
+      <button class="btn-ghost" onclick="chiudiCheckout()" data-i18n="cancel">ANNULLA</button>
     </div>
   </div>
 </div>
 
 <!-- ══ CHAT FAB ══ -->
-<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Supporto">
+<button class="chat-fab" id="chatFab" onclick="alternaChat()" aria-label="Supporto">
   <iconify-icon icon="mdi:chat-outline" width="22"></iconify-icon>
   <span class="chat-fab-badge" id="chatFabBadge"></span>
 </button>
 
-<!-- ══ CHAT PANEL ══ -->
+<!-- ══ PANNELLO CHAT ══ -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-header">
     <div>
       <div class="chat-panel-title">SUPPORTO</div>
       <div class="chat-panel-sub">// ROLEFIGZ</div>
     </div>
-    <button class="chat-close-btn" onclick="closeChat()">✕</button>
+    <button class="chat-close-btn" onclick="chiudiChat()">✕</button>
   </div>
 
   <!-- Lista ticket -->
   <div class="chat-list-view" id="chatListView">
-    <button class="chat-new-btn" onclick="chatShowNewForm()">
+    <button class="chat-new-btn" onclick="chatMostraNuovoForm()">
       <iconify-icon icon="mdi:plus" width="14" style="margin-right:6px;vertical-align:middle"></iconify-icon>NUOVO TICKET
     </button>
     <div class="chat-tickets-list" id="chatTicketsList">
@@ -456,16 +485,16 @@
     </div>
     <div class="field" style="margin-bottom:10px;flex:1;display:flex;flex-direction:column">
       <label>MESSAGGIO</label>
-      <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')crearTicket()"></textarea>
+      <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')creaTicket()"></textarea>
     </div>
-    <button class="chat-new-btn" id="chatCreateBtn" onclick="crearTicket()">INVIA</button>
-    <button class="chat-back-btn" style="margin:6px 0" onclick="chatShowListView()">← Indietro</button>
+    <button class="chat-new-btn" id="chatCreateBtn" onclick="creaTicket()">INVIA</button>
+    <button class="chat-back-btn" style="margin:6px 0" onclick="chatMostraLista()">← Indietro</button>
   </div>
 
   <!-- Conversazione -->
   <div class="chat-conv-view" id="chatConvView">
     <div class="chat-conv-top">
-      <button class="chat-back-btn" onclick="chatBack()">←</button>
+      <button class="chat-back-btn" onclick="tornaListaChat()">←</button>
       <span class="chat-conv-title" id="chatConvTitle"></span>
     </div>
     <div class="chat-closed-notice" id="chatClosedNotice" style="display:none">
@@ -473,8 +502,8 @@
     </div>
     <div class="chat-messages" id="chatMensajes"></div>
     <div class="chat-input-area" id="chatConvInput">
-      <textarea id="chatMsgInput" placeholder="Scrivi un messaggio... (Invio per a capo)" onkeydown="if(event.ctrlKey&&event.key==='Enter')enviarMensaje()"></textarea>
-      <button class="chat-send-btn" id="chatSendBtn" onclick="enviarMensaje()">
+      <textarea id="chatMsgInput" placeholder="Scrivi un messaggio... (Invio per a capo)" onkeydown="if(event.ctrlKey&&event.key==='Enter')inviaMessaggio()"></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="inviaMessaggio()">
         <iconify-icon icon="mdi:send" width="16"></iconify-icon>
       </button>
     </div>

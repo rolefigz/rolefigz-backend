@@ -1,16 +1,16 @@
-const { Op, fn, col, literal } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 const geoip = require("geoip-lite");
-const { Visita, Producto, Orden, DetalleOrden } = require("../models");
+const { Visita, Prodotto, Ordine, DettaglioOrdine } = require("../models");
 
-// ── POST /api/analytics/track — registrar visita (público) ──────────────────
+// POST /api/analytics/track — registra visita (pubblico)
 const trackVisita = async (req, res) => {
   try {
     const { tipo = "home", producto_id } = req.body;
 
     const rawIp = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.ip || "0.0.0.0";
-    // Anonimizar último octeto (GDPR)
-    const parts  = rawIp.split(".");
-    const ipAnon = parts.length === 4 ? `${parts[0]}.${parts[1]}.${parts[2]}.0` : rawIp;
+    // Anonimizza ultimo ottetto (GDPR)
+    const parti  = rawIp.split(".");
+    const ipAnon = parti.length === 4 ? `${parti[0]}.${parti[1]}.${parti[2]}.0` : rawIp;
 
     const geo    = geoip.lookup(rawIp);
     const pais   = geo?.country || null;
@@ -21,21 +21,21 @@ const trackVisita = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/resumen — KPIs globales (admin) ──────────────────────
+// GET /api/analytics/resumen — KPI globali (admin)
 const getResumen = async (req, res) => {
   try {
-    const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
-    const semanaAtras = new Date(); semanaAtras.setDate(semanaAtras.getDate() - 7);
+    const oggiInizio  = new Date(); oggiInizio.setHours(0, 0, 0, 0);
+    const settimanaFa = new Date(); settimanaFa.setDate(settimanaFa.getDate() - 7);
 
     const [totalVisitas, visitasHoy, visitasSemana, totalOrdenes, ingresoTotal, ordenesSemana, ingresoSemana] =
       await Promise.all([
         Visita.count(),
-        Visita.count({ where: { createdAt: { [Op.gte]: hoyInicio } } }),
-        Visita.count({ where: { createdAt: { [Op.gte]: semanaAtras } } }),
-        Orden.count({ where: { estado: { [Op.ne]: "cancelado" } } }),
-        Orden.sum("total", { where: { estado: { [Op.ne]: "cancelado" } } }),
-        Orden.count({ where: { estado: { [Op.ne]: "cancelado" }, createdAt: { [Op.gte]: semanaAtras } } }),
-        Orden.sum("total", { where: { estado: { [Op.ne]: "cancelado" }, createdAt: { [Op.gte]: semanaAtras } } }),
+        Visita.count({ where: { createdAt: { [Op.gte]: oggiInizio } } }),
+        Visita.count({ where: { createdAt: { [Op.gte]: settimanaFa } } }),
+        Ordine.count({ where: { estado: { [Op.ne]: "cancelado" } } }),
+        Ordine.sum("total", { where: { estado: { [Op.ne]: "cancelado" } } }),
+        Ordine.count({ where: { estado: { [Op.ne]: "cancelado" }, createdAt: { [Op.gte]: settimanaFa } } }),
+        Ordine.sum("total", { where: { estado: { [Op.ne]: "cancelado" }, createdAt: { [Op.gte]: settimanaFa } } }),
       ]);
 
     const conversion = totalVisitas > 0 ? ((totalOrdenes / totalVisitas) * 100).toFixed(1) : "0.0";
@@ -43,55 +43,55 @@ const getResumen = async (req, res) => {
     res.json({
       totalVisitas, visitasHoy, visitasSemana,
       totalOrdenes, ordenesSemana,
-      ingresoTotal:   parseFloat(ingresoTotal  || 0).toFixed(2),
-      ingresoSemana:  parseFloat(ingresoSemana || 0).toFixed(2),
+      ingresoTotal:  parseFloat(ingresoTotal  || 0).toFixed(2),
+      ingresoSemana: parseFloat(ingresoSemana || 0).toFixed(2),
       conversion,
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/visitas?dias=30 — visitas por día (admin) ────────────
+// GET /api/analytics/visitas?dias=30 — visite per giorno (admin)
 const getVisitasPorDia = async (req, res) => {
   try {
-    const dias  = Math.min(parseInt(req.query.dias) || 30, 365);
-    const desde = new Date(); desde.setDate(desde.getDate() - dias);
+    const giorni = Math.min(parseInt(req.query.dias) || 30, 365);
+    const da     = new Date(); da.setDate(da.getDate() - giorni);
 
-    const rows = await Visita.findAll({
+    const righe = await Visita.findAll({
       attributes: [[fn("DATE", col("createdAt")), "fecha"], [fn("COUNT", col("id")), "total"]],
-      where:  { createdAt: { [Op.gte]: desde } },
+      where:  { createdAt: { [Op.gte]: da } },
       group:  [fn("DATE", col("createdAt"))],
       order:  [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     });
-    res.json(rows);
+    res.json(righe);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/ingresos?dias=30 — ingresos por día (admin) ──────────
+// GET /api/analytics/ingresos?dias=30 — incassi per giorno (admin)
 const getIngresosPorDia = async (req, res) => {
   try {
-    const dias  = Math.min(parseInt(req.query.dias) || 30, 365);
-    const desde = new Date(); desde.setDate(desde.getDate() - dias);
+    const giorni = Math.min(parseInt(req.query.dias) || 30, 365);
+    const da     = new Date(); da.setDate(da.getDate() - giorni);
 
-    const rows = await Orden.findAll({
+    const righe = await Ordine.findAll({
       attributes: [
         [fn("DATE", col("createdAt")), "fecha"],
-        [fn("COUNT", col("id")),  "ordenes"],
+        [fn("COUNT", col("id")),   "ordenes"],
         [fn("SUM",   col("total")), "total"],
       ],
-      where: { createdAt: { [Op.gte]: desde }, estado: { [Op.ne]: "cancelado" } },
+      where: { createdAt: { [Op.gte]: da }, estado: { [Op.ne]: "cancelado" } },
       group: [fn("DATE", col("createdAt"))],
       order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     });
-    res.json(rows);
+    res.json(righe);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/paises — top países por visitas (admin) ───────────────
+// GET /api/analytics/paises — top paesi per visite (admin)
 const getPaises = async (req, res) => {
   try {
-    const rows = await Visita.findAll({
+    const righe = await Visita.findAll({
       attributes: ["pais", [fn("COUNT", col("id")), "total"]],
       where: { pais: { [Op.ne]: null } },
       group: ["pais"],
@@ -99,14 +99,14 @@ const getPaises = async (req, res) => {
       limit: 10,
       raw: true,
     });
-    res.json(rows);
+    res.json(righe);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/productos — top productos más vistos (admin) ──────────
+// GET /api/analytics/productos — top prodotti più visti (admin)
 const getProductosTop = async (req, res) => {
   try {
-    const rows = await Visita.findAll({
+    const righe = await Visita.findAll({
       attributes: ["producto_id", [fn("COUNT", col("id")), "visitas"]],
       where: { tipo: "producto", producto_id: { [Op.ne]: null } },
       group: ["producto_id"],
@@ -114,18 +114,18 @@ const getProductosTop = async (req, res) => {
       limit: 10,
       raw: true,
     });
-    if (!rows.length) return res.json([]);
-    const ids   = rows.map(r => r.producto_id);
-    const prods = await Producto.findAll({ where: { id: ids }, attributes: ["id", "nombre", "precio"], raw: true });
-    const map   = Object.fromEntries(prods.map(p => [p.id, p]));
-    res.json(rows.map(r => ({ ...r, nombre: map[r.producto_id]?.nombre || "—", precio: map[r.producto_id]?.precio })));
+    if (!righe.length) return res.json([]);
+    const ids      = righe.map(r => r.producto_id);
+    const prodotti = await Prodotto.findAll({ where: { id: ids }, attributes: ["id", "nombre", "precio"], raw: true });
+    const mappa    = Object.fromEntries(prodotti.map(p => [p.id, p]));
+    res.json(righe.map(r => ({ ...r, nombre: mappa[r.producto_id]?.nombre || "—", precio: mappa[r.producto_id]?.precio })));
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/vendidos — top productos más vendidos (admin) ─────────
+// GET /api/analytics/vendidos — top prodotti più venduti (admin)
 const getProductosVendidos = async (req, res) => {
   try {
-    const rows = await DetalleOrden.findAll({
+    const righe = await DettaglioOrdine.findAll({
       attributes: [
         "producto_id",
         [fn("SUM", col("cantidad")), "unidades"],
@@ -137,13 +137,13 @@ const getProductosVendidos = async (req, res) => {
       limit: 10,
       raw: true,
     });
-    if (!rows.length) return res.json([]);
-    const ids   = rows.map(r => r.producto_id);
-    const prods = await Producto.findAll({ where: { id: ids }, attributes: ["id", "nombre"], raw: true });
-    const map   = Object.fromEntries(prods.map(p => [p.id, p]));
-    res.json(rows.map(r => ({
+    if (!righe.length) return res.json([]);
+    const ids      = righe.map(r => r.producto_id);
+    const prodotti = await Prodotto.findAll({ where: { id: ids }, attributes: ["id", "nombre"], raw: true });
+    const mappa    = Object.fromEntries(prodotti.map(p => [p.id, p]));
+    res.json(righe.map(r => ({
       producto_id: r.producto_id,
-      nombre:   map[r.producto_id]?.nombre || "—",
+      nombre:   mappa[r.producto_id]?.nombre || "—",
       unidades: parseInt(r.unidades),
       ingresos: parseFloat(r.ingresos).toFixed(2),
       ordenes:  parseInt(r.ordenes),
@@ -151,15 +151,15 @@ const getProductosVendidos = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/analytics/estados — distribución de estados de órdenes (admin) ─
+// GET /api/analytics/estados — distribuzione stati ordini (admin)
 const getEstadosOrdenes = async (req, res) => {
   try {
-    const rows = await Orden.findAll({
+    const righe = await Ordine.findAll({
       attributes: ["estado", [fn("COUNT", col("id")), "total"]],
       group: ["estado"],
       raw: true,
     });
-    res.json(rows);
+    res.json(righe);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 

@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Usuario   = require("./Usuario");
+const Utente   = require("./Utente");
 
 const Articolo = sequelize.define("Articolo", {
   titolo:     { type: DataTypes.STRING,      allowNull: false },
@@ -13,6 +13,6 @@ const Articolo = sequelize.define("Articolo", {
   tags:       { type: DataTypes.STRING }
 }, { tableName: "articoli" });
 
-Articolo.belongsTo(Usuario, { foreignKey: "autore_id" });
+Articolo.belongsTo(Utente, { foreignKey: "autore_id" });
 
 module.exports = Articolo;

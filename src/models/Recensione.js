@@ -1,9 +1,9 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Producto  = require("./Producto");
-const Usuario   = require("./Usuario");
+const Prodotto = require("./Prodotto");
+const Utente   = require("./Utente");
 
-const Resena = sequelize.define("Resena", {
+const Recensione = sequelize.define("Recensione", {
   puntuacion:        { type: DataTypes.INTEGER, allowNull: false },
   comentario:        { type: DataTypes.TEXT },
   nombre_autor:      { type: DataTypes.STRING },
@@ -11,8 +11,8 @@ const Resena = sequelize.define("Resena", {
   compra_verificada: { type: DataTypes.BOOLEAN, defaultValue: false }
 }, { tableName: "resenas" });
 
-Resena.belongsTo(Producto, { foreignKey: "producto_id" });
-Resena.belongsTo(Usuario,  { foreignKey: "usuario_id", allowNull: true });
-Producto.hasMany(Resena,   { foreignKey: "producto_id", as: "resenas" });
+Recensione.belongsTo(Prodotto, { foreignKey: "producto_id" });
+Recensione.belongsTo(Utente,   { foreignKey: "usuario_id", allowNull: true });
+Prodotto.hasMany(Recensione,   { foreignKey: "producto_id", as: "recensioni" });
 
-module.exports = Resena;
+module.exports = Recensione;

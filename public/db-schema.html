@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<title>RoleFigz — Schema Database</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;600&display=swap');
+  :root { --dark:#0f0e0d; --accent:#C17F3A; --green:#22c55e; --red:#ef4444; --blue:#3b82f6; --muted:#888; --border:#ddd; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'DM Sans',sans-serif; background:#fff; color:#111; font-size:11px; }
+
+  /* COVER */
+  .cover { page-break-after:always; min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:60px; background:var(--dark); color:#f0ece4; }
+  .cover-logo { font-family:'Barlow Condensed',sans-serif; font-size:64px; font-weight:900; letter-spacing:4px; margin-bottom:8px; }
+  .cover-logo span { color:var(--accent); }
+  .cover-sub { font-family:'DM Mono',monospace; font-size:13px; color:#666; letter-spacing:3px; margin-bottom:60px; }
+  .cover-title { font-family:'Barlow Condensed',sans-serif; font-size:48px; font-weight:900; color:#f0ece4; letter-spacing:2px; line-height:1; margin-bottom:16px; }
+  .cover-date { font-family:'DM Mono',monospace; font-size:11px; color:#555; margin-top:60px; }
+  .cover-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:#222; margin-top:48px; }
+  .stat { background:var(--dark); padding:24px; border:1px solid #222; }
+  .stat-n { font-family:'Barlow Condensed',sans-serif; font-size:40px; font-weight:900; color:var(--accent); }
+  .stat-l { font-family:'DM Mono',monospace; font-size:9px; color:#555; letter-spacing:2px; margin-top:4px; }
+
+  /* SECTION */
+  .section { padding:40px 50px; page-break-before:always; }
+  .section:first-of-type { page-break-before:avoid; }
+  .section-title { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; letter-spacing:2px; color:var(--dark); border-bottom:3px solid var(--dark); padding-bottom:10px; margin-bottom:30px; text-transform:uppercase; }
+  .section-sub { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:2px; margin-bottom:6px; text-transform:uppercase; }
+
+  /* TABLE CARD */
+  .table-card { border:1px solid var(--border); margin-bottom:28px; break-inside:avoid; }
+  .table-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--dark); color:#f0ece4; }
+  .table-name { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; letter-spacing:1px; }
+  .table-model { font-family:'DM Mono',monospace; font-size:9px; color:#888; }
+  .table-db { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); }
+  table { width:100%; border-collapse:collapse; }
+  th { background:#f5f5f5; padding:7px 12px; text-align:left; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px; color:var(--muted); border-bottom:1px solid var(--border); font-weight:500; text-transform:uppercase; }
+  td { padding:7px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; font-size:10px; }
+  tr:last-child td { border-bottom:none; }
+  .col-name { font-family:'DM Mono',monospace; font-weight:500; color:#111; }
+  .col-name.pk { color:var(--accent); font-weight:700; }
+  .col-name.fk { color:var(--blue); }
+  .badge { display:inline-block; padding:1px 6px; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1px; border-radius:2px; margin-right:3px; }
+  .badge-nn  { background:#fef3c7; color:#92400e; }
+  .badge-def { background:#f0fdf4; color:#166534; }
+  .badge-uniq{ background:#ede9fe; color:#5b21b6; }
+  .badge-enum{ background:#fff1f2; color:#9f1239; }
+  .badge-ai  { background:#f0f9ff; color:#0369a1; }
+  .type-tag { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+  .fk-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:#eff6ff; border:1px solid #bfdbfe; font-family:'DM Mono',monospace; font-size:8px; color:#1d4ed8; margin-top:3px; }
+  .fk-chip::before { content:'→'; color:#93c5fd; }
+
+  /* ERD */
+  .erd { page-break-before:always; padding:40px 50px; }
+  .erd-title { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; letter-spacing:2px; color:var(--dark); border-bottom:3px solid var(--dark); padding-bottom:10px; margin-bottom:30px; text-transform:uppercase; }
+  .rel-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .rel-card { border:1px solid var(--border); padding:14px 16px; break-inside:avoid; }
+  .rel-from { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--dark); }
+  .rel-arrow { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin:4px 0; }
+  .rel-to { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--blue); }
+  .rel-type { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1px; color:var(--muted); margin-top:4px; }
+  .rel-fk { font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); margin-top:2px; }
+
+  /* DIAGRAM */
+  .diagram-wrap { page-break-before:always; padding:40px 50px; }
+  .diagram-title { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; letter-spacing:2px; color:var(--dark); border-bottom:3px solid var(--dark); padding-bottom:10px; margin-bottom:30px; text-transform:uppercase; }
+  svg { width:100%; height:auto; }
+
+  @media print {
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .cover { min-height:100vh; }
+    .section, .erd, .diagram-wrap { page-break-before:always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">ROLE<span>FIGZ</span></div>
+  <div class="cover-sub">// E-COMMERCE PLATFORM</div>
+  <div class="cover-title">DATABASE<br>SCHEMA</div>
+  <div>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:#555;margin-bottom:8px">// STACK</div>
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:#888">MySQL · Sequelize ORM · Node.js / Express</div>
+  </div>
+  <div class="cover-stats">
+    <div class="stat"><div class="stat-n">13</div><div class="stat-l">TABELLE</div></div>
+    <div class="stat"><div class="stat-n">10</div><div class="stat-l">FOREIGN KEYS</div></div>
+    <div class="stat"><div class="stat-n">8</div><div class="stat-l">RELAZIONI</div></div>
+    <div class="stat"><div class="stat-n">~60</div><div class="stat-l">COLONNE TOTALI</div></div>
+  </div>
+  <div class="cover-date">Generato il: <script>document.write(new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'}))</script></div>
+</div>
+
+<!-- ══ SECTION 1: UTENTI & AUTENTICAZIONE ══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">01 — Utenti &amp; Autenticazione</div>
+
+  <!-- UTENTI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Utente</div><div class="table-name">UTENTI</div></div>
+      <div class="table-db">TABLE: usuarios</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">nombre</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Nome completo</td></tr>
+      <tr><td class="col-name">email</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Email di accesso</td></tr>
+      <tr><td class="col-name">password</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Hash bcrypt</td></tr>
+      <tr><td class="col-name">rol</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">'admin','user'</span><span class="badge badge-def">DEF: user</span></td><td></td></tr>
+      <tr><td class="col-name">telefono</td><td class="type-tag">VARCHAR(255)</td><td></td><td></td></tr>
+      <tr><td class="col-name">direccion</td><td class="type-tag">TEXT</td><td></td><td>Indirizzo predefinito</td></tr>
+      <tr><td class="col-name">activo</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: true</span></td><td>Account abilitato</td></tr>
+      <tr><td class="col-name">verificado</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td>Email verificata</td></tr>
+      <tr><td class="col-name">codigoVerificacion</td><td class="type-tag">VARCHAR(255)</td><td></td><td>OTP 6 cifre</td></tr>
+      <tr><td class="col-name">codigoExpira</td><td class="type-tag">DATETIME</td><td></td><td>Scadenza OTP</td></tr>
+      <tr><td class="col-name">createdAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Auto Sequelize</td></tr>
+      <tr><td class="col-name">updatedAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Auto Sequelize</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ SECTION 2: CATALOGO PRODOTTI ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">02 — Catalogo Prodotti</div>
+
+  <!-- CATEGORIE -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Categoria</div><div class="table-name">CATEGORIE</div></div>
+      <div class="table-db">TABLE: categorias</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">nombre</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Nome categoria</td></tr>
+      <tr><td class="col-name">descripcion</td><td class="type-tag">TEXT</td><td></td><td></td></tr>
+      <tr><td class="col-name">createdAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">updatedAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <!-- PRODOTTI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Prodotto</div><div class="table-name">PRODOTTI</div></div>
+      <div class="table-db">TABLE: productos</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">nombre</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">descripcion</td><td class="type-tag">TEXT</td><td></td><td></td></tr>
+      <tr><td class="col-name">precio</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Prezzo base €</td></tr>
+      <tr><td class="col-name">stock</td><td class="type-tag">INTEGER</td><td><span class="badge badge-def">DEF: 0</span></td><td></td></tr>
+      <tr><td class="col-name">imagen</td><td class="type-tag">VARCHAR(255)</td><td></td><td>URL immagine principale</td></tr>
+      <tr><td class="col-name">activo</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: true</span></td><td>Visibile in catalogo</td></tr>
+      <tr><td class="col-name">slug</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-uniq">UNIQUE</span></td><td>URL-friendly name</td></tr>
+      <tr><td class="col-name">richiede_foto</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td>Cliente deve caricare foto</td></tr>
+      <tr><td class="col-name">selettore_data</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td>Abilita calendario consegna</td></tr>
+      <tr><td class="col-name">giorni_produzione</td><td class="type-tag">INTEGER</td><td><span class="badge badge-def">DEF: 7</span></td><td>Giorni per produzione</td></tr>
+      <tr><td class="col-name">giorni_spedizione</td><td class="type-tag">INTEGER</td><td><span class="badge badge-def">DEF: 3</span></td><td>Giorni di transito</td></tr>
+      <tr><td class="col-name">prezzo_per_giorno_express</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-def">DEF: 0</span></td><td>Extra €/giorno anticipo</td></tr>
+      <tr><td class="col-name fk">categoria_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">categorias.id</div></td></tr>
+      <tr><td class="col-name">createdAt / updatedAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <!-- VARIANTI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: VarianteProdotto</div><div class="table-name">VARIANTI PRODOTTO</div></div>
+      <div class="table-db">TABLE: variantes_producto</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">tipo</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Es: "colore", "taglia"</td></tr>
+      <tr><td class="col-name">valor</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Es: "Rosso", "XL"</td></tr>
+      <tr><td class="col-name">stock</td><td class="type-tag">INTEGER</td><td><span class="badge badge-def">DEF: 0</span></td><td></td></tr>
+      <tr><td class="col-name">precio_extra</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-def">DEF: 0</span></td><td>Supplemento prezzo €</td></tr>
+      <tr><td class="col-name fk">producto_id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td><div class="fk-chip">productos.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- IMMAGINI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: ImmagineProdotto</div><div class="table-name">IMMAGINI PRODOTTO</div></div>
+      <div class="table-db">TABLE: imagenes_producto</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">url</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>URL immagine</td></tr>
+      <tr><td class="col-name">orden</td><td class="type-tag">INTEGER</td><td><span class="badge badge-def">DEF: 0</span></td><td>Ordine visualizzazione</td></tr>
+      <tr><td class="col-name fk">producto_id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td><div class="fk-chip">productos.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- RECENSIONI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Recensione</div><div class="table-name">RECENSIONI</div></div>
+      <div class="table-db">TABLE: resenas</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">puntuacion</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Voto 1–5</td></tr>
+      <tr><td class="col-name">comentario</td><td class="type-tag">TEXT</td><td></td><td></td></tr>
+      <tr><td class="col-name">nombre_autor</td><td class="type-tag">VARCHAR(255)</td><td></td><td></td></tr>
+      <tr><td class="col-name">verificado</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td>Approvata da admin</td></tr>
+      <tr><td class="col-name">compra_verificada</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td>Acquisto verificato</td></tr>
+      <tr><td class="col-name fk">producto_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">productos.id</div></td></tr>
+      <tr><td class="col-name fk">usuario_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">usuarios.id (nullable)</div></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ SECTION 3: ORDINI & SPEDIZIONE ════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">03 — Ordini &amp; Spedizione</div>
+
+  <!-- ORDINI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Ordine</div><div class="table-name">ORDINI</div></div>
+      <div class="table-db">TABLE: ordenes</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">nombre_cliente</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Snapshot al momento acquisto</td></tr>
+      <tr><td class="col-name">email_cliente</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">telefono</td><td class="type-tag">VARCHAR(255)</td><td></td><td></td></tr>
+      <tr><td class="col-name">direccion</td><td class="type-tag">TEXT</td><td></td><td>Indirizzo spedizione completo</td></tr>
+      <tr><td class="col-name">total</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Totale incl. spedizione</td></tr>
+      <tr><td class="col-name">estado</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">pendiente · confirmado · enviado · entregado · cancelado</span></td><td><span class="badge badge-def">DEF: pendiente</span></td></tr>
+      <tr><td class="col-name">notas</td><td class="type-tag">TEXT</td><td></td><td>Istruzioni cliente</td></tr>
+      <tr><td class="col-name">tracking_number</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Numero tracking Shippo</td></tr>
+      <tr><td class="col-name">carrier</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Nome corriere (USPS, UPS…)</td></tr>
+      <tr><td class="col-name">label_url</td><td class="type-tag">VARCHAR(255)</td><td></td><td>URL PDF etichetta</td></tr>
+      <tr><td class="col-name">costo_spedizione</td><td class="type-tag">DECIMAL(10,2)</td><td></td><td>Costo spedizione €</td></tr>
+      <tr><td class="col-name">shippo_transaction_id</td><td class="type-tag">VARCHAR(255)</td><td></td><td>ID transazione Shippo</td></tr>
+      <tr><td class="col-name">shippo_rate_id</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Rate scelto al checkout</td></tr>
+      <tr><td class="col-name fk">usuario_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">usuarios.id (nullable)</div></td></tr>
+      <tr><td class="col-name">createdAt / updatedAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <!-- DETTAGLI ORDINE -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: DettaglioOrdine</div><div class="table-name">DETTAGLI ORDINE</div></div>
+      <div class="table-db">TABLE: detalles_orden</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">cantidad</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Quantità acquistata</td></tr>
+      <tr><td class="col-name">precio_unidad</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Prezzo al momento acquisto</td></tr>
+      <tr><td class="col-name">subtotal</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>cantidad × precio_unidad</td></tr>
+      <tr><td class="col-name">variante</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Es: "colore: Rosso"</td></tr>
+      <tr><td class="col-name">foto_cliente</td><td class="type-tag">VARCHAR(255)</td><td></td><td>URL foto caricata dal cliente</td></tr>
+      <tr><td class="col-name">data_consegna</td><td class="type-tag">DATEONLY</td><td></td><td>Data consegna scelta</td></tr>
+      <tr><td class="col-name">supplemento_express</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-def">DEF: 0</span></td><td>Extra consegna anticipata €</td></tr>
+      <tr><td class="col-name fk">orden_id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td><div class="fk-chip">ordenes.id</div></td></tr>
+      <tr><td class="col-name fk">producto_id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-nn">NOT NULL</span></td><td><div class="fk-chip">productos.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- OPZIONI SPEDIZIONE -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: OpzioneSpedizione</div><div class="table-name">OPZIONI SPEDIZIONE</div></div>
+      <div class="table-db">TABLE: opzioni_spedizione</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">nome</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Es: "Standard Italia"</td></tr>
+      <tr><td class="col-name">prezzo</td><td class="type-tag">DECIMAL(10,2)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">giorni</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Es: "3-5"</td></tr>
+      <tr><td class="col-name">zona</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">IT · EU · MONDO · ALL</span></td><td><span class="badge badge-def">DEF: IT</span></td></tr>
+      <tr><td class="col-name">attivo</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: true</span></td><td></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ SECTION 4: BLOG, SUPPORTO, ANALYTICS ════════════════════════════ -->
+<div class="section">
+  <div class="section-title">04 — Blog, Supporto &amp; Analytics</div>
+
+  <!-- ARTICOLI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Articolo</div><div class="table-name">ARTICOLI BLOG</div></div>
+      <div class="table-db">TABLE: articoli</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">titolo</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">slug</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span><span class="badge badge-uniq">UNIQUE</span></td><td></td></tr>
+      <tr><td class="col-name">contenuto</td><td class="type-tag">LONGTEXT</td><td><span class="badge badge-nn">NOT NULL</span></td><td>HTML/Markdown</td></tr>
+      <tr><td class="col-name">estratto</td><td class="type-tag">TEXT</td><td></td><td>Preview</td></tr>
+      <tr><td class="col-name">immagine</td><td class="type-tag">VARCHAR(255)</td><td></td><td>URL copertina</td></tr>
+      <tr><td class="col-name">pubblicato</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td></td></tr>
+      <tr><td class="col-name">meta_desc</td><td class="type-tag">VARCHAR(160)</td><td></td><td>SEO description</td></tr>
+      <tr><td class="col-name">tags</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Comma-separated</td></tr>
+      <tr><td class="col-name fk">autore_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">usuarios.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- TICKET -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Ticket</div><div class="table-name">TICKET SUPPORTO</div></div>
+      <div class="table-db">TABLE: tickets</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">asunto</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Oggetto del ticket</td></tr>
+      <tr><td class="col-name">estado</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">abierto · cerrado</span></td><td><span class="badge badge-def">DEF: abierto</span></td></tr>
+      <tr><td class="col-name fk">usuario_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">usuarios.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- MESSAGGI -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Messaggio</div><div class="table-name">MESSAGGI CHAT</div></div>
+      <div class="table-db">TABLE: mensajes</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">remitente</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">cliente · admin</span><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">texto</td><td class="type-tag">TEXT</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">leido</td><td class="type-tag">BOOLEAN</td><td><span class="badge badge-def">DEF: false</span></td><td></td></tr>
+      <tr><td class="col-name fk">ticket_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">tickets.id</div></td></tr>
+    </table>
+  </div>
+
+  <!-- VISITE -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: Visita</div><div class="table-name">VISITE / ANALYTICS</div></div>
+      <div class="table-db">TABLE: visitas</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">tipo</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-def">DEF: home</span></td><td>"home", "producto", "blog"…</td></tr>
+      <tr><td class="col-name">pais</td><td class="type-tag">VARCHAR(3)</td><td></td><td>Codice ISO paese</td></tr>
+      <tr><td class="col-name">ciudad</td><td class="type-tag">VARCHAR(255)</td><td></td><td></td></tr>
+      <tr><td class="col-name">ip</td><td class="type-tag">VARCHAR(255)</td><td></td><td>Anonimizzato</td></tr>
+      <tr><td class="col-name fk">producto_id</td><td class="type-tag">INTEGER</td><td></td><td><div class="fk-chip">productos.id (nullable)</div></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ERD: RELAZIONI ════════════════════════════════════════════════════ -->
+<div class="erd">
+  <div class="erd-title">05 — Entity Relationship Diagram</div>
+
+  <div class="rel-grid">
+
+    <div class="rel-card">
+      <div class="rel-from">PRODOTTO</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">CATEGORIA</div>
+      <div class="rel-type">N : 1 — Un prodotto appartiene a una categoria</div>
+      <div class="rel-fk">FK: productos.categoria_id → categorias.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">VARIANTE_PRODOTTO</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">PRODOTTO</div>
+      <div class="rel-type">N : 1 — Più varianti per prodotto (as: "variantes")</div>
+      <div class="rel-fk">FK: variantes_producto.producto_id → productos.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">IMMAGINE_PRODOTTO</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">PRODOTTO</div>
+      <div class="rel-type">N : 1 — Galleria immagini (as: "imagenes")</div>
+      <div class="rel-fk">FK: imagenes_producto.producto_id → productos.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">RECENSIONE</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">PRODOTTO + UTENTE</div>
+      <div class="rel-type">N : 1 — Recensione su prodotto, opzionale utente</div>
+      <div class="rel-fk">FK: resenas.producto_id → productos.id<br>FK: resenas.usuario_id → usuarios.id (null ok)</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">ORDINE</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">UTENTE</div>
+      <div class="rel-type">N : 1 — Ordine collegato a utente (guest ok)</div>
+      <div class="rel-fk">FK: ordenes.usuario_id → usuarios.id (null ok)</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">DETTAGLIO_ORDINE</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">ORDINE + PRODOTTO</div>
+      <div class="rel-type">N : 1 — Riga ordine con prodotto e quantità (as: "detalles")</div>
+      <div class="rel-fk">FK: detalles_orden.orden_id → ordenes.id<br>FK: detalles_orden.producto_id → productos.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">ARTICOLO</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">UTENTE</div>
+      <div class="rel-type">N : 1 — Articolo blog scritto da admin</div>
+      <div class="rel-fk">FK: articoli.autore_id → usuarios.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">TICKET</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">UTENTE</div>
+      <div class="rel-type">N : 1 — Ticket di supporto per utente</div>
+      <div class="rel-fk">FK: tickets.usuario_id → usuarios.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">MESSAGGIO</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">TICKET</div>
+      <div class="rel-type">N : 1 — Messaggi chat nel ticket (as: "messaggi")</div>
+      <div class="rel-fk">FK: mensajes.ticket_id → tickets.id</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-from">VISITA</div>
+      <div class="rel-arrow">belongsTo ────────────────</div>
+      <div class="rel-to">PRODOTTO</div>
+      <div class="rel-type">N : 1 — Visita pagina prodotto (nullable)</div>
+      <div class="rel-fk">FK: visitas.producto_id → productos.id (null ok)</div>
+    </div>
+
+  </div>
+
+  <!-- TABELLA INDIPENDENTE -->
+  <div style="margin-top:20px;padding:14px 16px;border:1px solid var(--border);border-left:4px solid var(--green)">
+    <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">TABELLA STANDALONE</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">OPZIONI_SPEDIZIONE</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px">Nessuna foreign key. Configurazione tariffe fisse admin (IT / EU / MONDO / ALL) consultata al checkout.</div>
+  </div>
+</div>
+
+<!-- ══ DIAGRAMMA VISUALE ════════════════════════════════════════════════ -->
+<div class="diagram-wrap">
+  <div class="diagram-title">06 — Mappa Relazioni</div>
+  <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #eee">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#999"/>
+      </marker>
+    </defs>
+    <!-- sfondo -->
+    <rect width="800" height="600" fill="#fafafa"/>
+
+    <!-- UTENTI (centro) -->
+    <rect x="310" y="250" width="140" height="60" rx="3" fill="#0f0e0d"/>
+    <text x="380" y="273" text-anchor="middle" font-family="'Barlow Condensed'" font-size="14" font-weight="900" fill="#f0ece4">UTENTI</text>
+    <text x="380" y="290" text-anchor="middle" font-family="monospace" font-size="8" fill="#C17F3A">usuarios</text>
+    <text x="380" y="303" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">PK: id</text>
+
+    <!-- ORDINI -->
+    <rect x="530" y="200" width="140" height="60" rx="3" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+    <text x="600" y="223" text-anchor="middle" font-family="'Barlow Condensed'" font-size="14" font-weight="900" fill="#f0ece4">ORDINI</text>
+    <text x="600" y="240" text-anchor="middle" font-family="monospace" font-size="8" fill="#93c5fd">ordenes</text>
+    <text x="600" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">FK: usuario_id</text>
+    <line x1="530" y1="230" x2="450" y2="270" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- DETTAGLI ORDINE -->
+    <rect x="530" y="350" width="140" height="60" rx="3" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+    <text x="600" y="368" text-anchor="middle" font-family="'Barlow Condensed'" font-size="11" font-weight="900" fill="#f0ece4">DETTAGLI</text>
+    <text x="600" y="382" text-anchor="middle" font-family="'Barlow Condensed'" font-size="11" font-weight="900" fill="#f0ece4">ORDINE</text>
+    <text x="600" y="397" text-anchor="middle" font-family="monospace" font-size="8" fill="#93c5fd">detalles_orden</text>
+    <text x="600" y="408" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">FK: orden_id, producto_id</text>
+    <line x1="600" y1="350" x2="600" y2="260" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- PRODOTTI -->
+    <rect x="310" y="60" width="140" height="60" rx="3" fill="#1a1a1a" stroke="#C17F3A" stroke-width="1.5"/>
+    <text x="380" y="83" text-anchor="middle" font-family="'Barlow Condensed'" font-size="14" font-weight="900" fill="#f0ece4">PRODOTTI</text>
+    <text x="380" y="100" text-anchor="middle" font-family="monospace" font-size="8" fill="#C17F3A">productos</text>
+    <text x="380" y="113" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">FK: categoria_id</text>
+    <line x1="600" y1="350" x2="430" y2="120" stroke="#C17F3A" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- CATEGORIE -->
+    <rect x="100" y="60" width="130" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="165" y="80" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">CATEGORIE</text>
+    <text x="165" y="97" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">categorias</text>
+    <line x1="310" y1="90" x2="230" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- VARIANTI -->
+    <rect x="100" y="160" width="130" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="165" y="180" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">VARIANTI</text>
+    <text x="165" y="197" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">variantes_producto</text>
+    <line x1="310" y1="100" x2="230" y2="175" stroke="#888" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- IMMAGINI -->
+    <rect x="100" y="250" width="130" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="165" y="270" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">IMMAGINI</text>
+    <text x="165" y="287" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">imagenes_producto</text>
+    <line x1="310" y1="105" x2="230" y2="265" stroke="#888" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- RECENSIONI -->
+    <rect x="100" y="340" width="130" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="165" y="360" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">RECENSIONI</text>
+    <text x="165" y="377" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">resenas</text>
+    <line x1="310" y1="110" x2="230" y2="355" stroke="#888" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+    <line x1="310" y1="270" x2="230" y2="365" stroke="#555" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- TICKET -->
+    <rect x="100" y="430" width="130" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="165" y="450" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">TICKET</text>
+    <text x="165" y="467" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">tickets</text>
+    <line x1="310" y1="275" x2="230" y2="450" stroke="#555" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- MESSAGGI -->
+    <rect x="530" y="470" width="140" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="600" y="490" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">MESSAGGI</text>
+    <text x="600" y="507" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">mensajes</text>
+    <line x1="530" y1="490" x2="230" y2="455" stroke="#555" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- ARTICOLI -->
+    <rect x="310" y="430" width="140" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="380" y="450" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">ARTICOLI</text>
+    <text x="380" y="467" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">articoli</text>
+    <line x1="380" y1="430" x2="380" y2="310" stroke="#555" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- VISITA (standalone con prodotto) -->
+    <rect x="530" y="60" width="140" height="50" rx="3" fill="#1a1a1a" stroke="#888" stroke-width="1"/>
+    <text x="600" y="80" text-anchor="middle" font-family="'Barlow Condensed'" font-size="13" font-weight="900" fill="#f0ece4">VISITE</text>
+    <text x="600" y="97" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">visitas</text>
+    <line x1="530" y1="85" x2="450" y2="90" stroke="#555" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4"/>
+
+    <!-- OPZIONI SPEDIZIONE (standalone) -->
+    <rect x="310" y="530" width="170" height="50" rx="3" fill="#052e16" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="395" y="550" text-anchor="middle" font-family="'Barlow Condensed'" font-size="11" font-weight="900" fill="#f0ece4">OPZIONI SPEDIZIONE</text>
+    <text x="395" y="567" text-anchor="middle" font-family="monospace" font-size="8" fill="#4ade80">opzioni_spedizione — standalone</text>
+
+    <!-- LEGENDA -->
+    <rect x="20" y="530" width="200" height="55" fill="white" stroke="#eee" stroke-width="1"/>
+    <text x="30" y="547" font-family="monospace" font-size="8" fill="#333">LEGENDA</text>
+    <line x1="30" y1="556" x2="55" y2="556" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4"/>
+    <text x="60" y="559" font-family="monospace" font-size="8" fill="#333">FK verso UTENTI/ORDINI</text>
+    <line x1="30" y1="568" x2="55" y2="568" stroke="#C17F3A" stroke-width="1.5" stroke-dasharray="4"/>
+    <text x="60" y="571" font-family="monospace" font-size="8" fill="#333">FK verso PRODOTTI</text>
+    <line x1="30" y1="580" x2="55" y2="580" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+    <text x="60" y="583" font-family="monospace" font-size="8" fill="#333">Altre relazioni</text>
+  </svg>
+</div>
+
+</body>
+</html>

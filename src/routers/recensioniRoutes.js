@@ -1,6 +1,6 @@
 const express = require("express");
 const router  = express.Router();
-const { getResenasByProducto, crearResena, puedeResenar, getResenasDestacadas, moderarResena, getAllResenas } = require("../controllers/resenasController");
+const { getResenasByProducto, crearResena, puedeResenar, getResenasDestacadas, moderarResena, getAllResenas } = require("../controllers/recensioniController");
 const { verifyToken, soloAdmin } = require("../middleware/auth");
 
 router.get("/destacadas",          getResenasDestacadas);

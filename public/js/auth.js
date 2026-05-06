@@ -1,17 +1,17 @@
-let emailPendienteVerificacion = '';
-let emailPendienteRecupera     = '';
+let emailAttesaVerifica  = '';
+let emailAttesaRecupero  = '';
 
-function openAuth(tab) {
+function apriAuth(tab) {
   document.getElementById('authModal').classList.add('on');
-  switchAuthTab(tab);
+  cambiaTabAuth(tab);
 }
 
-function closeAuthModal() {
+function chiudiModalAuth() {
   document.getElementById('authModal').classList.remove('on');
-  switchAuthTab('login');
+  cambiaTabAuth('login');
 }
 
-function switchAuthTab(tab) {
+function cambiaTabAuth(tab) {
   document.querySelectorAll('.auth-tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(tab === 'login' ? 'tabLogin' : 'tabRegister').classList.add('active');
@@ -22,7 +22,7 @@ function switchAuthTab(tab) {
   if (tabs) tabs.style.display = '';
 }
 
-function togglePass(inputId, iconId) {
+function alternaMostraPassword(inputId, iconId) {
   const el   = document.getElementById(inputId);
   const icon = document.getElementById(iconId);
   if (!el) return;
@@ -35,17 +35,17 @@ function togglePass(inputId, iconId) {
   }
 }
 
-function _setModalPanel(panelId, title) {
+function _impostaPannelloModale(panelId, titolo) {
   document.querySelectorAll('.auth-tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(panelId).classList.add('active');
   const titleEl = document.querySelector('#authModal .modal-title');
-  if (titleEl) titleEl.textContent = title;
+  if (titleEl) titleEl.textContent = titolo;
   const tabs = document.getElementById('authTabs');
   if (tabs) tabs.style.display = 'none';
 }
 
-async function doLogin() {
+async function accedi() {
   const email = document.getElementById('loginEmail').value;
   const pass  = document.getElementById('loginPass').value;
   const btn   = document.getElementById('loginSubmit');
@@ -60,9 +60,9 @@ async function doLogin() {
     const data = await r.json();
     if (!r.ok) {
       if (data.verificacion_pendiente) {
-        emailPendienteVerificacion = data.email;
+        emailAttesaVerifica = data.email;
         document.getElementById('authModal').classList.add('on');
-        showVerificaPanel(data.email);
+        mostraPannelloVerifica(data.email);
         showMsg('verificaMsg', '✅ Codice inviato! Controlla la tua email.', 'ok');
         return;
       }
@@ -70,11 +70,11 @@ async function doLogin() {
     }
     token = data.token;
     localStorage.setItem('rfToken', token);
-    usuario = data.usuario;
-    setLoggedIn();
-    closeAuthModal();
-    if (usuario.rol === 'admin') { window.location.href = '/admin.html'; return; }
-    else showView('tienda');
+    utente = data.usuario;
+    impostaSessione();
+    chiudiModalAuth();
+    if (utente.rol === 'admin') { window.location.href = '/admin.html'; return; }
+    else mostraVista('tienda');
   } catch(e) {
     showMsg('loginMsg', e.message, 'err');
   } finally {
@@ -83,7 +83,7 @@ async function doLogin() {
   }
 }
 
-async function doRegister() {
+async function registrati() {
   const nome  = document.getElementById('regNombre').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
@@ -107,8 +107,8 @@ async function doRegister() {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    emailPendienteVerificacion = email;
-    showVerificaPanel(email);
+    emailAttesaVerifica = email;
+    mostraPannelloVerifica(email);
   } catch(e) {
     showMsg('registerMsg', e.message, 'err');
     btn.disabled = false;
@@ -116,18 +116,18 @@ async function doRegister() {
   }
 }
 
-function showVerificaPanel(email) {
-  _setModalPanel('panelVerifica', 'VERIFICA EMAIL');
+function mostraPannelloVerifica(email) {
+  _impostaPannelloModale('panelVerifica', 'VERIFICA EMAIL');
   const el = document.getElementById('emailVerifica');
   if (el) el.textContent = email;
   const input = document.getElementById('codigoInput');
   if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
 }
 
-async function doVerificar() {
-  const codigo = document.getElementById('codigoInput').value.trim();
-  const email  = emailPendienteVerificacion;
-  if (!codigo || codigo.length !== 6) {
+async function verificaCodice() {
+  const codice = document.getElementById('codigoInput').value.trim();
+  const email  = emailAttesaVerifica;
+  if (!codice || codice.length !== 6) {
     showMsg('verificaMsg', 'Inserisci il codice a 6 cifre', 'err'); return;
   }
   const btn = document.getElementById('verificarBtn');
@@ -136,30 +136,30 @@ async function doVerificar() {
     const r = await fetch(`${API}/auth/verificar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, codigo })
+      body: JSON.stringify({ email, codigo: codice })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     token = data.token;
     localStorage.setItem('rfToken', token);
-    usuario = data.usuario;
-    setLoggedIn(usuario);
-    closeAuthModal();
+    utente = data.usuario;
+    impostaSessione(utente);
+    chiudiModalAuth();
   } catch(e) {
     showMsg('verificaMsg', e.message, 'err');
     btn.disabled = false; btn.textContent = 'VERIFICA E ACCEDI';
   }
 }
 
-// ── RECUPERA PASSWORD ────────────────────────────────────────────────────────
+// ── RECUPERO PASSWORD ────────────────────────────────────────────────────────
 
-function showRecupera() {
-  _setModalPanel('panelRecupera', 'RECUPERA PASSWORD');
+function mostraRecupera() {
+  _impostaPannelloModale('panelRecupera', 'RECUPERA PASSWORD');
   const el = document.getElementById('recuperaEmail');
   if (el) { el.value = ''; setTimeout(() => el.focus(), 100); }
 }
 
-async function enviarRecupera() {
+async function inviaRecupera() {
   const email = document.getElementById('recuperaEmail').value.trim();
   if (!email) { showMsg('recuperaMsg', 'Inserisci la tua email', 'err'); return; }
   const btn = document.getElementById('recuperaBtn');
@@ -172,8 +172,8 @@ async function enviarRecupera() {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    emailPendienteRecupera = email;
-    _setModalPanel('panelResetPass', 'NUOVA PASSWORD');
+    emailAttesaRecupero = email;
+    _impostaPannelloModale('panelResetPass', 'NUOVA PASSWORD');
     const el = document.getElementById('emailReset');
     if (el) el.textContent = email;
     const input = document.getElementById('resetCodigo');
@@ -184,39 +184,88 @@ async function enviarRecupera() {
   }
 }
 
-async function doResetPass() {
-  const codigo  = document.getElementById('resetCodigo').value.trim();
-  const newPass = document.getElementById('resetPass').value;
-  if (!codigo || codigo.length !== 6) { showMsg('resetMsg', 'Inserisci il codice a 6 cifre', 'err'); return; }
-  if (!newPass || newPass.length < 6) { showMsg('resetMsg', 'La password deve avere almeno 6 caratteri', 'err'); return; }
+async function reimpostaPassword() {
+  const codice    = document.getElementById('resetCodigo').value.trim();
+  const nuovaPass = document.getElementById('resetPass').value;
+  if (!codice || codice.length !== 6) { showMsg('resetMsg', 'Inserisci il codice a 6 cifre', 'err'); return; }
+  if (!nuovaPass || nuovaPass.length < 6) { showMsg('resetMsg', 'La password deve avere almeno 6 caratteri', 'err'); return; }
   const btn = document.getElementById('resetBtn');
   btn.disabled = true; btn.textContent = '...';
   try {
     const r = await fetch(`${API}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailPendienteRecupera, codigo, nuevaPassword: newPass })
+      body: JSON.stringify({ email: emailAttesaRecupero, codigo: codice, nuevaPassword: nuovaPass })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     showMsg('resetMsg', '✅ Password aggiornata. Ora puoi accedere.', 'ok');
-    setTimeout(() => switchAuthTab('login'), 1800);
+    setTimeout(() => cambiaTabAuth('login'), 1800);
   } catch(e) {
     showMsg('resetMsg', e.message, 'err');
     btn.disabled = false; btn.textContent = 'REIMPOSTA PASSWORD';
   }
 }
 
-// ── SESSIONE ─────────────────────────────────────────────────────────────────
+// ── GOOGLE SIGN-IN ───────────────────────────────────────────────────────────
 
-function _setChatFabVisible(visible) {
-  const fab = document.getElementById('chatFab');
-  if (fab) fab.classList.toggle('visible', visible);
-  if (visible) startFabPolling();
-  else { stopFabPolling(); stopChatPoll(); }
+async function inizializzaGoogle() {
+  try {
+    const r = await fetch(`${API}/auth/google-config`);
+    const { clientId } = await r.json();
+    if (!clientId) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => {
+      google.accounts.id.initialize({
+        client_id:   clientId,
+        callback:    handleGoogleCredential,
+        auto_select: false,
+      });
+      const opzioniBtn = { theme: 'outline', size: 'large', width: 340, shape: 'rectangular', logo_alignment: 'left' };
+      const bl = document.getElementById('googleBtnLogin');
+      if (bl) google.accounts.id.renderButton(bl, { ...opzioniBtn, text: 'signin_with' });
+      const br = document.getElementById('googleBtnRegister');
+      if (br) google.accounts.id.renderButton(br, { ...opzioniBtn, text: 'signup_with' });
+    };
+    document.head.appendChild(script);
+  } catch(e) { /* Google non disponibile, nessuna azione */ }
 }
 
-function setLoggedIn() {
+async function handleGoogleCredential(response) {
+  try {
+    const r = await fetch(`${API}/auth/google`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ credential: response.credential })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    token = data.token;
+    localStorage.setItem('rfToken', token);
+    utente = data.usuario;
+    impostaSessione();
+    chiudiModalAuth();
+    if (utente.rol === 'admin') { window.location.href = '/admin.html'; return; }
+    mostraVista('tienda');
+  } catch(e) {
+    showMsg('loginMsg',    e.message, 'err');
+    showMsg('registerMsg', e.message, 'err');
+  }
+}
+
+// ── SESSIONE ─────────────────────────────────────────────────────────────────
+
+function _impostaVisibilitaFabChat(visibile) {
+  const fab = document.getElementById('chatFab');
+  if (fab) fab.classList.toggle('visible', visibile);
+  if (visibile) avviaPollingFab();
+  else { fermaPollingFab(); fermaPollingChat(); }
+}
+
+function impostaSessione() {
   document.getElementById('loginBtn').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'block';
   const hLogin = document.getElementById('headerLoginBtn');
@@ -224,24 +273,24 @@ function setLoggedIn() {
   if (hLogin)  hLogin.style.display  = 'none';
   if (hLogout) hLogout.style.display = 'block';
   document.getElementById('perfilBtn').style.display = 'block';
-  document.getElementById('adminBtn').style.display = usuario.rol === 'admin' ? 'block' : 'none';
+  document.getElementById('adminBtn').style.display = utente.rol === 'admin' ? 'block' : 'none';
   setSd('authDot', 'ok');
-  setTxt('authStatus', `${t(usuario.rol === 'admin' ? 'status_admin' : 'status_client')}: ${usuario.nombre}`);
+  setTxt('authStatus', `${t(utente.rol === 'admin' ? 'status_admin' : 'status_client')}: ${utente.nombre}`);
   const el = document.getElementById('perfilAvatar');
-  if (el) el.textContent = (usuario.nombre || '?').charAt(0).toUpperCase();
-  setTxt('perfilNombre', usuario.nombre || '');
-  setTxt('perfilEmail', usuario.email || '');
-  document.querySelectorAll('[onclick*="openAuth"]').forEach(el => { el.style.display = 'none'; });
-  if (usuario.rol !== 'admin') _setChatFabVisible(true);
-  if (usuario.rol === 'admin') {
+  if (el) el.textContent = (utente.nombre || '?').charAt(0).toUpperCase();
+  setTxt('perfilNombre', utente.nombre || '');
+  setTxt('perfilEmail', utente.email || '');
+  document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = 'none'; });
+  if (utente.rol !== 'admin') _impostaVisibilitaFabChat(true);
+  if (utente.rol === 'admin') {
     const bar = document.getElementById('statusBar');
     if (bar) bar.style.display = 'flex';
   }
 }
 
-function doLogout() {
+function disconnetti() {
   token = null;
-  usuario = null;
+  utente = null;
   localStorage.removeItem('rfToken');
   if (window.location.pathname.includes('admin')) {
     window.location.href = '/index.html';
@@ -256,21 +305,21 @@ function doLogout() {
     document.getElementById('adminBtn').style.display = 'none';
     setSd('authDot', '');
     setTxt('authStatus', t('status_no_session'));
-    document.querySelectorAll('[onclick*="openAuth"]').forEach(el => { el.style.display = ''; });
-    _setChatFabVisible(false);
+    document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = ''; });
+    _impostaVisibilitaFabChat(false);
     const chatPanel = document.getElementById('chatPanel');
     if (chatPanel) chatPanel.classList.remove('on');
     const bar = document.getElementById('statusBar');
     if (bar) bar.style.display = 'none';
-    showView('tienda');
+    mostraVista('tienda');
   }
 }
 
-function checkTokenValidity() {
+function verificaToken() {
   if (!token) return false;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.exp * 1000 < Date.now()) { doLogout(); return false; }
+    if (payload.exp * 1000 < Date.now()) { disconnetti(); return false; }
     return true;
-  } catch(e) { doLogout(); return false; }
+  } catch(e) { disconnetti(); return false; }
 }

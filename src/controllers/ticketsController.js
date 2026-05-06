@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
-const { Ticket, Mensaje, Usuario } = require("../models");
+const { Ticket, Messaggio, Utente } = require("../models");
 
-// POST /api/tickets — crear ticket + primer mensaje (cliente)
+// POST /api/tickets — crea ticket + primo messaggio (cliente)
 const crearTicket = async (req, res) => {
   try {
     const { asunto, texto } = req.body;
@@ -9,12 +9,12 @@ const crearTicket = async (req, res) => {
       return res.status(400).json({ error: "Oggetto e messaggio obbligatori" });
 
     const ticket = await Ticket.create({ usuario_id: req.usuario.id, asunto: asunto.trim() });
-    await Mensaje.create({ ticket_id: ticket.id, remitente: "cliente", texto: texto.trim() });
+    await Messaggio.create({ ticket_id: ticket.id, remitente: "cliente", texto: texto.trim() });
     res.status(201).json({ mensaje: "Ticket creato", ticket });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/tickets/mis — tickets del usuario autenticado
+// GET /api/tickets/mis — ticket dell'utente autenticato
 const getMisTickets = async (req, res) => {
   try {
     const tickets = await Ticket.findAll({
@@ -22,65 +22,65 @@ const getMisTickets = async (req, res) => {
       order: [["updatedAt", "DESC"]]
     });
 
-    const result = await Promise.all(tickets.map(async t => {
-      const noLeidos = await Mensaje.count({
+    const risultato = await Promise.all(tickets.map(async t => {
+      const nonLetti = await Messaggio.count({
         where: { ticket_id: t.id, remitente: "admin", leido: false }
       });
-      const ultimo = await Mensaje.findOne({
+      const ultimo = await Messaggio.findOne({
         where: { ticket_id: t.id },
         order: [["createdAt", "DESC"]]
       });
       return {
         ...t.toJSON(),
-        no_leidos: noLeidos,
+        no_leidos:      nonLetti,
         ultimo_mensaje: ultimo?.texto?.slice(0, 60) || "",
-        ultimo_at: ultimo?.createdAt || t.createdAt
+        ultimo_at:      ultimo?.createdAt || t.createdAt
       };
     }));
 
-    res.json(result);
+    res.json(risultato);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/tickets/unread — mensajes de admin no leídos (para FAB badge)
+// GET /api/tickets/unread — messaggi admin non letti (per badge FAB)
 const getUnreadCliente = async (req, res) => {
   try {
     const tickets = await Ticket.findAll({ where: { usuario_id: req.usuario.id }, attributes: ["id"] });
     const ids = tickets.map(t => t.id);
     const count = ids.length
-      ? await Mensaje.count({ where: { ticket_id: { [Op.in]: ids }, remitente: "admin", leido: false } })
+      ? await Messaggio.count({ where: { ticket_id: { [Op.in]: ids }, remitente: "admin", leido: false } })
       : 0;
     res.json({ count });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/tickets/:id/mensajes — mensajes de un ticket (marca leídos)
+// GET /api/tickets/:id/mensajes — messaggi di un ticket (segna come letti)
 const getMensajes = async (req, res) => {
   try {
     const ticket = await Ticket.findByPk(req.params.id, {
-      include: [{ model: Usuario, attributes: ["nombre", "email"] }]
+      include: [{ model: Utente, attributes: ["nombre", "email"] }]
     });
     if (!ticket) return res.status(404).json({ error: "Ticket non trovato" });
     if (req.usuario.rol !== "admin" && ticket.usuario_id !== req.usuario.id)
       return res.status(403).json({ error: "Accesso negato" });
 
-    // Marcar como leídos los mensajes del otro lado
-    const otroRemitente = req.usuario.rol === "admin" ? "cliente" : "admin";
-    await Mensaje.update(
+    // Segna come letti i messaggi dell'altra parte
+    const altroMittente = req.usuario.rol === "admin" ? "cliente" : "admin";
+    await Messaggio.update(
       { leido: true },
-      { where: { ticket_id: ticket.id, remitente: otroRemitente, leido: false } }
+      { where: { ticket_id: ticket.id, remitente: altroMittente, leido: false } }
     );
 
-    const mensajes = await Mensaje.findAll({
+    const messaggi = await Messaggio.findAll({
       where: { ticket_id: ticket.id },
       order: [["createdAt", "ASC"]]
     });
 
-    res.json({ ticket, mensajes });
+    res.json({ ticket, mensajes: messaggi });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// POST /api/tickets/:id/mensajes — enviar mensaje
+// POST /api/tickets/:id/mensajes — invia messaggio
 const enviarMensaje = async (req, res) => {
   try {
     const { texto } = req.body;
@@ -93,59 +93,59 @@ const enviarMensaje = async (req, res) => {
     if (ticket.estado === "cerrado" && req.usuario.rol !== "admin")
       return res.status(400).json({ error: "Ticket chiuso" });
 
-    const remitente = req.usuario.rol === "admin" ? "admin" : "cliente";
-    const msg = await Mensaje.create({ ticket_id: ticket.id, remitente, texto: texto.trim() });
+    const mittente = req.usuario.rol === "admin" ? "admin" : "cliente";
+    const msg      = await Messaggio.create({ ticket_id: ticket.id, remitente: mittente, texto: texto.trim() });
 
-    // Tocar updatedAt del ticket para ordenación
+    // Aggiorna updatedAt del ticket per l'ordinamento
     await Ticket.update({ updatedAt: new Date() }, { where: { id: ticket.id } });
 
     res.status(201).json({ mensaje: "Messaggio inviato", data: msg });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/tickets — todos los tickets (admin)
+// GET /api/tickets — tutti i ticket (admin)
 const getAllTickets = async (req, res) => {
   try {
     const tickets = await Ticket.findAll({
-      include: [{ model: Usuario, attributes: ["nombre", "email"] }],
+      include: [{ model: Utente, attributes: ["nombre", "email"] }],
       order: [["updatedAt", "DESC"]]
     });
 
-    const result = await Promise.all(tickets.map(async t => {
-      const noLeidos = await Mensaje.count({
+    const risultato = await Promise.all(tickets.map(async t => {
+      const nonLetti = await Messaggio.count({
         where: { ticket_id: t.id, remitente: "cliente", leido: false }
       });
-      const ultimo = await Mensaje.findOne({
+      const ultimo = await Messaggio.findOne({
         where: { ticket_id: t.id },
         order: [["createdAt", "DESC"]]
       });
       return {
         ...t.toJSON(),
-        no_leidos: noLeidos,
+        no_leidos:      nonLetti,
         ultimo_mensaje: ultimo?.texto?.slice(0, 60) || "",
-        ultimo_at: ultimo?.createdAt || t.createdAt
+        ultimo_at:      ultimo?.createdAt || t.createdAt
       };
     }));
 
-    res.json(result);
+    res.json(risultato);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/tickets/admin/unread — total no leídos para badge del menú
+// GET /api/tickets/admin/unread — totale non letti per badge menu
 const getUnreadAdmin = async (req, res) => {
   try {
-    const count = await Mensaje.count({ where: { remitente: "cliente", leido: false } });
+    const count = await Messaggio.count({ where: { remitente: "cliente", leido: false } });
     res.json({ count });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// PATCH /api/tickets/:id/estado — abrir/cerrar ticket (admin)
+// PATCH /api/tickets/:id/estado — apri/chiudi ticket (admin)
 const cambiarEstado = async (req, res) => {
   try {
     const ticket = await Ticket.findByPk(req.params.id);
     if (!ticket) return res.status(404).json({ error: "Ticket non trovato" });
-    const estados = ["abierto", "cerrado"];
-    if (!estados.includes(req.body.estado))
+    const statiValidi = ["abierto", "cerrado"];
+    if (!statiValidi.includes(req.body.estado))
       return res.status(400).json({ error: "Stato non valido" });
     await ticket.update({ estado: req.body.estado });
     res.json({ mensaje: "Stato aggiornato", ticket });

@@ -39,17 +39,17 @@
   <img class="logo-img" src="/assets/logo.png" alt="Rolefigz" onclick="window.location.href='/index.html'" style="cursor:pointer">
   <nav>
     <button class="nav-btn" onclick="window.location.href='/index.html'">VER TIENDA</button>
-    <button class="nav-btn primary" onclick="doLogout()">ESCI</button>
+    <button class="nav-btn primary" onclick="disconnetti()">ESCI</button>
   </nav>
 </header>
 
-<!-- ══ STATUS BAR ══ -->
+<!-- ══ BARRA DI STATO ══ -->
 <div class="status-bar">
   <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONNESSIONE...</span></div>
   <div class="si"><span style="font-family:'DM Mono',monospace;letter-spacing:2px">// PANNELLO ADMIN</span></div>
 </div>
 
-<!-- ══ ADMIN PANEL ══ -->
+<!-- ══ PANNELLO ADMIN ══ -->
 <div style="padding:40px">
   <div class="admin-grid">
     <div class="admin-sidebar">
@@ -63,6 +63,7 @@
       <div class="admin-menu-item" onclick="adminTab('resenas',this)"><iconify-icon icon="mdi:star-outline" width="15"></iconify-icon> Recensioni</div>
       <div class="admin-menu-item" onclick="adminTab('analytics',this)"><iconify-icon icon="mdi:chart-bar" width="15"></iconify-icon> Analytics</div>
       <div class="admin-menu-item" onclick="adminTab('tickets',this)" id="adminTicketsItem"><iconify-icon icon="mdi:chat-outline" width="15"></iconify-icon> Messaggi <span class="admin-menu-badge" id="adminTicketsBadge" style="display:none"></span></div>
+      <div class="admin-menu-item" onclick="adminTab('tariffe_spedizione',this)"><iconify-icon icon="mdi:truck-outline" width="15"></iconify-icon> Spedizioni</div>
     </div>
     <div class="admin-content" id="adminContent">
       <div class="loading">CARICAMENTO</div>

@@ -25,6 +25,7 @@
     "mysql2": "^3.22.2",
     "nodemailer": "^8.0.5",
     "sequelize": "^6.37.8",
+    "shippo": "^2.18.0",
     "stripe": "^22.1.0"
   },
   "devDependencies": {

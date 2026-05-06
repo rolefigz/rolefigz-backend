@@ -110,11 +110,11 @@ const i18n = {
 };
 
 function t(key) {
-  return (i18n[currentLang] && i18n[currentLang][key]) || (i18n['it'][key]) || key;
+  return (i18n[linguaCorrente] && i18n[linguaCorrente][key]) || (i18n['it'][key]) || key;
 }
 
-function setLang(lang) {
-  currentLang = lang;
+function impostaLingua(lang) {
+  linguaCorrente = lang;
   localStorage.setItem('rfLang', lang);
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -124,5 +124,5 @@ function setLang(lang) {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
   });
-  renderProductos();
+  renderProdotti();
 }

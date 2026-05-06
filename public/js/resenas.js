@@ -1,21 +1,21 @@
-function estrellas(n, size) {
+function stelline(n, size) {
   return Array.from({ length: 5 }, (_, i) =>
     `<span class="star${i < n ? ' on' : ''}" style="${size ? 'font-size:' + size + 'px' : ''}">★</span>`
   ).join('');
 }
 
-async function loadResenas(productoId) {
-  const listEl = document.getElementById('resenas-list');
-  const formEl = document.getElementById('resenas-form-wrap');
-  if (!listEl) return;
+async function caricaRecensioni(prodottoId) {
+  const listaEl = document.getElementById('resenas-list');
+  const formEl  = document.getElementById('resenas-form-wrap');
+  if (!listaEl) return;
 
   try {
-    const r = await fetch(`${API}/resenas/${productoId}`);
+    const r = await fetch(`${API}/resenas/${prodottoId}`);
     if (!r.ok) throw new Error('Errore caricamento recensioni');
     const data = await r.json();
-    renderResenas(data, listEl);
+    renderRecensioni(data, listaEl);
   } catch(e) {
-    listEl.innerHTML = `<div class="resenas-empty">Impossibile caricare le recensioni.</div>`;
+    listaEl.innerHTML = `<div class="resenas-empty">Impossibile caricare le recensioni.</div>`;
   }
 
   if (!formEl) return;
@@ -24,20 +24,20 @@ async function loadResenas(productoId) {
     return;
   }
   try {
-    const r2 = await fetch(`${API}/resenas/puedo/${productoId}`, {
+    const r2 = await fetch(`${API}/resenas/puedo/${prodottoId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!r2.ok) throw new Error();
-    const puede = await r2.json();
-    renderFormResena(productoId, puede, formEl);
+    const puo = await r2.json();
+    renderFormRecensione(prodottoId, puo, formEl);
   } catch {
     formEl.innerHTML = '';
   }
 }
 
-function renderResenas({ resenas, promedio, total }, listEl) {
+function renderRecensioni({ resenas, promedio, total }, listaEl) {
   if (!total) {
-    listEl.innerHTML = '<div class="resenas-empty">Nessuna recensione ancora. Acquista e sii il primo a recensire!</div>';
+    listaEl.innerHTML = '<div class="resenas-empty">Nessuna recensione ancora. Acquista e sii il primo a recensire!</div>';
     return;
   }
 
@@ -46,7 +46,7 @@ function renderResenas({ resenas, promedio, total }, listEl) {
     <div class="resenas-stats">
       <div class="resenas-avg">${promedio}</div>
       <div>
-        <div>${estrellas(filled, 20)}</div>
+        <div>${stelline(filled, 20)}</div>
         <div class="resenas-count">${total} RECENSION${total === 1 ? 'E' : 'I'} VERIFICAT${total === 1 ? 'A' : 'E'}</div>
       </div>
     </div>`;
@@ -54,64 +54,64 @@ function renderResenas({ resenas, promedio, total }, listEl) {
   const cards = resenas.map(r => `
     <div class="resena-card">
       <div class="resena-header">
-        <div>${estrellas(r.puntuacion, 15)}</div>
+        <div>${stelline(r.puntuacion, 15)}</div>
         ${r.compra_verificada ? '<div class="resena-badge">✓ ACQUISTO VERIFICATO</div>' : ''}
       </div>
       ${r.comentario ? `<div class="resena-texto">"${r.comentario}"</div>` : ''}
       <div class="resena-autor">
-        <strong>${r.nombre_autor || (r.Usuario ? r.Usuario.nombre : 'Cliente')}</strong>
+        <strong>${r.nombre_autor || (r.Utente ? r.Utente.nombre : 'Cliente')}</strong>
         <span>${new Date(r.createdAt).toLocaleDateString('it-IT')}</span>
       </div>
     </div>`).join('');
 
-  listEl.innerHTML = stats + `<div class="resenas-cards">${cards}</div>`;
+  listaEl.innerHTML = stats + `<div class="resenas-cards">${cards}</div>`;
 }
 
-function renderFormResena(productoId, puede, formEl) {
-  if (!puede.puedeResenar) {
-    const msgs = {
+function renderFormRecensione(prodottoId, puo, formEl) {
+  if (!puo.puedeResenar) {
+    const messaggi = {
       ya_reseno:   'Hai già lasciato una recensione per questo prodotto.',
       no_comprado: 'Solo chi ha acquistato questo prodotto può lasciare una recensione.'
     };
-    formEl.innerHTML = `<div class="resena-aviso">${msgs[puede.motivo] || ''}</div>`;
+    formEl.innerHTML = `<div class="resena-aviso">${messaggi[puo.motivo] || ''}</div>`;
     return;
   }
 
   formEl.innerHTML = `
     <div class="resena-form-title">LASCIA UNA RECENSIONE</div>
     <div class="star-input" id="starInput">
-      <span class="star-pick" onclick="selectStar(1)">★</span>
-      <span class="star-pick" onclick="selectStar(2)">★</span>
-      <span class="star-pick" onclick="selectStar(3)">★</span>
-      <span class="star-pick" onclick="selectStar(4)">★</span>
-      <span class="star-pick" onclick="selectStar(5)">★</span>
+      <span class="star-pick" onclick="selezionaStella(1)">★</span>
+      <span class="star-pick" onclick="selezionaStella(2)">★</span>
+      <span class="star-pick" onclick="selezionaStella(3)">★</span>
+      <span class="star-pick" onclick="selezionaStella(4)">★</span>
+      <span class="star-pick" onclick="selezionaStella(5)">★</span>
     </div>
     <input type="hidden" id="resenaPuntuacion" value="0"/>
     <div class="field" style="margin-top:16px">
       <label>Commento</label>
       <textarea id="resenaComentario" placeholder="Descrivi la tua esperienza con questo prodotto..." rows="3"></textarea>
     </div>
-    <button class="add-cart-btn" style="width:100%;margin-top:8px;height:48px" onclick="submitResena(${productoId})">INVIA RECENSIONE</button>
+    <button class="add-cart-btn" style="width:100%;margin-top:8px;height:48px" onclick="inviaRecensione(${prodottoId})">INVIA RECENSIONE</button>
     <div id="resenaMsg"></div>`;
 }
 
-function selectStar(n) {
+function selezionaStella(n) {
   document.getElementById('resenaPuntuacion').value = n;
   document.querySelectorAll('#starInput .star-pick').forEach((s, i) => {
     s.classList.toggle('on', i < n);
   });
 }
 
-async function submitResena(productoId) {
-  const puntuacion = parseInt(document.getElementById('resenaPuntuacion').value);
-  const comentario = document.getElementById('resenaComentario').value.trim();
-  if (!puntuacion) { showMsg('resenaMsg', 'Seleziona un punteggio', 'err'); return; }
+async function inviaRecensione(prodottoId) {
+  const voto      = parseInt(document.getElementById('resenaPuntuacion').value);
+  const commento  = document.getElementById('resenaComentario').value.trim();
+  if (!voto) { showMsg('resenaMsg', 'Seleziona un punteggio', 'err'); return; }
 
   try {
     const r = await fetch(`${API}/resenas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ puntuacion, comentario, producto_id: productoId })
+      body: JSON.stringify({ puntuacion: voto, comentario: commento, producto_id: prodottoId })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
@@ -120,22 +120,22 @@ async function submitResena(productoId) {
   } catch(e) { showMsg('resenaMsg', e.message, 'err'); }
 }
 
-async function loadResenasDestacadas() {
+async function caricaRecensioniInEvidenza() {
   const sec = document.getElementById('resenasDestacadas');
   if (!sec) return;
   try {
     const r = await fetch(`${API}/resenas/destacadas`);
     if (!r.ok) throw new Error();
-    const resenas = await r.json();
-    if (!resenas.length) { sec.style.display = 'none'; return; }
+    const recensioni = await r.json();
+    if (!recensioni.length) { sec.style.display = 'none'; return; }
 
-    sec.querySelector('.resenas-dest-grid').innerHTML = resenas.map(r => `
+    sec.querySelector('.resenas-dest-grid').innerHTML = recensioni.map(r => `
       <div class="resena-dest-card">
-        <div class="resena-dest-stars">${estrellas(r.puntuacion, 16)}</div>
+        <div class="resena-dest-stars">${stelline(r.puntuacion, 16)}</div>
         <div class="resena-dest-texto">"${r.comentario || ''}"</div>
         <div class="resena-dest-footer">
-          <div class="resena-dest-autor">${r.nombre_autor || (r.Usuario ? r.Usuario.nombre : 'Cliente')}</div>
-          <div class="resena-dest-prod">${r.Producto ? r.Producto.nombre : ''}</div>
+          <div class="resena-dest-autor">${r.nombre_autor || (r.Utente ? r.Utente.nombre : 'Cliente')}</div>
+          <div class="resena-dest-prod">${r.Prodotto ? r.Prodotto.nombre : ''}</div>
         </div>
       </div>`).join('');
   } catch { sec.style.display = 'none'; }

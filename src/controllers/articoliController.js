@@ -1,9 +1,9 @@
-const { Articolo, Usuario } = require("../models");
+const { Articolo, Utente } = require("../models");
 
-const slugify = (str) =>
+const slugifica = (str) =>
   str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const makeUniqueSlug = async (base) => {
+const creaSlugUnico = async (base) => {
   let slug = base;
   let n = 1;
   while (await Articolo.findOne({ where: { slug } })) {
@@ -27,7 +27,7 @@ const getArticoloBySlug = async (req, res) => {
   try {
     const articolo = await Articolo.findOne({
       where: { slug: req.params.slug, pubblicato: true },
-      include: [{ model: Usuario, attributes: ["nombre"], foreignKey: "autore_id" }],
+      include: [{ model: Utente, attributes: ["nombre"], foreignKey: "autore_id" }],
     });
     if (!articolo) return res.status(404).json({ error: "Articolo non trovato" });
     res.json(articolo);
@@ -37,7 +37,7 @@ const getArticoloBySlug = async (req, res) => {
 const crearArticolo = async (req, res) => {
   try {
     const { titolo, estratto, contenuto, meta_desc, tags, immagine, pubblicato } = req.body;
-    const slug = await makeUniqueSlug(slugify(titolo));
+    const slug = await creaSlugUnico(slugifica(titolo));
     const articolo = await Articolo.create({
       titolo, slug, estratto, contenuto, meta_desc, tags, immagine,
       pubblicato: pubblicato || false,
@@ -53,7 +53,7 @@ const editarArticolo = async (req, res) => {
     if (!articolo) return res.status(404).json({ error: "Articolo non trovato" });
     const { titolo, estratto, contenuto, meta_desc, tags, immagine, pubblicato } = req.body;
     if (titolo && titolo !== articolo.titolo) {
-      req.body.slug = await makeUniqueSlug(slugify(titolo));
+      req.body.slug = await creaSlugUnico(slugifica(titolo));
     }
     await articolo.update({ titolo, slug: req.body.slug || articolo.slug, estratto, contenuto, meta_desc, tags, immagine, pubblicato });
     res.json({ mensaje: "Articolo aggiornato", articolo });

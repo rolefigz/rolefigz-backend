@@ -3,50 +3,50 @@ function getImgUrl(p) {
   return p.imagen || null;
 }
 
-function filterByCategory(catId) {
+function filtraPerCategoria(catId) {
   document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth' });
-  if (!catId) { renderProductos(); return; }
-  const filtered = productos.filter(p =>
+  if (!catId) { renderProdotti(); return; }
+  const filtrati = prodotti.filter(p =>
     p.categoria_id === catId || (p.Categoria && p.Categoria.id === catId)
   );
-  renderProductos(filtered);
+  renderProdotti(filtrati);
 }
 
-function filterProductos(q) {
-  if (!q) { renderProductos(); return; }
-  const filtered = productos.filter(p =>
+function filtraProdotti(q) {
+  if (!q) { renderProdotti(); return; }
+  const filtrati = prodotti.filter(p =>
     p.nombre.toLowerCase().includes(q.toLowerCase()) ||
     (p.descripcion && p.descripcion.toLowerCase().includes(q.toLowerCase()))
   );
-  renderProductos(filtered);
+  renderProdotti(filtrati);
 }
 
-async function loadProductos() {
+async function caricaProdotti() {
   const el = document.getElementById('productosList');
   el.innerHTML = '<div class="loading">CARICAMENTO CATALOGO</div>';
   try {
     const r = await fetch(`${API}/productos`);
-    productos = await r.json();
-    setTxt('productCount', `${productos.length} PRODOTTI`);
-    setTxt('heroCounter', productos.length);
-    renderProductos();
+    prodotti = await r.json();
+    setTxt('productCount', `${prodotti.length} PRODOTTI`);
+    setTxt('heroCounter', prodotti.length);
+    renderProdotti();
   } catch {
     el.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>NESSUNA CONNESSIONE</h3><p>Verifica che il server sia attivo</p></div>';
   }
 }
 
-function renderProductos(list) {
-  list = list || productos;
+function renderProdotti(lista) {
+  lista = lista || prodotti;
   const el = document.getElementById('productosList');
-  if (!list.length) {
+  if (!lista.length) {
     el.innerHTML = '<div class="empty-state"><div class="ei"><iconify-icon icon="mdi:package-variant-closed-remove" width="40"></iconify-icon></div><h3>NESSUN PRODOTTO</h3><p>Aggiungi prodotti dal pannello admin.</p></div>';
     return;
   }
-  el.innerHTML = `<div class="grid">${list.map(p => {
+  el.innerHTML = `<div class="grid">${lista.map(p => {
     const img = getImgUrl(p);
     return `
-      <div class="card" onclick="verProducto(${p.id})">
-        ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">${currentLang === 'it' ? 'ULTIMI' : 'ÚLTIMAS'}</div>` : ''}
+      <div class="card" onclick="vediProdotto(${p.id})">
+        ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">${linguaCorrente === 'it' ? 'ULTIMI' : 'ÚLTIMAS'}</div>` : ''}
         ${p.stock === 0 ? `<div class="card-badge" style="background:var(--muted)">${t('sold_out')}</div>` : ''}
         ${img ? `<img class="card-img" src="${img}" alt="${p.nombre}" onerror="this.outerHTML='<div class=card-ph>3D</div>'">` : '<div class="card-ph">3D</div>'}
         <div class="card-body">
@@ -57,7 +57,7 @@ function renderProductos(list) {
             <div class="card-price">€${parseFloat(p.precio).toFixed(2)}</div>
             <div class="card-stock">${p.stock > 0 ? `STOCK: ${p.stock}` : t('sold_out')}</div>
           </div>
-          <button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})" ${p.stock === 0 ? 'disabled' : ''}>
+          <button class="add-btn" onclick="event.stopPropagation();aggiungiAlCarrello(${p.id})" ${p.stock === 0 ? 'disabled' : ''}>
             ${p.stock === 0 ? t('sold_out') : t('add_to_cart')}
           </button>
         </div>
@@ -65,8 +65,8 @@ function renderProductos(list) {
   }).join('')}</div>`;
 }
 
-async function verProducto(idOrSlug) {
-  showView('producto');
+async function vediProdotto(idOrSlug) {
+  mostraVista('producto');
   const layout = document.getElementById('productoLayout');
   layout.innerHTML = '<div class="loading" style="padding:120px">CARICAMENTO</div>';
   try {
@@ -75,12 +75,17 @@ async function verProducto(idOrSlug) {
     const r = await fetch(url);
     if (!r.ok) throw new Error('non trovato');
     const p = await r.json();
-    productoActual = p;
-    varianteSeleccionada = {};
-    cantidadSeleccionada = 1;
+    prodottoCorrente = p;
+    varianteSelezionata = {};
+    quantitaSelezionata = 1;
+    fotoClienteUrl = null;
+    dataConsegnaSelezionata = null;
+    supplementoExpressCorrente = 0;
+    const ora = new Date();
+    calMeseCorrente = { anno: ora.getFullYear(), mese: ora.getMonth() };
 
-    const nuevoSlug = p.slug || String(p.id);
-    window.history.pushState({ tipo: 'producto', slug: nuevoSlug }, p.nombre, `/producto/${nuevoSlug}`);
+    const nuovoSlug = p.slug || String(p.id);
+    window.history.pushState({ tipo: 'producto', slug: nuovoSlug }, p.nombre, `/producto/${nuovoSlug}`);
     document.title = `${p.nombre} — RoleFigz`;
     document.querySelector('meta[name="description"]')?.setAttribute('content', p.descripcion || p.nombre);
     const ogTitle = document.querySelector('meta[property="og:title"]');
@@ -88,9 +93,9 @@ async function verProducto(idOrSlug) {
     if (ogTitle) ogTitle.setAttribute('content', `${p.nombre} — RoleFigz`);
     if (ogDesc)  ogDesc.setAttribute('content', p.descripcion || p.nombre);
 
-    renderProductoDetalle(p);
-    loadResenas(p.id);
-    trackVisita('producto', p.id);
+    renderDettaglioProdotto(p);
+    caricaRecensioni(p.id);
+    tracciVisita('producto', p.id);
   } catch {
     layout.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>PRODOTTO NON TROVATO</h3><p>Il link potrebbe essere scaduto o il prodotto non è più disponibile.</p></div>';
   }
@@ -99,10 +104,10 @@ async function verProducto(idOrSlug) {
 function tornaAlNegozio() {
   window.history.pushState({}, 'RoleFigz', '/');
   document.title = 'RoleFigz — Stampa 3D & Personalizzazione';
-  showView('tienda');
+  mostraVista('tienda');
 }
 
-function copiarLink(slug, btn) {
+function copiaLink(slug, btn) {
   const url = `${window.location.origin}/producto/${slug}`;
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
@@ -117,26 +122,26 @@ function copiarLink(slug, btn) {
   }).catch(() => {});
 }
 
-function renderProductoDetalle(p) {
+function renderDettaglioProdotto(p) {
   const layout = document.getElementById('productoLayout');
-  const imagenes = p.imagenes && p.imagenes.length ? p.imagenes : (p.imagen ? [{ url: p.imagen }] : []);
-  const tiposVariantes = {};
+  const immagini = p.imagenes && p.imagenes.length ? p.imagenes : (p.imagen ? [{ url: p.imagen }] : []);
+  const tipiVarianti = {};
   if (p.variantes) p.variantes.forEach(v => {
-    if (!tiposVariantes[v.tipo]) tiposVariantes[v.tipo] = [];
-    tiposVariantes[v.tipo].push(v);
+    if (!tipiVarianti[v.tipo]) tipiVarianti[v.tipo] = [];
+    tipiVarianti[v.tipo].push(v);
   });
-  const tieneVariantes = Object.keys(tiposVariantes).length > 0;
+  const haVarianti = Object.keys(tipiVarianti).length > 0;
 
   layout.innerHTML = `
     <div class="producto-galeria">
       <div class="galeria-main" id="galeriaMain">
-        ${imagenes.length
-          ? `<img id="mainImg" src="${imagenes[0].url}" alt="${p.nombre}">`
+        ${immagini.length
+          ? `<img id="mainImg" src="${immagini[0].url}" alt="${p.nombre}">`
           : '<div class="galeria-main-ph">3D</div>'}
       </div>
-      ${imagenes.length > 1 ? `<div class="galeria-thumbs">
-        ${imagenes.map((img, i) => `
-          <div class="galeria-thumb ${i === 0 ? 'active' : ''}" onclick="switchImg('${img.url}', ${i})" id="thumb-${i}">
+      ${immagini.length > 1 ? `<div class="galeria-thumbs">
+        ${immagini.map((img, i) => `
+          <div class="galeria-thumb ${i === 0 ? 'active' : ''}" onclick="cambiaImmagine('${img.url}', ${i})" id="thumb-${i}">
             <img src="${img.url}" alt="">
           </div>`).join('')}
       </div>` : ''}
@@ -146,7 +151,7 @@ function renderProductoDetalle(p) {
         <div class="producto-breadcrumb" onclick="tornaAlNegozio()" style="margin:0;flex:1">
           ${t('nav_shop')} / <span>${p.Categoria ? p.Categoria.nombre.toUpperCase() : 'PRODOTTI'}</span> / ${p.nombre.toUpperCase()}
         </div>
-        ${p.slug ? `<button onclick="copiarLink('${p.slug}',this)" class="share-btn">🔗 COPIA LINK</button>` : ''}
+        ${p.slug ? `<button onclick="copiaLink('${p.slug}',this)" class="share-btn">🔗 COPIA LINK</button>` : ''}
       </div>
       <div class="producto-cat">${p.Categoria ? p.Categoria.nombre : ''}</div>
       <div class="producto-nombre">${p.nombre}</div>
@@ -154,13 +159,13 @@ function renderProductoDetalle(p) {
         €${parseFloat(p.precio).toFixed(2)}
         <span class="producto-precio-extra" id="precioExtra"></span>
       </div>
-      ${Object.entries(tiposVariantes).map(([tipo, vars]) => `
+      ${Object.entries(tipiVarianti).map(([tipo, vars]) => `
         <div class="variantes-section">
           <div class="variantes-label">${tipo.toUpperCase()}: <strong id="sel-${tipo}">—</strong></div>
           <div class="variantes-grid">
             ${vars.map(v => `
               <button class="variante-btn ${v.stock === 0 ? 'out' : ''}"
-                onclick="${v.stock > 0 ? `selectVariante('${tipo}','${v.valor}',${v.precio_extra},this)` : ''}"
+                onclick="${v.stock > 0 ? `selezionaVariante('${tipo}','${v.valor}',${v.precio_extra},this)` : ''}"
                 ${v.stock === 0 ? 'disabled' : ''}
                 title="${v.stock === 0 ? t('sold_out') : 'Stock: ' + v.stock}">
                 ${v.valor}${v.precio_extra > 0 ? ` +€${parseFloat(v.precio_extra).toFixed(2)}` : ''}
@@ -172,13 +177,54 @@ function renderProductoDetalle(p) {
         <div class="stock-dot ${p.stock > 5 ? 'ok' : p.stock > 0 ? 'low' : 'out'}"></div>
         <span>${p.stock > 5 ? 'DISPONIBILE' : p.stock > 0 ? `ULTIME ${p.stock} UNITÀ` : t('sold_out')}</span>
       </div>
+      ${p.selettore_data ? `
+      <div class="data-consegna-wrap" id="dataConsegnaWrap">
+        <div class="data-consegna-label">
+          <iconify-icon icon="mdi:calendar-clock" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>DATA DI CONSEGNA <span style="color:var(--accent)">*</span>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="cambiaMesseCalendario(-1)">←</button>
+          <span class="cal-mese-anno" id="calMeseAnno"></span>
+          <button class="cal-nav-btn" onclick="cambiaMesseCalendario(1)">→</button>
+        </div>
+        <div class="cal-settimana">
+          <span>LUN</span><span>MAR</span><span>MER</span><span>GIO</span><span>VEN</span><span>SAB</span><span>DOM</span>
+        </div>
+        <div class="cal-griglia" id="calGiorni"></div>
+        <div class="cal-legenda">
+          <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>NON DISP.</div>
+          ${p.prezzo_per_giorno_express > 0 ? `<div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(193,127,58,.2);border:1px solid var(--accent)"></div>EXPRESS (+€${parseFloat(p.prezzo_per_giorno_express).toFixed(2)}/gg)</div>` : ''}
+          <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(76,175,80,.2);border:1px solid var(--green)"></div>STANDARD (${(p.giorni_produzione || 7) + (p.giorni_spedizione || 3)} gg)</div>
+        </div>
+        <div class="cal-info-box" id="dataSelezionataInfo" style="display:none">
+          <span id="dataSelezionataLabel"></span>
+          <span id="supplementoLabel"></span>
+        </div>
+      </div>` : ''}
+      ${p.richiede_foto ? `
+      <div class="foto-upload-wrap" id="fotoUploadWrap">
+        <div class="foto-upload-label"><iconify-icon icon="mdi:camera-outline" width="14" style="vertical-align:middle;margin-right:6px"></iconify-icon>CARICA LA TUA FOTO <span style="color:var(--accent)">*</span></div>
+        <div class="foto-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoClienteInput').click()">
+          <div id="fotoUploadPlaceholder">
+            <iconify-icon icon="mdi:upload" width="28" style="color:var(--muted)"></iconify-icon>
+            <div style="font-size:10px;letter-spacing:1px;margin-top:6px">CLICCA PER CARICARE</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:3px">JPG, PNG, WEBP — max 5MB</div>
+          </div>
+          <div id="fotoUploadPreview" style="display:none;position:relative">
+            <img id="fotoUploadImg" src="" style="max-height:120px;max-width:100%;object-fit:contain"/>
+            <div style="font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:1px">Clicca per cambiare</div>
+          </div>
+        </div>
+        <input type="file" id="fotoClienteInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="caricaFotoCliente(this)"/>
+        <div id="fotoUploadMsg" style="font-size:10px;margin-top:5px;letter-spacing:1px"></div>
+      </div>` : ''}
       <div class="qty-row">
         <div class="qty-ctrl">
-          <button onclick="changeCantidad(-1)">−</button>
+          <button onclick="cambiaQuantitaDettaglio(-1)">−</button>
           <span id="cantidadDisplay">1</span>
-          <button onclick="changeCantidad(1)">+</button>
+          <button onclick="cambiaQuantitaDettaglio(1)">+</button>
         </div>
-        <button class="add-cart-btn" onclick="addToCartDetalle()" id="addCartBtn" ${p.stock === 0 ? 'disabled' : ''}>
+        <button class="add-cart-btn" onclick="aggiungiAlCarrelloDettaglio()" id="addCartBtn" ${p.stock === 0 ? 'disabled' : ''}>
           ${p.stock === 0 ? t('sold_out') : t('add_to_cart')}
         </button>
       </div>
@@ -186,61 +232,261 @@ function renderProductoDetalle(p) {
         <div class="meta-row"><span class="meta-key">CATEGORIA</span><span>${p.Categoria ? p.Categoria.nombre : '—'}</span></div>
         <div class="meta-row"><span class="meta-key">MATERIALE</span><span>PLA Premium</span></div>
         <div class="meta-row"><span class="meta-key">RIFERIMENTO</span><span style="font-family:'DM Mono',monospace;font-size:10px">RF-${String(p.id).padStart(4, '0')}</span></div>
-        ${tieneVariantes ? `<div class="meta-row"><span class="meta-key">VARIANTI</span><span>${p.variantes.length} opzioni</span></div>` : ''}
+        ${haVarianti ? `<div class="meta-row"><span class="meta-key">VARIANTI</span><span>${p.variantes.length} opzioni</span></div>` : ''}
       </div>
     </div>`;
 
-  // Reseñas fuera del grid para evitar superposición con elementos sticky
-  const view = document.getElementById('view-producto');
-  const oldResenas = view.querySelector('.producto-resenas');
-  if (oldResenas) oldResenas.remove();
-  const resenasEl = document.createElement('div');
-  resenasEl.className = 'producto-resenas';
-  resenasEl.innerHTML = `
+  // Inizializza calendario dopo che l'HTML è nel DOM
+  if (p.selettore_data) setTimeout(() => renderCalendario(), 0);
+
+  // Recensioni fuori dal grid per evitare sovrapposizione con elementi sticky
+  const vista = document.getElementById('view-producto');
+  const oldRecensioni = vista.querySelector('.producto-resenas');
+  if (oldRecensioni) oldRecensioni.remove();
+  const recensioniEl = document.createElement('div');
+  recensioniEl.className = 'producto-resenas';
+  recensioniEl.innerHTML = `
     <div class="section-eyebrow" style="margin-bottom:8px">// Opinioni dei clienti</div>
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;margin-bottom:28px;color:var(--dark)">RECENSIONI</div>
     <div id="resenas-list"><div class="loading" style="padding:20px 0">CARICAMENTO</div></div>
     <div id="resenas-form-wrap" style="margin-top:32px;padding-top:28px;border-top:1px solid var(--border)"></div>`;
-  view.appendChild(resenasEl);
+  vista.appendChild(recensioniEl);
 }
 
-function switchImg(url, idx) {
+function cambiaImmagine(url, idx) {
   document.getElementById('mainImg').src = url;
   document.querySelectorAll('.galeria-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
 }
 
-function selectVariante(tipo, valor, precioExtra, btn) {
+function selezionaVariante(tipo, valore, prezzoExtra, btn) {
   btn.closest('.variantes-grid').querySelectorAll('.variante-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  varianteSeleccionada[tipo] = valor;
-  setTxt(`sel-${tipo}`, valor);
-  const base = parseFloat(productoActual.precio);
+  varianteSelezionata[tipo] = valore;
+  setTxt(`sel-${tipo}`, valore);
+  const base = parseFloat(prodottoCorrente.precio);
   let extra = 0;
-  productoActual.variantes.forEach(v => {
-    if (varianteSeleccionada[v.tipo] === v.valor) extra += parseFloat(v.precio_extra || 0);
+  prodottoCorrente.variantes.forEach(v => {
+    if (varianteSelezionata[v.tipo] === v.valor) extra += parseFloat(v.precio_extra || 0);
   });
   setTxt('precioExtra', extra > 0 ? `+€${extra.toFixed(2)}` : '');
   document.getElementById('precioDisplay').childNodes[0].textContent = `€${(base + extra).toFixed(2)}`;
 }
 
-function changeCantidad(d) {
-  cantidadSeleccionada = Math.max(1, Math.min(cantidadSeleccionada + d, productoActual.stock));
-  setTxt('cantidadDisplay', cantidadSeleccionada);
+function cambiaQuantitaDettaglio(d) {
+  quantitaSelezionata = Math.max(1, Math.min(quantitaSelezionata + d, prodottoCorrente.stock));
+  setTxt('cantidadDisplay', quantitaSelezionata);
 }
 
-function addToCartDetalle() {
-  if (!productoActual) return;
-  const varianteStr = Object.entries(varianteSeleccionada).map(([k, v]) => `${k}: ${v}`).join(', ');
-  const base = parseFloat(productoActual.precio);
-  let extra = 0;
-  productoActual.variantes && productoActual.variantes.forEach(v => {
-    if (varianteSeleccionada[v.tipo] === v.valor) extra += parseFloat(v.precio_extra || 0);
+async function caricaFotoCliente(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const msgEl = document.getElementById('fotoUploadMsg');
+  msgEl.textContent = 'Caricamento...';
+  msgEl.style.color = 'var(--muted)';
+  const fd = new FormData();
+  fd.append('foto', file);
+  try {
+    const r = await fetch(`${API}/productos/foto-cliente`, { method: 'POST', body: fd });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    fotoClienteUrl = data.url;
+    document.getElementById('fotoUploadImg').src = data.url;
+    document.getElementById('fotoUploadPreview').style.display = 'block';
+    document.getElementById('fotoUploadPlaceholder').style.display = 'none';
+    msgEl.textContent = '✓ Foto caricata';
+    msgEl.style.color = 'var(--green)';
+  } catch(e) {
+    fotoClienteUrl = null;
+    msgEl.textContent = e.message;
+    msgEl.style.color = 'var(--accent)';
+  }
+}
+
+// ── Calendario data di consegna ───────────────────────────────────────────────
+
+const MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+function renderCalendario() {
+  if (!prodottoCorrente || !prodottoCorrente.selettore_data) return;
+  const { anno, mese } = calMeseCorrente;
+  const p = prodottoCorrente;
+
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const giorniProd   = p.giorni_produzione || 7;
+  const giorniSpediz = p.giorni_spedizione || 3;
+  const prezzoGiorno = parseFloat(p.prezzo_per_giorno_express || 0);
+
+  // Data standard = oggi + prod + spedizione
+  const dataStandard = new Date(oggi);
+  dataStandard.setDate(dataStandard.getDate() + giorniProd + giorniSpediz);
+
+  // Data minima = oggi + spedizione + 1 giorno produzione minimo
+  const dataMinima = new Date(oggi);
+  dataMinima.setDate(dataMinima.getDate() + giorniSpediz + 1);
+
+  // Header mese/anno
+  setTxt('calMeseAnno', `${MESI_IT[mese]} ${anno}`);
+
+  // Costruisci griglia giorni
+  const primoGiorno = new Date(anno, mese, 1);
+  const ultimoGiorno = new Date(anno, mese + 1, 0);
+  const offsetInizio = (primoGiorno.getDay() + 6) % 7; // 0=Lun
+
+  let html = '';
+
+  // Celle vuote iniziali
+  for (let i = 0; i < offsetInizio; i++) html += `<div class="cal-day"></div>`;
+
+  for (let g = 1; g <= ultimoGiorno.getDate(); g++) {
+    const data = new Date(anno, mese, g);
+    const iso  = data.toISOString().slice(0, 10);
+    const sel  = iso === dataConsegnaSelezionata;
+
+    if (data < dataMinima) {
+      html += `<div class="cal-day cal-day--dis"><span class="cal-day-n">${g}</span></div>`;
+    } else if (data < dataStandard) {
+      // Express — calcola supplemento
+      const giorniAnticipo = Math.round((dataStandard - data) / 864e5);
+      const supp = giorniAnticipo * prezzoGiorno;
+      html += `<div class="cal-day cal-day--exp${sel ? ' cal-day--sel' : ''}" onclick="selezionaDataConsegna('${iso}',${supp})">
+        <span class="cal-day-n">${g}</span>
+        <span class="cal-day-badge">${prezzoGiorno > 0 ? `+€${supp.toFixed(0)}` : 'EXP'}</span>
+      </div>`;
+    } else {
+      const isStd = data.getTime() === dataStandard.getTime();
+      html += `<div class="cal-day cal-day--ok${sel ? ' cal-day--sel' : ''}${isStd ? ' cal-day--std' : ''}" onclick="selezionaDataConsegna('${iso}',0)">
+        <span class="cal-day-n">${g}</span>
+        ${isStd ? '<span class="cal-day-badge" style="color:var(--green)">STD</span>' : ''}
+      </div>`;
+    }
+  }
+
+  document.getElementById('calGiorni').innerHTML = html;
+
+  // Info box data selezionata
+  const infoEl = document.getElementById('dataSelezionataInfo');
+  if (infoEl) {
+    if (dataConsegnaSelezionata) {
+      const dSel = new Date(dataConsegnaSelezionata + 'T00:00:00');
+      setTxt('dataSelezionataLabel', `📅 ${dSel.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}`);
+      const suppEl = document.getElementById('supplementoLabel');
+      if (supplementoExpressCorrente > 0) {
+        suppEl.textContent = ` · +€${supplementoExpressCorrente.toFixed(2)} express`;
+        suppEl.style.color = 'var(--accent)';
+      } else {
+        suppEl.textContent = ' · consegna standard';
+        suppEl.style.color = 'var(--muted)';
+      }
+      infoEl.style.display = '';
+    } else {
+      infoEl.style.display = 'none';
+    }
+  }
+}
+
+function cambiaMesseCalendario(delta) {
+  let { anno, mese } = calMeseCorrente;
+  mese += delta;
+  if (mese > 11) { mese = 0; anno++; }
+  if (mese < 0)  { mese = 11; anno--; }
+  // Non andare prima del mese corrente
+  const ora = new Date();
+  if (anno < ora.getFullYear() || (anno === ora.getFullYear() && mese < ora.getMonth())) return;
+  calMeseCorrente = { anno, mese };
+  renderCalendario();
+}
+
+function selezionaDataConsegna(iso, supplemento) {
+  dataConsegnaSelezionata    = iso;
+  supplementoExpressCorrente = supplemento;
+
+  // Ricalcola il prezzo mostrato
+  const base = parseFloat(prodottoCorrente.precio);
+  let extraVariante = 0;
+  prodottoCorrente.variantes && prodottoCorrente.variantes.forEach(v => {
+    if (varianteSelezionata[v.tipo] === v.valor) extraVariante += parseFloat(v.precio_extra || 0);
   });
-  const precioFinal = base + extra;
-  const key = `${productoActual.id}-${varianteStr}`;
-  const item = carrito.find(x => x.key === key);
-  if (item) item.cantidad += cantidadSeleccionada;
-  else carrito.push({ key, producto: productoActual, variante: varianteStr, precio: precioFinal, cantidad: cantidadSeleccionada });
-  updateCartUI();
-  openCart();
+  const prezzoTotale = base + extraVariante + supplemento;
+  document.getElementById('precioDisplay').childNodes[0].textContent = `€${prezzoTotale.toFixed(2)}`;
+  const extraTesto = [];
+  if (extraVariante > 0) extraTesto.push(`+€${extraVariante.toFixed(2)} variante`);
+  if (supplemento > 0)   extraTesto.push(`+€${supplemento.toFixed(2)} express`);
+  setTxt('precioExtra', extraTesto.join(' '));
+
+  renderCalendario();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function aggiungiAlCarrelloDettaglio() {
+  if (!prodottoCorrente) return;
+
+  // Verifica foto obbligatoria
+  if (prodottoCorrente.richiede_foto && !fotoClienteUrl) {
+    const msgEl = document.getElementById('fotoUploadMsg');
+    if (msgEl) { msgEl.textContent = '⚠ Carica la tua foto prima di aggiungere al carrello'; msgEl.style.color = 'var(--accent)'; }
+    document.getElementById('fotoUploadArea')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Verifica data obbligatoria
+  if (prodottoCorrente.selettore_data && !dataConsegnaSelezionata) {
+    document.getElementById('dataConsegnaWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('calMeseAnno')?.closest('.data-consegna-wrap')?.classList.add('cal-avviso');
+    setTimeout(() => document.getElementById('calMeseAnno')?.closest('.data-consegna-wrap')?.classList.remove('cal-avviso'), 1200);
+    return;
+  }
+
+  const varianteStr = Object.entries(varianteSelezionata).map(([k, v]) => `${k}: ${v}`).join(', ');
+  const base = parseFloat(prodottoCorrente.precio);
+  let extra = 0;
+  prodottoCorrente.variantes && prodottoCorrente.variantes.forEach(v => {
+    if (varianteSelezionata[v.tipo] === v.valor) extra += parseFloat(v.precio_extra || 0);
+  });
+  const prezzoFinale = base + extra + supplementoExpressCorrente;
+
+  // Key unica per prodotti con foto o data (non si sommano tra loro)
+  const needsUniqueKey = prodottoCorrente.richiede_foto || prodottoCorrente.selettore_data;
+  const key = needsUniqueKey
+    ? `${prodottoCorrente.id}-${varianteStr}-${Date.now()}`
+    : `${prodottoCorrente.id}-${varianteStr}`;
+
+  const fotoSalvata   = fotoClienteUrl;
+  const dataSalvata   = dataConsegnaSelezionata;
+  const suppSalvato   = supplementoExpressCorrente;
+
+  // Reset stato
+  fotoClienteUrl           = null;
+  dataConsegnaSelezionata  = null;
+  supplementoExpressCorrente = 0;
+
+  const item = !needsUniqueKey && carrello.find(x => x.key === key);
+  if (item) item.quantita += quantitaSelezionata;
+  else carrello.push({
+    key,
+    prodotto:        prodottoCorrente,
+    variante:        varianteStr,
+    prezzo:          prezzoFinale,
+    quantita:        quantitaSelezionata,
+    fotoCliente:     fotoSalvata,
+    dataConsegna:    dataSalvata,
+    supplementoExpress: suppSalvato
+  });
+
+  // Reset UI foto
+  if (prodottoCorrente.richiede_foto) {
+    const prev = document.getElementById('fotoUploadPreview');
+    const ph   = document.getElementById('fotoUploadPlaceholder');
+    if (prev) prev.style.display = 'none';
+    if (ph)   ph.style.display   = '';
+    const msg = document.getElementById('fotoUploadMsg');
+    if (msg)  msg.textContent    = '';
+  }
+
+  // Reset prezzo display
+  setTxt('precioExtra', '');
+  document.getElementById('precioDisplay').childNodes[0].textContent = `€${(base + extra).toFixed(2)}`;
+
+  aggiornaUICarrello();
+  apriCarrello();
 }
