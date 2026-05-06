@@ -203,61 +203,6 @@ async function reimpostaPassword() {
   }
 }
 
-// ── GOOGLE SIGN-IN ───────────────────────────────────────────────────────────
-
-async function inizializzaGoogle() {
-  try {
-    const r = await fetch(`${API}/auth/google-config`);
-    const { clientId } = await r.json();
-    if (!clientId) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
-      google.accounts.id.initialize({
-        client_id:   clientId,
-        callback:    handleGoogleCredential,
-        auto_select: false,
-      });
-      const opzioniBtn = { theme: 'outline', size: 'large', width: 340, shape: 'rectangular', logo_alignment: 'left' };
-      const bl = document.getElementById('googleBtnLogin');
-      if (bl) google.accounts.id.renderButton(bl, { ...opzioniBtn, text: 'signin_with' });
-      const br = document.getElementById('googleBtnRegister');
-      if (br) google.accounts.id.renderButton(br, { ...opzioniBtn, text: 'signup_with' });
-    };
-    document.head.appendChild(script);
-  } catch(e) { /* Google non disponibile, nessuna azione */ }
-}
-
-async function handleGoogleCredential(response) {
-  try {
-    // Estrai foto profilo dal JWT Google (lato client, non segreto)
-    try {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      if (payload.picture) localStorage.setItem('rfFoto', payload.picture);
-    } catch {}
-
-    const r = await fetch(`${API}/auth/google`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ credential: response.credential })
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error);
-    token = data.token;
-    localStorage.setItem('rfToken', token);
-    utente = data.usuario;
-    impostaSessione();
-    chiudiModalAuth();
-    if (utente.rol === 'admin') { window.location.href = '/admin.html'; return; }
-    mostraVista('tienda');
-  } catch(e) {
-    showMsg('loginMsg',    e.message, 'err');
-    showMsg('registerMsg', e.message, 'err');
-  }
-}
-
 // ── SESSIONE ─────────────────────────────────────────────────────────────────
 
 function _impostaVisibilitaFabChat(visibile) {

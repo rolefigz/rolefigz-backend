@@ -70,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(verificaToken, 5 * 60 * 1000);
   if (document.getElementById('resenasDestacadas')) caricaRecensioniInEvidenza();
   gestisciRitornoStripe();
-  inizializzaGoogle();
 
   const percorso = window.location.pathname;
   if (percorso.startsWith('/producto/')) {

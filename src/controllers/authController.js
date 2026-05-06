@@ -138,46 +138,4 @@ const resetPassword = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// GET /api/auth/google-config — espone il client ID (non segreto)
-const getGoogleConfig = (req, res) => {
-  res.json({ clientId: process.env.GOOGLE_CLIENT_ID || null });
-};
-
-// POST /api/auth/google — verifica credenziale Google e autentica
-const loginGoogle = async (req, res) => {
-  try {
-    const { credential } = req.body;
-    if (!credential) return res.status(400).json({ error: "Credenziale Google mancante" });
-
-    const verifica = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
-    const payload  = await verifica.json();
-
-    if (!verifica.ok || payload.error_description)
-      return res.status(401).json({ error: "Token Google non valido" });
-    if (payload.aud !== process.env.GOOGLE_CLIENT_ID)
-      return res.status(401).json({ error: "Token non valido per questa applicazione" });
-    if (payload.email_verified !== "true" && payload.email_verified !== true)
-      return res.status(401).json({ error: "Email Google non verificata" });
-
-    let utente = await Utente.findOne({ where: { email: payload.email } });
-    if (!utente) {
-      utente = await Utente.create({
-        nombre:    payload.name || payload.email.split("@")[0],
-        email:     payload.email,
-        password:  await bcrypt.hash(Math.random().toString(36) + Date.now(), 10),
-        rol:       "user",
-        verificado: true,
-        activo:    true,
-      });
-    } else if (!utente.verificado) {
-      await utente.update({ verificado: true });
-    }
-
-    if (!utente.activo) return res.status(403).json({ error: "Account disabilitato" });
-
-    const tkn = jwt.sign({ id: utente.id, rol: utente.rol }, process.env.JWT_SECRET, { expiresIn: "30d" });
-    res.json({ token: tkn, usuario: { id: utente.id, nombre: utente.nombre, email: utente.email, rol: utente.rol } });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-};
-
-module.exports = { register, verificarCodigo, login, getPerfil, updatePerfil, getMisOrdenes, recuperarPassword, resetPassword, getGoogleConfig, loginGoogle };
+module.exports = { register, verificarCodigo, login, getPerfil, updatePerfil, getMisOrdenes, recuperarPassword, resetPassword };
