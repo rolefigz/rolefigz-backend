@@ -40,8 +40,9 @@ async function adminTab(tab, el) {
             </div>`
           : `<div style="padding:8px 12px;background:var(--surface2);border:1px dashed var(--border);margin-top:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">
               <iconify-icon icon="mdi:clock-outline" width="12" style="vertical-align:middle;margin-right:4px"></iconify-icon>
-              Etichetta non ancora generata —
-              <button class="action-btn" style="padding:2px 8px;font-size:9px" onclick="adminApriSpedizione(${o.id})">GENERA ORA</button>
+              Etichetta non generata —
+              <button class="action-btn" style="padding:2px 8px;font-size:9px" onclick="adminApriSpedizione(${o.id})">SHIPPO</button>
+              <button class="action-btn" style="padding:2px 8px;font-size:9px;border-color:var(--accent);color:var(--accent)" onclick="adminInserisciTracking(${o.id})">+ TRACKING MANUALE</button>
             </div>`;
 
         const statoColor = { confirmado:'var(--accent)', enviado:'var(--green)', entregado:'var(--green)', cancelado:'var(--red)', pendiente:'var(--muted)' };
@@ -1237,6 +1238,23 @@ async function adminEliminaTariffa(id) {
       headers: { Authorization: `Bearer ${token}` }
     });
     adminTabTariffeSpedizione(document.getElementById('adminContent'));
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+// ══ TRACKING MANUALE ═══════════════════════════════════════════════════════
+
+async function adminInserisciTracking(ordineId) {
+  const tracking = prompt('Inserisci il numero di tracking:');
+  if (!tracking || !tracking.trim()) return;
+  const corriere = prompt('Corriere (es. DHL, GLS, BRT):') || '';
+  try {
+    const r = await fetch(`${API}/ordenes/${ordineId}/tracking`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tracking_number: tracking.trim(), carrier: corriere.trim(), estado: 'enviado' })
+    });
+    if (!r.ok) throw new Error((await r.json()).error);
+    adminTab('ordenes', null);
   } catch(e) { alert('Errore: ' + e.message); }
 }
 
