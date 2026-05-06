@@ -22,7 +22,32 @@
   <div style="display:flex;align-items:center;gap:8px">
     <button class="nav-btn" onclick="mostraVista('tienda')" data-i18n="nav_shop">NEGOZIO</button>
     <button class="nav-btn primary" onclick="apriAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
-    <button class="nav-btn" onclick="disconnetti()" id="headerLogoutBtn" style="display:none" data-i18n="nav_logout">ESCI</button>
+
+    <!-- Avatar dropdown (visibile solo da loggati) -->
+    <div class="avatar-wrap" id="avatarWrap" style="display:none">
+      <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdownProfilo(event)" aria-label="Profilo">
+        <img id="avatarFoto" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
+        <span id="avatarIniziale">?</span>
+      </button>
+      <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="avatar-dd-user">
+          <div class="avatar-dd-nome" id="ddNome">—</div>
+          <div class="avatar-dd-email" id="ddEmail">—</div>
+        </div>
+        <div class="avatar-dd-sep"></div>
+        <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('ordenes',null)">
+          <iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> I miei ordini
+        </button>
+        <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('datos',null)">
+          <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> I miei dati
+        </button>
+        <div class="avatar-dd-sep"></div>
+        <button class="avatar-dd-item danger" onclick="chiudiDropdownProfilo();disconnetti()">
+          <iconify-icon icon="mdi:logout" width="15"></iconify-icon> Esci
+        </button>
+      </div>
+    </div>
+
     <button class="menu-toggle" id="menuToggle" onclick="apriMenuNav()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>

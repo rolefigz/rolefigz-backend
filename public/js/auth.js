@@ -236,6 +236,12 @@ async function inizializzaGoogle() {
 
 async function handleGoogleCredential(response) {
   try {
+    // Estrai foto profilo dal JWT Google (lato client, non segreto)
+    try {
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      if (payload.picture) localStorage.setItem('rfFoto', payload.picture);
+    } catch {}
+
     const r = await fetch(`${API}/auth/google`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -266,20 +272,29 @@ function _impostaVisibilitaFabChat(visibile) {
 }
 
 function impostaSessione() {
-  document.getElementById('loginBtn').style.display = 'none';
-  document.getElementById('logoutBtn').style.display = 'block';
-  const hLogin = document.getElementById('headerLoginBtn');
-  const hLogout = document.getElementById('headerLogoutBtn');
-  if (hLogin)  hLogin.style.display  = 'none';
-  if (hLogout) hLogout.style.display = 'block';
-  document.getElementById('perfilBtn').style.display = 'block';
-  document.getElementById('adminBtn').style.display = utente.rol === 'admin' ? 'block' : 'none';
+  document.getElementById('loginBtn').style.display     = 'none';
+  document.getElementById('logoutBtn').style.display    = 'block';
+  document.getElementById('headerLoginBtn').style.display = 'none';
+  document.getElementById('perfilBtn').style.display    = 'block';
+  document.getElementById('adminBtn').style.display     = utente.rol === 'admin' ? 'block' : 'none';
+
+  // Avatar header
+  const wrap = document.getElementById('avatarWrap');
+  if (wrap) wrap.style.display = 'block';
+  const iniziale = document.getElementById('avatarIniziale');
+  if (iniziale) iniziale.textContent = (utente.nombre || '?').charAt(0).toUpperCase();
+  const foto = document.getElementById('avatarFoto');
+  const fotoUrl = utente.foto || localStorage.getItem('rfFoto');
+  if (foto && fotoUrl) { foto.src = fotoUrl; foto.style.display = 'block'; if (iniziale) iniziale.style.display = 'none'; }
+  setTxt('ddNome',  utente.nombre || '');
+  setTxt('ddEmail', utente.email  || '');
+
   setSd('authDot', 'ok');
   setTxt('authStatus', `${t(utente.rol === 'admin' ? 'status_admin' : 'status_client')}: ${utente.nombre}`);
   const el = document.getElementById('perfilAvatar');
   if (el) el.textContent = (utente.nombre || '?').charAt(0).toUpperCase();
   setTxt('perfilNombre', utente.nombre || '');
-  setTxt('perfilEmail', utente.email || '');
+  setTxt('perfilEmail',  utente.email  || '');
   document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = 'none'; });
   if (utente.rol !== 'admin') _impostaVisibilitaFabChat(true);
   if (utente.rol === 'admin') {
@@ -288,10 +303,23 @@ function impostaSessione() {
   }
 }
 
+function toggleDropdownProfilo(e) {
+  e.stopPropagation();
+  document.getElementById('avatarDropdown').classList.toggle('open');
+}
+function chiudiDropdownProfilo() {
+  document.getElementById('avatarDropdown')?.classList.remove('open');
+}
+document.addEventListener('click', chiudiDropdownProfilo);
+
 function disconnetti() {
   token = null;
   utente = null;
   localStorage.removeItem('rfToken');
+  localStorage.removeItem('rfFoto');
+  const wrap = document.getElementById('avatarWrap');
+  if (wrap) wrap.style.display = 'none';
+  chiudiDropdownProfilo();
   if (window.location.pathname.includes('admin')) {
     window.location.href = '/index.html';
   } else {

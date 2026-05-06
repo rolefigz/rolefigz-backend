@@ -494,6 +494,34 @@ footer { background: var(--dark); color: #888; padding: 56px 48px 32px; border-t
 .menu-toggle span { display: block; width: 20px; height: 1.5px; background: var(--text); transition: background .2s; }
 .menu-toggle:hover span { background: var(--accent); }
 
+/* ── AVATAR DROPDOWN ── */
+.avatar-wrap { position: relative; }
+.avatar-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--dark);
+  background: var(--dark); color: #fff; cursor: pointer; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; transition: border-color .2s, transform .15s; padding: 0;
+}
+.avatar-btn:hover { border-color: var(--accent); transform: scale(1.05); }
+.avatar-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 10px);
+  background: #fff; border: 1px solid var(--border); min-width: 220px; z-index: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,.10);
+}
+.avatar-dropdown.open { display: block; }
+.avatar-dd-user { padding: 14px 16px 10px; }
+.avatar-dd-nome { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--dark); text-transform: uppercase; letter-spacing: .5px; }
+.avatar-dd-email { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; }
+.avatar-dd-sep { height: 1px; background: var(--border); margin: 2px 0; }
+.avatar-dd-item {
+  width: 100%; text-align: left; padding: 10px 16px; border: none; background: none;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--dark); cursor: pointer;
+  display: flex; align-items: center; gap: 9px; transition: background .15s;
+}
+.avatar-dd-item:hover { background: var(--surface2); }
+.avatar-dd-item.danger { color: var(--red); }
+.avatar-dd-item.danger:hover { background: #fff1f2; }
+
 /* ── NAV PANEL OVERLAY ── */
 .nav-overlay { position: fixed; inset: 0; background: rgba(20,20,18,.6); z-index: 300; display: none; }
 .nav-overlay.on { display: block; }
