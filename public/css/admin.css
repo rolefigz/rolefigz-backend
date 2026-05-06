@@ -35,3 +35,49 @@ nav { display: flex; gap: 6px; align-items: center; }
 .img-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 5px; }
 .add-file-btn { width: 100%; background: none; border: 1px solid var(--border); color: var(--muted); padding: 10px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; cursor: pointer; transition: all .2s; }
 .add-file-btn:hover { border-color: var(--dark); color: var(--dark); }
+
+/* ── WRAPPER ── */
+.admin-wrap { padding: 40px; }
+
+/* ── ADMIN MENU BADGE ── */
+.admin-menu-badge { background: var(--accent); color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 20px; font-family: 'DM Mono', monospace; margin-left: auto; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  header { padding: 0 20px; }
+  .status-bar { padding: 6px 20px; }
+  .admin-wrap { padding: 20px; }
+  .admin-content { padding: 20px; }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  header { padding: 0 14px; height: 56px; }
+  .logo-img { height: 30px; }
+  .status-bar { padding: 6px 14px; font-size: 8px; }
+  .admin-wrap { padding: 0; }
+
+  /* Sidebar → barra orizzontale scrollabile */
+  .admin-grid { grid-template-columns: 1fr; border: none; background: none; gap: 0; }
+  .admin-sidebar {
+    display: flex; flex-direction: row; overflow-x: auto; gap: 4px;
+    padding: 12px 14px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .admin-sidebar::-webkit-scrollbar { display: none; }
+  .admin-sidebar-title { display: none; }
+  .admin-menu-item {
+    white-space: nowrap; flex-shrink: 0;
+    padding: 7px 12px; font-size: 11px; margin-bottom: 0;
+    border: 1px solid var(--border);
+  }
+  .admin-menu-item.active { border-color: var(--accent); }
+  .admin-menu-badge { margin-left: 4px; }
+
+  .admin-content { padding: 16px; border: none; }
+  .admin-form-title { font-size: 20px; margin-bottom: 14px; }
+
+  /* Tabelle scrollabili */
+  .admin-content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
