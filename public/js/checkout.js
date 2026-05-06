@@ -54,12 +54,9 @@ function aggiornaRiepilogoOrdine() {
 }
 
 async function calcolaSpedizioneCheckout() {
-  const nome  = document.getElementById('chkNombre').value.trim();
   const via   = document.getElementById('chkVia').value.trim();
   const citta = document.getElementById('chkCitta').value.trim();
   const cap   = document.getElementById('chkCap').value.trim();
-  const prov  = document.getElementById('chkProv').value.trim();
-  // Fix 2: codice ISO 2 lettere maiuscole
   const naz   = (document.getElementById('chkNazione').value || 'IT').toUpperCase().slice(0, 2);
 
   if (!via || !citta || !cap) {
@@ -72,39 +69,30 @@ async function calcolaSpedizioneCheckout() {
   aggiornaRiepilogoOrdine();
 
   const wrap = document.getElementById('spedizioneOpzioni');
-  wrap.innerHTML = '<div class="spediz-loading">CALCOLO TARIFFE...</div>';
+  wrap.innerHTML = '<div class="spediz-loading">CARICAMENTO OPZIONI...</div>';
 
   try {
-    const r = await fetch(`${API}/spedizione/rate-pubblica`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome_destinatario: nome || 'Cliente',
-        via, citta, cap,
-        provincia: prov,
-        nazione:   naz,
-      })
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error);
+    const r = await fetch(`${API}/spedizione/opzioni?nazione=${encodeURIComponent(naz)}`);
+    const opzioni = await r.json();
+    if (!r.ok) throw new Error(opzioni.error);
 
-    if (!data.tariffe || !data.tariffe.length) {
-      wrap.innerHTML = '<div class="msg err">Nessuna tariffa disponibile per questo indirizzo.</div>';
+    if (!opzioni.length) {
+      wrap.innerHTML = '<div class="msg err">Nessuna opzione di spedizione disponibile per questo paese. Contattaci.</div>';
       return;
     }
 
     wrap.innerHTML = `
       <div class="spediz-label">SELEZIONA METODO DI SPEDIZIONE *</div>
-      ${data.tariffe.map(t => `
-        <div class="spediz-opt" data-id="${t.id}" onclick="selezionaSpedizione('${t.id}','${t.corriere.replace(/'/g,"\\'")}','${t.servizio.replace(/'/g,"\\'")}',${t.prezzo})">
+      ${opzioni.map(o => `
+        <div class="spediz-opt" data-id="${o.id}" onclick="selezionaSpedizione(${o.id},'${o.nome.replace(/'/g,"\\'")}','${(o.giorni||'').replace(/'/g,"\\'")}',${parseFloat(o.prezzo)})">
           <div class="spediz-info">
-            <div class="spediz-corriere">${t.corriere}</div>
-            <div class="spediz-servizio">${t.servizio}${t.giorni ? ` · ${t.giorni} giorni` : ''}</div>
+            <div class="spediz-corriere">${o.nome}</div>
+            ${o.giorni ? `<div class="spediz-servizio">${o.giorni} giorni lavorativi</div>` : ''}
           </div>
-          <div class="spediz-prezzo">€${parseFloat(t.prezzo).toFixed(2)}</div>
+          <div class="spediz-prezzo">€${parseFloat(o.prezzo).toFixed(2)}</div>
         </div>`).join('')}`;
   } catch(e) {
-    wrap.innerHTML = `<div class="msg err">Impossibile calcolare la spedizione: ${e.message}</div>`;
+    wrap.innerHTML = `<div class="msg err">Errore caricamento spedizione: ${e.message}</div>`;
   }
 }
 
@@ -135,28 +123,6 @@ async function confermaOrdine() {
   const naz       = document.getElementById('chkNazione').value || 'IT';
   const direccion = [via, cap, citta, prov, naz].filter(Boolean).join(', ');
 
-  // Passo 1: genera etichetta Shippo se abbiamo un rate_id
-  let etichetta = null;
-  if (spedizioneSelezionata.id) {
-    btn.textContent = 'GENERAZIONE ETICHETTA...';
-    try {
-      const re = await fetch(`${API}/spedizione/acquista-checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rate_id: spedizioneSelezionata.id }),
-      });
-      const de = await re.json();
-      if (!re.ok) throw new Error(de.error);
-      etichetta = de;
-    } catch(e) {
-      showMsg('checkoutMsg', e.message, 'err');
-      btn.disabled    = false;
-      btn.textContent = t('checkout_confirm');
-      return;
-    }
-  }
-
-  // Passo 2: crea sessione Stripe
   btn.textContent = 'PAGAMENTO...';
   try {
     const r = await fetch(`${API}/pagos/crear-sesion`, {
@@ -175,9 +141,9 @@ async function confermaOrdine() {
         carrier:               spedizioneSelezionata.corriere,
         shipping_service:      spedizioneSelezionata.servizio,
         shippo_rate_id:        spedizioneSelezionata.id || null,
-        tracking_number:       etichetta?.tracking_number       || null,
-        label_url:             etichetta?.label_url             || null,
-        shippo_transaction_id: etichetta?.shippo_transaction_id || null,
+        tracking_number:       null,
+        label_url:             null,
+        shippo_transaction_id: null,
         items: carrello.map(i => ({
           producto_id:         i.prodotto.id,
           cantidad:            i.quantita,
