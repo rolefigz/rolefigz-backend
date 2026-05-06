@@ -301,4 +301,78 @@ const emailSpedizione = async (ordine) => {
   });
 };
 
-module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailVerificacion, emailSpedizione };
+const emailGadget3D = async ({ id, nome, email, gadget, azienda }) => {
+  await trasportatore.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      email,
+    subject: `✅ Richiesta gadget 3D ricevuta — RoleFigz #${id}`,
+    html: `
+    <!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+        <tr><td align="center">
+          <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+            <tr>
+              <td style="padding:32px 40px;border-bottom:1px solid #222">
+                <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#C17F3A">FIGZ</span></span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:40px 40px 24px;background:#0f0f0f">
+                <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#C17F3A;text-transform:uppercase">// Career Day 2026</p>
+                <h1 style="margin:0;font-size:36px;font-weight:900;letter-spacing:2px;color:#f0ece4">RICHIESTA<br>RICEVUTA!</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 40px;border-bottom:1px solid #222">
+                <p style="margin:0 0 16px;font-size:13px;color:#ccc;line-height:1.8">Ciao <strong style="color:#f0ece4">${nome}</strong>,</p>
+                <p style="margin:0 0 16px;font-size:13px;color:#ccc;line-height:1.8">Abbiamo ricevuto la tua richiesta di gadget 3D personalizzato per <strong style="color:#f0ece4">${azienda}</strong>.</p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #222;margin:20px 0">
+                  <tr style="background:#0a0a0a">
+                    <td style="padding:12px 20px;font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Ordine</td>
+                    <td style="padding:12px 20px;font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Gadget</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:14px 20px;font-size:20px;font-weight:bold;color:#C17F3A">#${id}</td>
+                    <td style="padding:14px 20px;font-size:15px;color:#f0ece4">${gadget}</td>
+                  </tr>
+                </table>
+                <p style="margin:0;font-size:13px;color:#ccc;line-height:1.8">Ti contatteremo entro <strong style="color:#f0ece4">24 ore</strong> per confermare i dettagli e organizzare la consegna.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 40px;background:#0a0a0a">
+                <p style="margin:0;font-size:12px;color:#444;line-height:1.7">Hai domande? Rispondi a questa email.<br>Il campione è completamente gratuito — nessun costo nascosto.</p>
+                <p style="margin:16px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D PERSONALIZZATA</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body></html>`,
+  });
+};
+
+const emailGadget3DAdmin = async ({ id, nome, email, gadget, azienda, settore, dimensione, utilizzo, note, logo_url }) => {
+  await trasportatore.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      process.env.EMAIL_USER,
+    subject: `🖨️ Nuovo gadget 3D #${id} — ${azienda}`,
+    html: `
+    <div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
+      <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">NUOVO GADGET 3D #${id}</h2>
+      <p><strong>Nome:</strong> ${nome}</p>
+      <p><strong>Azienda:</strong> ${azienda}</p>
+      <p><strong>Email:</strong> <a href="mailto:${email}" style="color:#C17F3A">${email}</a></p>
+      <hr style="border-color:#222;margin:16px 0"/>
+      <p><strong>Gadget:</strong> <span style="color:#C17F3A;font-size:18px">${gadget}</span></p>
+      <p><strong>Settore:</strong> ${settore}</p>
+      <p><strong>Dimensione:</strong> ${dimensione}</p>
+      <p><strong>Utilizzo:</strong> ${utilizzo}</p>
+      ${note ? `<p><strong>Note:</strong> ${note}</p>` : ""}
+      ${logo_url ? `<p><strong>Logo:</strong> <a href="${logo_url}" style="color:#C17F3A">Visualizza logo</a></p>` : "<p><strong>Logo:</strong> non caricato</p>"}
+    </div>`,
+  });
+};
+
+module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };

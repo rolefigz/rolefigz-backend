@@ -636,7 +636,7 @@
       if (resp.ok && data.success) {
         document.getElementById('g3dFormWrap').style.display = 'none';
         const success = document.getElementById('g3dSuccess');
-        document.getElementById('g3dSuccessId').textContent = 'Ordine #' + data.order_id;
+        document.getElementById('g3dSuccessId').textContent = 'Ordine #' + data.order_id + ' — controlla la tua email';
         success.classList.add('on');
         success.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
