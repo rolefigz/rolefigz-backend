@@ -15,6 +15,7 @@ const { webhook }       = require("./src/controllers/pagamentiController");
 const analiticheRoutes  = require("./src/routers/analiticheRoutes");
 const ticketsRoutes      = require("./src/routers/ticketsRoutes");
 const spedizioneRoutes   = require("./src/routers/spedizioneRoutes");
+const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -45,6 +46,7 @@ app.use("/api/pagos",      limitAPI,  pagamentiRoutes);
 app.use("/api/analytics",  limitAPI,  analiticheRoutes);
 app.use("/api/tickets",    limitAPI,  ticketsRoutes);
 app.use("/api/spedizione", limitAPI,  spedizioneRoutes);
+app.use("/api",           limitAPI,  gadget3dRoutes);
 
 // ── SPA catch-all — serve index.html per le route prodotto ───────────────
 app.get("/producto/:slug", (req, res) => {

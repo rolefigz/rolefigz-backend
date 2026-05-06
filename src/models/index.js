@@ -12,10 +12,11 @@ const Visita           = require("./Visita");
 const Ticket              = require("./Ticket");
 const Messaggio           = require("./Messaggio");
 const OpzioneSpedizione   = require("./OpzioneSpedizione");
+const RichiestaGadget     = require("./RichiestaGadget");
 
 module.exports = {
   sequelize,
   Utente, Categoria, Prodotto, Ordine, DettaglioOrdine,
   VarianteProdotto, ImmagineProdotto, Recensione,
-  Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione
+  Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget
 };

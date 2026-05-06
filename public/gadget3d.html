@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gadget 3D Gratis — RoleFigz × Career Day 2026</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png"/>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <style>
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--accent); }
+
+    /* ── CURSOR ── */
+    .g3d-cursor {
+      position: fixed; width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%); transition: transform .1s;
+      mix-blend-mode: multiply;
+    }
+
+    /* ── NAV ── */
+    .g3d-nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(247,245,240,.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+    }
+    .g3d-nav-logo { height: 34px; filter: invert(1); }
+    .g3d-nav-badge {
+      font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+      color: var(--muted); border: 1px solid var(--border); padding: 4px 12px;
+      text-transform: uppercase;
+    }
+    .g3d-nav-badge span { color: var(--accent); }
+
+    /* ── HERO ── */
+    .g3d-hero {
+      background: var(--dark); color: #f0ece4;
+      padding: 100px 48px 80px; position: relative; overflow: hidden;
+    }
+    .g3d-hero::before {
+      content: 'GADGET'; position: absolute; right: -40px; top: 50%;
+      transform: translateY(-50%); font-family: 'Barlow Condensed', sans-serif;
+      font-size: 280px; font-weight: 900; color: rgba(255,255,255,.03);
+      letter-spacing: -8px; pointer-events: none; line-height: 1;
+    }
+    .g3d-hero-inner { max-width: 760px; position: relative; z-index: 2; }
+    .g3d-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent);
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .g3d-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    .g3d-h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(64px, 9vw, 112px); font-weight: 900;
+      line-height: .88; letter-spacing: -2px; text-transform: uppercase;
+      margin-bottom: 24px; color: #f0ece4;
+    }
+    .g3d-h1 em { font-style: italic; color: var(--accent); }
+    .g3d-sub { font-size: 16px; color: #888; line-height: 1.8; max-width: 480px; margin-bottom: 40px; }
+    .g3d-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--accent); color: #fff; border: none;
+      padding: 16px 36px; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; transition: background .2s; text-decoration: none;
+    }
+    .g3d-cta:hover { background: var(--accent2); }
+    .g3d-stats {
+      display: flex; gap: 48px; margin-top: 56px;
+      padding-top: 40px; border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .g3d-stat-n {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 52px;
+      font-weight: 900; color: var(--accent); line-height: 1;
+    }
+    .g3d-stat-l {
+      font-family: 'DM Mono', monospace; font-size: 9px; color: #666;
+      letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;
+    }
+
+    /* ── SEZIONI ── */
+    .g3d-section { padding: 80px 48px; border-bottom: 1px solid var(--border); }
+    .g3d-section-dark { background: var(--dark2); color: #f0ece4; }
+    .g3d-label {
+      font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent);
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .g3d-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(40px, 5vw, 60px); font-weight: 900;
+      text-transform: uppercase; letter-spacing: -1px; line-height: .9;
+      margin-bottom: 52px; color: var(--dark);
+    }
+    .g3d-section-dark .g3d-title { color: #f0ece4; }
+
+    /* ── STEPS ── */
+    .g3d-steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: rgba(255,255,255,.06); }
+    .g3d-step { background: var(--dark); padding: 40px 28px; }
+    .g3d-step-num {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 80px; font-weight: 900;
+      color: rgba(255,255,255,.06); line-height: 1; margin-bottom: 20px;
+    }
+    .g3d-step-icon { font-size: 36px; color: var(--accent); margin-bottom: 16px; }
+    .g3d-step-name {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: #f0ece4; margin-bottom: 8px;
+    }
+    .g3d-step-desc { font-size: 12px; color: #666; line-height: 1.7; }
+
+    /* ── GADGET GRID ── */
+    .g3d-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); }
+    .g3d-card {
+      background: var(--surface); padding: 32px 28px; cursor: pointer;
+      transition: all .2s; border: 2px solid transparent; position: relative;
+      animation: fadeUp .4s ease both;
+    }
+    .g3d-card:hover { background: var(--surface2); }
+    .g3d-card.selected { border-color: var(--accent); background: rgba(193,127,58,.04); }
+    .g3d-card-check {
+      position: absolute; top: 14px; right: 14px; font-size: 20px;
+      color: var(--accent); display: none;
+    }
+    .g3d-card.selected .g3d-card-check { display: block; }
+    .g3d-card-icon { font-size: 48px; color: var(--accent); margin-bottom: 20px; display: block; }
+    .g3d-card-name {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px; color: var(--dark); margin-bottom: 6px;
+    }
+    .g3d-card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FORM ── */
+    .g3d-form-wrap { max-width: 680px; margin: 0 auto; }
+    .g3d-form-title {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 3px; color: var(--muted);
+      margin: 32px 0 20px; padding-top: 24px; border-top: 1px solid var(--border);
+    }
+    .g3d-form-title:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+    /* Upload */
+    .g3d-upload {
+      border: 1.5px dashed var(--border); padding: 36px 20px; text-align: center;
+      cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 6px;
+    }
+    .g3d-upload:hover { border-color: var(--accent); background: rgba(193,127,58,.03); }
+    .g3d-upload.dragover { border-color: var(--accent); background: rgba(193,127,58,.06); }
+    .g3d-upload-icon { font-size: 40px; color: var(--muted); margin-bottom: 12px; display: block; }
+    .g3d-upload-text { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dark); margin-bottom: 4px; }
+    .g3d-upload-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+    .g3d-upload-preview { display: none; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(74,122,90,.06); border: 1px solid rgba(74,122,90,.25); margin-top: 8px; }
+    .g3d-upload-preview.on { display: flex; }
+    .g3d-preview-img { width: 48px; height: 48px; object-fit: contain; background: #fff; border: 1px solid var(--border); }
+    .g3d-preview-name { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dark); flex: 1; }
+    .g3d-preview-check { font-size: 18px; color: var(--green); }
+
+    /* Radio groups */
+    .g3d-radios { display: flex; flex-direction: column; gap: 6px; }
+    .g3d-radio {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      border: 1px solid var(--border); cursor: pointer; transition: all .15s;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+    }
+    .g3d-radio:hover { border-color: var(--accent); background: rgba(193,127,58,.03); }
+    .g3d-radio input[type="radio"] { display: none; }
+    .g3d-radio-dot {
+      width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 50%;
+      flex-shrink: 0; transition: all .15s; display: flex; align-items: center; justify-content: center;
+    }
+    .g3d-radio.selected { border-color: var(--accent); background: rgba(193,127,58,.05); }
+    .g3d-radio.selected .g3d-radio-dot { border-color: var(--accent); background: var(--accent); }
+    .g3d-radio.selected .g3d-radio-dot::after { content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+
+    /* Submit */
+    .g3d-submit {
+      width: 100%; background: var(--dark); border: none; color: #fff;
+      padding: 18px; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; transition: background .2s; margin-top: 28px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .g3d-submit:hover { background: var(--dark2); }
+    .g3d-submit:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    @keyframes g3d-spin { to { transform: rotate(360deg); } }
+    .g3d-spin { animation: g3d-spin .8s linear infinite; display: inline-block; }
+
+    /* Errors */
+    .g3d-err {
+      display: none; font-family: 'DM Mono', monospace; font-size: 9px;
+      color: var(--red); letter-spacing: 1px; margin-top: 5px;
+      align-items: center; gap: 4px;
+    }
+    .g3d-err.on { display: flex; }
+    .g3d-field-err input, .g3d-field-err textarea, .g3d-field-err .g3d-upload { border-color: var(--red) !important; }
+    .g3d-global-err {
+      display: none; margin-top: 16px; padding: 14px 16px;
+      background: rgba(192,57,43,.07); border: 1px solid rgba(192,57,43,.25);
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--red);
+      letter-spacing: 1px; align-items: center; gap: 8px;
+    }
+    .g3d-global-err.on { display: flex; }
+
+    /* ── SUCCESS ── */
+    .g3d-success {
+      display: none; text-align: center; padding: 80px 48px;
+      animation: fadeUp .5s ease;
+    }
+    .g3d-success.on { display: block; }
+    .g3d-success-icon { font-size: 80px; color: var(--green); margin-bottom: 24px; display: block; }
+    .g3d-success-logo { height: 36px; filter: invert(1); margin-bottom: 32px; }
+    .g3d-success-h { font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 900; text-transform: uppercase; letter-spacing: -2px; color: var(--dark); margin-bottom: 12px; line-height: 1; }
+    .g3d-success-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 3px; margin-bottom: 16px; }
+    .g3d-success-sub { font-size: 14px; color: var(--muted); line-height: 1.8; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .g3d-nav { padding: 0 24px; }
+      .g3d-hero { padding: 64px 24px 56px; }
+      .g3d-section { padding: 56px 24px; }
+      .g3d-steps { grid-template-columns: 1fr 1fr; }
+      .g3d-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .g3d-nav { padding: 0 16px; height: 56px; }
+      .g3d-nav-badge { display: none; }
+      .g3d-hero { padding: 48px 16px 44px; }
+      .g3d-hero::before { display: none; }
+      .g3d-stats { flex-wrap: wrap; gap: 24px; }
+      .g3d-section { padding: 44px 16px; }
+      .g3d-steps { grid-template-columns: 1fr; }
+      .g3d-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="g3d-cursor" id="g3dCursor"></div>
+
+<!-- NAV -->
+<nav class="g3d-nav">
+  <img src="/assets/logo.png" alt="RoleFigz" class="g3d-nav-logo"/>
+  <div class="g3d-nav-badge">Career Day 2026 · <span>Piacenza</span></div>
+</nav>
+
+<!-- HERO -->
+<section class="g3d-hero">
+  <div class="g3d-hero-inner">
+    <div class="g3d-eyebrow">
+      <span class="iconify" data-icon="mdi:nfc" style="font-size:14px"></span>
+      Hai il nostro portachiavi NFC tra le mani
+    </div>
+    <h1 class="g3d-h1">IL TUO GADGET<br>3D <em>GRATIS</em></h1>
+    <p class="g3d-sub">Scegli il gadget aziendale che vuoi, carica il logo della tua azienda e lo stampiamo in 3D. Completamente personalizzato, senza costi, consegnato entro 48 ore.</p>
+    <a href="#g3d-scegli" class="g3d-cta">
+      Scegli il tuo gadget
+      <span class="iconify" data-icon="mdi:arrow-right"></span>
+    </a>
+    <div class="g3d-stats">
+      <div>
+        <div class="g3d-stat-n">48H</div>
+        <div class="g3d-stat-l">consegna</div>
+      </div>
+      <div>
+        <div class="g3d-stat-n">100%</div>
+        <div class="g3d-stat-l">personalizzato</div>
+      </div>
+      <div>
+        <div class="g3d-stat-n">0€</div>
+        <div class="g3d-stat-l">il campione</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COME FUNZIONA -->
+<section class="g3d-section g3d-section-dark">
+  <div class="g3d-label">// Come funziona</div>
+  <div class="g3d-title">4 PASSI,<br>UN GADGET</div>
+  <div class="g3d-steps">
+    <div class="g3d-step" style="animation-delay:.05s">
+      <div class="g3d-step-num">01</div>
+      <div class="g3d-step-icon">
+        <span class="iconify" data-icon="mdi:gesture-tap"></span>
+      </div>
+      <div class="g3d-step-name">Scegli il gadget</div>
+      <div class="g3d-step-desc">Seleziona tra i nostri 6 gadget il prodotto più adatto alla tua azienda.</div>
+    </div>
+    <div class="g3d-step" style="animation-delay:.1s">
+      <div class="g3d-step-num">02</div>
+      <div class="g3d-step-icon">
+        <span class="iconify" data-icon="mdi:image-plus"></span>
+      </div>
+      <div class="g3d-step-name">Carica il logo</div>
+      <div class="g3d-step-desc">Carica il file del logo aziendale in PNG, JPG o SVG. Lo stampiamo in rilievo.</div>
+    </div>
+    <div class="g3d-step" style="animation-delay:.15s">
+      <div class="g3d-step-num">03</div>
+      <div class="g3d-step-icon">
+        <span class="iconify" data-icon="mdi:comment-question"></span>
+      </div>
+      <div class="g3d-step-name">Compila il form</div>
+      <div class="g3d-step-desc">Inserisci i dati aziendali e le tue preferenze di personalizzazione.</div>
+    </div>
+    <div class="g3d-step" style="animation-delay:.2s">
+      <div class="g3d-step-num">04</div>
+      <div class="g3d-step-icon">
+        <span class="iconify" data-icon="mdi:truck-delivery"></span>
+      </div>
+      <div class="g3d-step-name">Ricevi il gadget</div>
+      <div class="g3d-step-desc">Stampiamo e consegniamo il gadget personalizzato entro 48 ore lavorative.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SELEZIONE GADGET -->
+<section class="g3d-section" id="g3d-scegli">
+  <div class="g3d-label">// Passo 1</div>
+  <div class="g3d-title">SCEGLI IL<br>TUO GADGET</div>
+  <div class="g3d-grid" id="g3dGadgetGrid">
+    <div class="g3d-card" data-gadget="Porta biglietti" style="animation-delay:.05s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:card-account-details"></span></span>
+      <div class="g3d-card-name">Porta biglietti</div>
+      <div class="g3d-card-desc">Porta biglietti da visita in stampa 3D con logo aziendale in rilievo. Elegante e funzionale.</div>
+    </div>
+    <div class="g3d-card" data-gadget="Organizer scrivania" style="animation-delay:.1s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:pencil-box"></span></span>
+      <div class="g3d-card-name">Organizer scrivania</div>
+      <div class="g3d-card-desc">Organizer da scrivania modulare con incisione del brand. Tiene penne, cavi e oggetti.</div>
+    </div>
+    <div class="g3d-card" data-gadget="Portachiavi" style="animation-delay:.15s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:key-chain"></span></span>
+      <div class="g3d-card-name">Portachiavi</div>
+      <div class="g3d-card-desc">Portachiavi personalizzato con logo 3D. Resistente, leggero, disponibile in vari colori.</div>
+    </div>
+    <div class="g3d-card" data-gadget="Miniatura prodotto" style="animation-delay:.2s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:factory"></span></span>
+      <div class="g3d-card-name">Miniatura prodotto</div>
+      <div class="g3d-card-desc">Replica in scala del tuo prodotto o macchinario. Perfetta per stand fieristici.</div>
+    </div>
+    <div class="g3d-card" data-gadget="Trofeo / Premio" style="animation-delay:.25s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:trophy"></span></span>
+      <div class="g3d-card-name">Trofeo / Premio</div>
+      <div class="g3d-card-desc">Trofeo personalizzato per premi interni o riconoscimenti. Design esclusivo su misura.</div>
+    </div>
+    <div class="g3d-card" data-gadget="Targhetta" style="animation-delay:.3s">
+      <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:sign-text"></span></span>
+      <div class="g3d-card-name">Targhetta</div>
+      <div class="g3d-card-desc">Targhetta nominativa o di reparto con logo. Professionale e personalizzabile.</div>
+    </div>
+  </div>
+  <div class="g3d-err on" id="g3dGadgetErr" style="margin-top:12px">
+    <span class="iconify" data-icon="mdi:alert-circle"></span> Seleziona un gadget per continuare
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="g3d-section" id="g3d-form" style="background:var(--surface2)">
+  <div class="g3d-label">// Passo 2</div>
+  <div class="g3d-title">I TUOI DATI<br>AZIENDALI</div>
+
+  <div class="g3d-form-wrap">
+    <div id="g3dFormWrap">
+
+      <!-- Dati personali -->
+      <div class="g3d-form-title">DATI DI CONTATTO</div>
+
+      <div class="field" id="f-nome">
+        <label>Nome e Cognome *</label>
+        <input type="text" id="g3dNome" placeholder="Mario Rossi"/>
+        <div class="g3d-err" id="e-nome"><span class="iconify" data-icon="mdi:alert-circle"></span> Campo obbligatorio</div>
+      </div>
+      <div class="field" id="f-azienda">
+        <label>Azienda *</label>
+        <input type="text" id="g3dAzienda" placeholder="Acme S.p.A."/>
+        <div class="g3d-err" id="e-azienda"><span class="iconify" data-icon="mdi:alert-circle"></span> Campo obbligatorio</div>
+      </div>
+      <div class="field" id="f-email">
+        <label>Email aziendale *</label>
+        <input type="email" id="g3dEmail" placeholder="mario@acme.it"/>
+        <div class="g3d-err" id="e-email"><span class="iconify" data-icon="mdi:alert-circle"></span> Inserisci un'email valida</div>
+      </div>
+
+      <!-- Upload logo -->
+      <div class="g3d-form-title">LOGO AZIENDALE</div>
+      <div id="f-logo">
+        <div class="g3d-upload" id="g3dUploadArea">
+          <span class="g3d-upload-icon"><span class="iconify" data-icon="mdi:cloud-upload"></span></span>
+          <div class="g3d-upload-text">Trascina il logo qui o clicca per caricare</div>
+          <div class="g3d-upload-sub">PNG, JPG, SVG · Max 5MB</div>
+          <input type="file" id="g3dLogo" accept=".png,.jpg,.jpeg,.svg,.webp" style="display:none"/>
+        </div>
+        <div class="g3d-upload-preview" id="g3dPreview">
+          <img id="g3dPreviewImg" class="g3d-preview-img" src="" alt=""/>
+          <span class="g3d-preview-name" id="g3dPreviewName"></span>
+          <span class="g3d-preview-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
+        </div>
+        <div class="g3d-err" id="e-logo"><span class="iconify" data-icon="mdi:alert-circle"></span> Carica il logo aziendale (max 5MB)</div>
+      </div>
+
+      <!-- Settore -->
+      <div class="g3d-form-title">SETTORE AZIENDALE</div>
+      <div class="g3d-radios" id="f-settore">
+        <label class="g3d-radio"><input type="radio" name="settore" value="Meccanica / Manifatturiero"/><div class="g3d-radio-dot"></div>Meccanica / Manifatturiero</label>
+        <label class="g3d-radio"><input type="radio" name="settore" value="Informatica / Software"/><div class="g3d-radio-dot"></div>Informatica / Software</label>
+        <label class="g3d-radio"><input type="radio" name="settore" value="Logistica / Trasporti"/><div class="g3d-radio-dot"></div>Logistica / Trasporti</label>
+        <label class="g3d-radio"><input type="radio" name="settore" value="Energia / Oil & Gas / Utilities"/><div class="g3d-radio-dot"></div>Energia / Oil &amp; Gas / Utilities</label>
+        <label class="g3d-radio"><input type="radio" name="settore" value="Altro"/><div class="g3d-radio-dot"></div>Altro</label>
+      </div>
+      <div class="g3d-err" id="e-settore"><span class="iconify" data-icon="mdi:alert-circle"></span> Seleziona il settore</div>
+
+      <!-- Dimensione -->
+      <div class="g3d-form-title">DIMENSIONE AZIENDA</div>
+      <div class="g3d-radios" id="f-dimensione">
+        <label class="g3d-radio"><input type="radio" name="dimensione" value="Meno di 20 persone"/><div class="g3d-radio-dot"></div>Meno di 20 persone</label>
+        <label class="g3d-radio"><input type="radio" name="dimensione" value="20 – 100 persone"/><div class="g3d-radio-dot"></div>20 – 100 persone</label>
+        <label class="g3d-radio"><input type="radio" name="dimensione" value="Più di 100 persone"/><div class="g3d-radio-dot"></div>Più di 100 persone</label>
+      </div>
+      <div class="g3d-err" id="e-dimensione"><span class="iconify" data-icon="mdi:alert-circle"></span> Seleziona la dimensione</div>
+
+      <!-- Utilizzo -->
+      <div class="g3d-form-title">PER COSA UTILIZZERESTI I GADGET?</div>
+      <div class="g3d-radios" id="f-utilizzo">
+        <label class="g3d-radio"><input type="radio" name="utilizzo" value="Fiere ed eventi aziendali"/><div class="g3d-radio-dot"></div>Fiere ed eventi aziendali</label>
+        <label class="g3d-radio"><input type="radio" name="utilizzo" value="Omaggi per clienti chiave"/><div class="g3d-radio-dot"></div>Omaggi per clienti chiave</label>
+        <label class="g3d-radio"><input type="radio" name="utilizzo" value="Premi e riconoscimenti interni"/><div class="g3d-radio-dot"></div>Premi e riconoscimenti interni</label>
+        <label class="g3d-radio"><input type="radio" name="utilizzo" value="Prototipazione / uso tecnico"/><div class="g3d-radio-dot"></div>Prototipazione / uso tecnico</label>
+      </div>
+      <div class="g3d-err" id="e-utilizzo"><span class="iconify" data-icon="mdi:alert-circle"></span> Seleziona l'utilizzo</div>
+
+      <!-- Note -->
+      <div class="g3d-form-title">NOTE AGGIUNTIVE</div>
+      <div class="field">
+        <label>Note (opzionale)</label>
+        <textarea id="g3dNote" placeholder="Dettagli extra, colori preferiti, quantità..." style="min-height:90px"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <div class="g3d-global-err" id="g3dGlobalErr">
+        <span class="iconify" data-icon="mdi:alert-circle"></span>
+        <span id="g3dGlobalErrTxt"></span>
+      </div>
+      <button class="g3d-submit" id="g3dSubmit" onclick="g3dInvia()">
+        <span id="g3dSubmitTxt">Richiedi il mio gadget gratis</span>
+        <span class="iconify" data-icon="mdi:arrow-right" id="g3dSubmitIcon"></span>
+      </button>
+
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="g3d-success" id="g3dSuccess">
+      <span class="g3d-success-icon"><span class="iconify" data-icon="mdi:check-decagram"></span></span>
+      <img src="/assets/logo.png" alt="RoleFigz" class="g3d-success-logo"/>
+      <div class="g3d-success-h">RICHIESTA<br>INVIATA!</div>
+      <div class="g3d-success-id" id="g3dSuccessId"></div>
+      <div class="g3d-success-sub">Ti contatteremo entro 24 ore per confermare i dettagli.<br>Controlla la tua casella email aziendale.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ⚙️ ENDPOINT
+  const G3D_API_ENDPOINT = '/api/orders/gadget3d';
+
+  // ── Cursor ──────────────────────────────────────────────
+  const cur = document.getElementById('g3dCursor');
+  document.addEventListener('mousemove', e => {
+    cur.style.left = e.clientX + 'px';
+    cur.style.top  = e.clientY + 'px';
+  });
+
+  // ── Gadget selection ────────────────────────────────────
+  let selectedGadget = null;
+  document.querySelectorAll('.g3d-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.g3d-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedGadget = card.dataset.gadget;
+      document.getElementById('g3dGadgetErr').classList.remove('on');
+      setTimeout(() => document.getElementById('g3d-form').scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    });
+  });
+
+  // ── Radio groups ────────────────────────────────────────
+  document.querySelectorAll('.g3d-radio').forEach(label => {
+    label.addEventListener('click', () => {
+      const name = label.querySelector('input').name;
+      document.querySelectorAll(`.g3d-radio input[name="${name}"]`).forEach(r => {
+        r.closest('.g3d-radio').classList.remove('selected');
+      });
+      label.classList.add('selected');
+      const errId = 'e-' + name;
+      const errEl = document.getElementById(errId);
+      if (errEl) errEl.classList.remove('on');
+    });
+  });
+
+  // ── Upload logo ─────────────────────────────────────────
+  let logoFile = null;
+  const uploadArea = document.getElementById('g3dUploadArea');
+  const logoInput  = document.getElementById('g3dLogo');
+  const preview    = document.getElementById('g3dPreview');
+  const previewImg = document.getElementById('g3dPreviewImg');
+  const previewName= document.getElementById('g3dPreviewName');
+
+  uploadArea.addEventListener('click', () => logoInput.click());
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  logoInput.addEventListener('change', () => { if (logoInput.files[0]) handleFile(logoInput.files[0]); });
+
+  function handleFile(file) {
+    if (file.size > 5 * 1024 * 1024) {
+      document.getElementById('e-logo').classList.add('on');
+      document.getElementById('e-logo').querySelector('span + *') || null;
+      document.getElementById('e-logo').innerHTML = '<span class="iconify" data-icon="mdi:alert-circle"></span> File troppo grande. Max 5MB.';
+      return;
+    }
+    logoFile = file;
+    document.getElementById('e-logo').classList.remove('on');
+    previewName.textContent = file.name;
+    if (file.type !== 'image/svg+xml') {
+      const reader = new FileReader();
+      reader.onload = e => { previewImg.src = e.target.result; previewImg.style.display = 'block'; };
+      reader.readAsDataURL(file);
+    } else {
+      previewImg.style.display = 'none';
+    }
+    preview.classList.add('on');
+  }
+
+  // ── Validazione ─────────────────────────────────────────
+  function g3dValida() {
+    let ok = true;
+    const errors = [];
+
+    // Gadget
+    if (!selectedGadget) {
+      document.getElementById('g3dGadgetErr').classList.add('on');
+      ok = false; errors.push(document.getElementById('g3d-scegli'));
+    }
+    // Nome
+    const nome = document.getElementById('g3dNome').value.trim();
+    const eNome = document.getElementById('e-nome');
+    const fNome = document.getElementById('f-nome');
+    if (!nome) { eNome.classList.add('on'); fNome.classList.add('g3d-field-err'); ok = false; errors.push(fNome); }
+    else { eNome.classList.remove('on'); fNome.classList.remove('g3d-field-err'); }
+
+    // Azienda
+    const azienda = document.getElementById('g3dAzienda').value.trim();
+    const eAz = document.getElementById('e-azienda');
+    const fAz = document.getElementById('f-azienda');
+    if (!azienda) { eAz.classList.add('on'); fAz.classList.add('g3d-field-err'); ok = false; errors.push(fAz); }
+    else { eAz.classList.remove('on'); fAz.classList.remove('g3d-field-err'); }
+
+    // Email
+    const email = document.getElementById('g3dEmail').value.trim();
+    const eEm = document.getElementById('e-email');
+    const fEm = document.getElementById('f-email');
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailOk) { eEm.classList.add('on'); fEm.classList.add('g3d-field-err'); ok = false; errors.push(fEm); }
+    else { eEm.classList.remove('on'); fEm.classList.remove('g3d-field-err'); }
+
+    // Logo
+    const eLogo = document.getElementById('e-logo');
+    if (!logoFile) { eLogo.classList.add('on'); ok = false; errors.push(document.getElementById('f-logo')); }
+    else eLogo.classList.remove('on');
+
+    // Settore
+    const settore = document.querySelector('input[name="settore"]:checked')?.value;
+    const eSett = document.getElementById('e-settore');
+    if (!settore) { eSett.classList.add('on'); ok = false; errors.push(document.getElementById('f-settore')); }
+    else eSett.classList.remove('on');
+
+    // Dimensione
+    const dim = document.querySelector('input[name="dimensione"]:checked')?.value;
+    const eDim = document.getElementById('e-dimensione');
+    if (!dim) { eDim.classList.add('on'); ok = false; errors.push(document.getElementById('f-dimensione')); }
+    else eDim.classList.remove('on');
+
+    // Utilizzo
+    const util = document.querySelector('input[name="utilizzo"]:checked')?.value;
+    const eUtil = document.getElementById('e-utilizzo');
+    if (!util) { eUtil.classList.add('on'); ok = false; errors.push(document.getElementById('f-utilizzo')); }
+    else eUtil.classList.remove('on');
+
+    if (!ok && errors[0]) {
+      errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return ok;
+  }
+
+  // ── Invio ────────────────────────────────────────────────
+  async function g3dInvia() {
+    if (!g3dValida()) return;
+
+    const btn     = document.getElementById('g3dSubmit');
+    const txtEl   = document.getElementById('g3dSubmitTxt');
+    const iconEl  = document.getElementById('g3dSubmitIcon');
+    const globalErr = document.getElementById('g3dGlobalErr');
+
+    btn.disabled = true;
+    txtEl.textContent = 'Invio in corso...';
+    iconEl.setAttribute('data-icon', 'mdi:loading');
+    iconEl.classList.add('g3d-spin');
+    globalErr.classList.remove('on');
+
+    const formData = new FormData();
+    formData.append('nome',       document.getElementById('g3dNome').value.trim());
+    formData.append('azienda',    document.getElementById('g3dAzienda').value.trim());
+    formData.append('email',      document.getElementById('g3dEmail').value.trim());
+    formData.append('logo',       logoFile);
+    formData.append('gadget',     selectedGadget);
+    formData.append('settore',    document.querySelector('input[name="settore"]:checked').value);
+    formData.append('dimensione', document.querySelector('input[name="dimensione"]:checked').value);
+    formData.append('utilizzo',   document.querySelector('input[name="utilizzo"]:checked').value);
+    formData.append('note',       document.getElementById('g3dNote').value);
+
+    try {
+      const resp = await fetch(G3D_API_ENDPOINT, { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      if (resp.ok && data.success) {
+        document.getElementById('g3dFormWrap').style.display = 'none';
+        const success = document.getElementById('g3dSuccess');
+        document.getElementById('g3dSuccessId').textContent = 'Ordine #' + data.order_id;
+        success.classList.add('on');
+        success.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        const msg = data.error || 'Errore. Riprova.';
+        document.getElementById('g3dGlobalErrTxt').textContent = msg;
+        globalErr.classList.add('on');
+        btn.disabled = false;
+        txtEl.textContent = 'Richiedi il mio gadget gratis';
+        iconEl.setAttribute('data-icon', 'mdi:arrow-right');
+        iconEl.classList.remove('g3d-spin');
+      }
+    } catch (err) {
+      const msg = err.message === 'Failed to fetch'
+        ? 'Connessione assente. Controlla la rete.'
+        : 'Errore del server. Riprova tra qualche minuto.';
+      document.getElementById('g3dGlobalErrTxt').textContent = msg;
+      globalErr.classList.add('on');
+      btn.disabled = false;
+      txtEl.textContent = 'Richiedi il mio gadget gratis';
+      iconEl.setAttribute('data-icon', 'mdi:arrow-right');
+      iconEl.classList.remove('g3d-spin');
+    }
+  }
+
+  // ── FadeUp observer ──────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.style.animation = 'fadeUp .5s ease both'; });
+  }, { threshold: .1 });
+  document.querySelectorAll('.g3d-step, .g3d-card').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
