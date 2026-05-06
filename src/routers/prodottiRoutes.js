@@ -16,7 +16,7 @@ router.get("/admin/:id",    verifyToken, soloAdmin, getProductoByIdAdmin);
 router.post("/foto-cliente", upload.single("foto"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "Nessuna foto ricevuta" });
-    const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    const url = req.file.path;
     res.json({ url });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -58,7 +58,7 @@ router.post("/:id/imagen", verifyToken, soloAdmin, upload.single("imagen"), asyn
     const prodotto = await Prodotto.findByPk(req.params.id);
     if (!prodotto) return res.status(404).json({ error: "Prodotto non trovato" });
     if (!req.file)  return res.status(400).json({ error: "Nessuna immagine ricevuta" });
-    const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    const url = req.file.path;
     await prodotto.update({ imagen: url });
     res.json({ mensaje: "Immagine caricata con successo", imagen: url });
   } catch (err) {
@@ -101,7 +101,7 @@ router.post("/:id/imagenes", verifyToken, soloAdmin, upload.single("imagen"), as
     const prodotto = await Prodotto.findByPk(req.params.id);
     if (!prodotto) return res.status(404).json({ error: "Prodotto non trovato" });
     if (!req.file)  return res.status(400).json({ error: "Nessuna immagine ricevuta" });
-    const url    = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    const url    = req.file.path;
     const ordine = await ImmagineProdotto.count({ where: { producto_id: req.params.id } });
     const immagine = await ImmagineProdotto.create({ producto_id: req.params.id, url, orden: ordine });
     if (ordine === 0) await prodotto.update({ imagen: url });

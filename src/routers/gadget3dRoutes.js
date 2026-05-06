@@ -39,7 +39,7 @@ router.post("/orders/gadget3d", upload.single("logo"), async (req, res) => {
 
     const order_id = "G3D-" + Date.now();
     const logo_url = req.file
-      ? `/uploads/logos/${req.file.filename}`
+      ? req.file.path
       : null;
 
     await RichiestaGadget.create({
