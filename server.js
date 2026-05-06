@@ -19,6 +19,7 @@ const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
 require("dotenv").config();
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ── Sicurezza globale ─────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
