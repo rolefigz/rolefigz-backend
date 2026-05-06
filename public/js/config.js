@@ -1,4 +1,6 @@
-const API = 'http://localhost:3000/api';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : '/api';
 let token = localStorage.getItem('rfToken') || null;
 let utente = null;
 let prodotti = [];
