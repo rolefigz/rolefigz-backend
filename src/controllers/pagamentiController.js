@@ -1,4 +1,8 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+let _stripe = null;
+function getStripe() {
+  if (!_stripe) _stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  return _stripe;
+}
 const jwt    = require("jsonwebtoken");
 const { Ordine, DettaglioOrdine, Prodotto } = require("../models");
 const { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailSpedizione } = require("../utils/mailer");
@@ -145,7 +149,7 @@ const crearSesion = async (req, res) => {
 
     // Crea sessione di pagamento su Stripe
     const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
-    const session  = await stripe.checkout.sessions.create({
+    const session  = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
       line_items:           lineItems,
       mode:                 "payment",
@@ -171,7 +175,7 @@ const confirmarPago = async (req, res) => {
       return res.status(400).json({ error: "Dati incompleti" });
 
     // Verifica con Stripe che il pagamento sia stato completato
-    const session = await stripe.checkout.sessions.retrieve(session_id);
+    const session = await getStripe().checkout.sessions.retrieve(session_id);
     if (session.payment_status !== "paid")
       return res.status(400).json({ error: "Pagamento non completato" });
     if (session.metadata?.orden_id !== String(orden_id))
@@ -203,7 +207,7 @@ const webhook = async (req, res) => {
 
   try {
     if (process.env.STRIPE_WEBHOOK_SECRET) {
-      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+      event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } else {
       // Senza segreto configurato (sviluppo senza Stripe CLI)
       event = JSON.parse(req.body.toString());
