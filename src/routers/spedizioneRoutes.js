@@ -4,6 +4,7 @@ const { verifyToken, soloAdmin } = require("../middleware/auth");
 const {
   calcolaTariffe, acquistaEtichetta, acquistaEtichettaCheckout, getStatoSpedizione,
   getOpzioniCliente, getOpzioniAdmin, creaOpzione, aggiornaOpzione, eliminaOpzione,
+  shippoWebhook,
 } = require("../controllers/spedizioneController");
 
 // Tariffe configurabili — cliente (pubblico, usa ?nazione=IT)
@@ -13,6 +14,9 @@ router.get("/opzioni/admin",         verifyToken, soloAdmin, getOpzioniAdmin);
 router.post("/opzioni",              verifyToken, soloAdmin, creaOpzione);
 router.put("/opzioni/:id",           verifyToken, soloAdmin, aggiornaOpzione);
 router.delete("/opzioni/:id",        verifyToken, soloAdmin, eliminaOpzione);
+
+// Shippo webhook (pubblico — Shippo chiama qui)
+router.post("/webhook",              shippoWebhook);
 
 // Shippo — solo admin (generazione etichette)
 router.post("/acquista-checkout",    acquistaEtichettaCheckout);

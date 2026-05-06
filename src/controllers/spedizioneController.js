@@ -268,7 +268,56 @@ const acquistaEtichettaCheckout = async (req, res) => {
   }
 };
 
+// POST /api/spedizione/webhook — Shippo invia eventi qui
+const shippoWebhook = async (req, res) => {
+  try {
+    const { event, data } = req.body;
+    if (!event || !data) return res.json({ received: true });
+
+    console.log(`📬 Shippo webhook: ${event}`);
+
+    // Etichetta creata con successo
+    if (event === "transaction_created" || event === "transaction_updated") {
+      if (data.status === "SUCCESS" && data.tracking_number) {
+        // Cerca ordine per shippo_transaction_id
+        const ordine = await Ordine.findOne({ where: { shippo_transaction_id: data.object_id } });
+        if (ordine && !ordine.tracking_number) {
+          await ordine.update({
+            tracking_number: data.tracking_number,
+            label_url:       data.label_url || ordine.label_url,
+            estado:          "enviado",
+          });
+          emailSpedizione(ordine).catch(() => {});
+          console.log(`✅ Tracking aggiornato via webhook — ordine #${ordine.id}: ${data.tracking_number}`);
+        }
+      }
+    }
+
+    // Aggiornamento stato tracking
+    if (event === "track_updated") {
+      const stato = data.tracking_status?.status;
+      if (data.tracking_number && stato) {
+        const ordine = await Ordine.findOne({ where: { tracking_number: data.tracking_number } });
+        if (ordine) {
+          if (stato === "DELIVERED" && ordine.estado !== "entregado") {
+            await ordine.update({ estado: "entregado" });
+            console.log(`✅ Ordine #${ordine.id} segnato come CONSEGNATO via webhook`);
+          } else if (stato === "TRANSIT" && ordine.estado === "confirmado") {
+            await ordine.update({ estado: "enviado" });
+          }
+        }
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error("❌ Shippo webhook errore:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   calcolaTariffe, acquistaEtichetta, acquistaEtichettaCheckout, getStatoSpedizione,
   getOpzioniCliente, getOpzioniAdmin, creaOpzione, aggiornaOpzione, eliminaOpzione,
+  shippoWebhook,
 };
