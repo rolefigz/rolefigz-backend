@@ -1,13 +1,17 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM   = process.env.EMAIL_FROM || "RoleFigz <noreply@rolefigz.com>";
-const ADMIN  = process.env.EMAIL_USER;
+const trasportatore = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+const ADMIN = process.env.EMAIL_USER;
 
 async function invia(to, subject, html) {
-  const { error } = await resend.emails.send({ from: FROM, to, subject, html });
-  if (error) throw new Error(error.message);
+  await trasportatore.sendMail({ from: process.env.EMAIL_FROM, to, subject, html });
 }
 
 const emailConfirmacionPedido = async (ordine, dettagli) => {
