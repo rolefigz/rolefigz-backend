@@ -2,7 +2,6 @@ const bcrypt = require("bcryptjs");
 const jwt    = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const { Utente, Ordine, DettaglioOrdine, Prodotto } = require("../models");
-const { emailVerificacion } = require("../utils/mailer");
 
 const register = async (req, res) => {
   try {
@@ -114,7 +113,10 @@ const recuperarPassword = async (req, res) => {
     const codice = Math.floor(100000 + Math.random() * 900000).toString();
     const scade  = new Date(Date.now() + 15 * 60 * 1000);
     await utente.update({ codigoVerificacion: codice, codigoExpira: scade });
-    await emailVerificacion(email, codice, utente.nombre);
+    const { emailVerificacion } = require("../utils/mailer");
+    emailVerificacion(email, codice, utente.nombre).catch(err =>
+      console.error("Email recupero password:", err.message)
+    );
     res.json({ mensaje: "Codice inviato", email });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
