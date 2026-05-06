@@ -9,15 +9,20 @@ const register = async (req, res) => {
     const { nombre, email, password } = req.body;
     const esiste = await Utente.findOne({ where: { email } });
     if (esiste) return res.status(400).json({ error: "Email già registrata" });
-    const hash   = await bcrypt.hash(password, 10);
-    const codice = Math.floor(100000 + Math.random() * 900000).toString();
-    const scade  = new Date(Date.now() + 15 * 60 * 1000);
-    await Utente.create({
-      nombre, email, password: hash, rol: "user",
-      codigoVerificacion: codice, codigoExpira: scade
+    const hash = await bcrypt.hash(password, 10);
+    const utente = await Utente.create({
+      nombre, email, password: hash, rol: "user", verificado: true
     });
-    await emailVerificacion(email, codice, nombre);
-    res.status(201).json({ mensaje: "Codice inviato", email });
+    const token = jwt.sign(
+      { id: utente.id, email: utente.email, rol: utente.rol, nombre: utente.nombre },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.status(201).json({
+      mensaje: "Account creato",
+      token,
+      usuario: { id: utente.id, nombre: utente.nombre, email: utente.email, rol: utente.rol }
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -53,15 +58,7 @@ const login = async (req, res) => {
     const valido = await bcrypt.compare(password, utente.password);
     if (!valido) return res.status(401).json({ error: "Password errata" });
     if (!utente.verificado) {
-      const codice = Math.floor(100000 + Math.random() * 900000).toString();
-      const scade  = new Date(Date.now() + 15 * 60 * 1000);
-      await utente.update({ codigoVerificacion: codice, codigoExpira: scade });
-      await emailVerificacion(utente.email, codice, utente.nombre);
-      return res.status(403).json({
-        error: "Account non verificato. Ti abbiamo inviato un nuovo codice.",
-        email: utente.email,
-        verificacion_pendiente: true
-      });
+      await utente.update({ verificado: true });
     }
     const token = jwt.sign(
       { id: utente.id, email: utente.email, rol: utente.rol, nombre: utente.nombre },
