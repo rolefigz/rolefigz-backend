@@ -1,13 +1,14 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 require("dotenv").config();
 
-const trasportatore = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM   = process.env.EMAIL_FROM || "RoleFigz <noreply@rolefigz.com>";
+const ADMIN  = process.env.EMAIL_USER;
+
+async function invia(to, subject, html) {
+  const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+  if (error) throw new Error(error.message);
+}
 
 const emailConfirmacionPedido = async (ordine, dettagli) => {
   const righe = dettagli.map(d => `
@@ -124,31 +125,24 @@ const emailConfirmacionPedido = async (ordine, dettagli) => {
   </body>
   </html>`;
 
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      ordine.email_cliente,
-    subject: `✅ Ordine #${ordine.id} confermato — RoleFigz`,
-    html,
-  });
+  await invia(ordine.email_cliente, `✅ Ordine #${ordine.id} confermato — RoleFigz`, html);
 };
 
 // Email interno per l'admin
 const emailNuevoPedidoAdmin = async (ordine) => {
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      process.env.EMAIL_USER,
-    subject: `🛒 Nuovo ordine #${ordine.id} — €${parseFloat(ordine.total).toFixed(2)}`,
-    html: `
-      <div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
-        <h2 style="color:#ff3c00;letter-spacing:3px">NUOVO ORDINE #${ordine.id}</h2>
-        <p><strong>Cliente:</strong> ${ordine.nombre_cliente}</p>
-        <p><strong>Email:</strong> ${ordine.email_cliente}</p>
-        <p><strong>Telefono:</strong> ${ordine.telefono || "—"}</p>
-        <p><strong>Totale:</strong> <span style="color:#ff3c00;font-size:20px">€${parseFloat(ordine.total).toFixed(2)}</span></p>
-        <p><strong>Indirizzo:</strong> ${ordine.direccion || "—"}</p>
-        <p><strong>Note:</strong> ${ordine.notas || "—"}</p>
-      </div>`
-  });
+  await invia(
+    ADMIN,
+    `🛒 Nuovo ordine #${ordine.id} — €${parseFloat(ordine.total).toFixed(2)}`,
+    `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
+      <h2 style="color:#ff3c00;letter-spacing:3px">NUOVO ORDINE #${ordine.id}</h2>
+      <p><strong>Cliente:</strong> ${ordine.nombre_cliente}</p>
+      <p><strong>Email:</strong> ${ordine.email_cliente}</p>
+      <p><strong>Telefono:</strong> ${ordine.telefono || "—"}</p>
+      <p><strong>Totale:</strong> <span style="color:#ff3c00;font-size:20px">€${parseFloat(ordine.total).toFixed(2)}</span></p>
+      <p><strong>Indirizzo:</strong> ${ordine.direccion || "—"}</p>
+      <p><strong>Note:</strong> ${ordine.notas || "—"}</p>
+    </div>`
+  );
 };
 
 const emailVerificacion = async (email, codice, nome) => {
@@ -204,12 +198,7 @@ const emailVerificacion = async (email, codice, nome) => {
   </body>
   </html>`;
 
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      email,
-    subject: `Codice di verifica RoleFigz — ${codice}`,
-    html,
-  });
+  await invia(email, `Codice di verifica RoleFigz — ${codice}`, html);
 };
 
 const emailSpedizione = async (ordine) => {
@@ -293,20 +282,11 @@ const emailSpedizione = async (ordine) => {
   </body>
   </html>`;
 
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      ordine.email_cliente,
-    subject: `📦 Ordine #${ordine.id} spedito — Tracking: ${ordine.tracking_number}`,
-    html,
-  });
+  await invia(ordine.email_cliente, `📦 Ordine #${ordine.id} spedito — Tracking: ${ordine.tracking_number}`, html);
 };
 
 const emailGadget3D = async ({ id, nome, email, gadget, azienda }) => {
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      email,
-    subject: `✅ Richiesta gadget 3D ricevuta — RoleFigz #${id}`,
-    html: `
+  await invia(email, `✅ Richiesta gadget 3D ricevuta — RoleFigz #${id}`, `
     <!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
     <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
@@ -349,17 +329,14 @@ const emailGadget3D = async ({ id, nome, email, gadget, azienda }) => {
           </table>
         </td></tr>
       </table>
-    </body></html>`,
-  });
+    </body></html>`);
 };
 
 const emailGadget3DAdmin = async ({ id, nome, email, gadget, azienda, settore, dimensione, utilizzo, note, logo_url }) => {
-  await trasportatore.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      process.env.EMAIL_USER,
-    subject: `🖨️ Nuovo gadget 3D #${id} — ${azienda}`,
-    html: `
-    <div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
+  await invia(
+    ADMIN,
+    `🖨️ Nuovo gadget 3D #${id} — ${azienda}`,
+    `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
       <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">NUOVO GADGET 3D #${id}</h2>
       <p><strong>Nome:</strong> ${nome}</p>
       <p><strong>Azienda:</strong> ${azienda}</p>
@@ -371,8 +348,8 @@ const emailGadget3DAdmin = async ({ id, nome, email, gadget, azienda, settore, d
       <p><strong>Utilizzo:</strong> ${utilizzo}</p>
       ${note ? `<p><strong>Note:</strong> ${note}</p>` : ""}
       ${logo_url ? `<p><strong>Logo:</strong> <a href="${logo_url}" style="color:#C17F3A">Visualizza logo</a></p>` : "<p><strong>Logo:</strong> non caricato</p>"}
-    </div>`,
-  });
+    </div>`
+  );
 };
 
 module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
