@@ -12,19 +12,47 @@ function apriCheckout() {
     prefisso.dataset.set = '1';
   }
   spedizioneSelezionata = null;
-  document.getElementById('spedizioneOpzioni').innerHTML = '';
-  aggiornaRiepilogoOrdine();
   document.getElementById('checkoutModal').classList.add('on');
+  calcolaSpedizioneAuto();
 }
 
 function chiudiCheckout() {
   document.getElementById('checkoutModal').classList.remove('on');
 }
 
-function resetSpedizione() {
-  if (!spedizioneSelezionata) return;
-  spedizioneSelezionata = null;
-  document.getElementById('spedizioneOpzioni').innerHTML = '';
+function calcolaSpedizioneAuto() {
+  const naz = (document.getElementById('chkNazione')?.value || 'IT').toUpperCase();
+  const totProdotti = totaleCarrello();
+  const wrap = document.getElementById('spedizioneOpzioni');
+
+  if (naz !== 'IT') {
+    spedizioneSelezionata = null;
+    wrap.innerHTML = '<div class="msg err" style="margin:10px 0">Spediamo solo in Italia. Per spedizioni internazionali contattaci.</div>';
+    aggiornaRiepilogoOrdine();
+    return;
+  }
+
+  const gratuita = totProdotti >= 100;
+  spedizioneSelezionata = {
+    id:       'it-fisso',
+    corriere: 'Standard',
+    servizio: gratuita ? 'Spedizione gratuita' : 'Spedizione standard',
+    prezzo:   gratuita ? 0 : 10,
+  };
+
+  wrap.innerHTML = `
+    <div class="spediz-opt selected" style="pointer-events:none">
+      <div class="spediz-info">
+        <div class="spediz-corriere">
+          <iconify-icon icon="mdi:truck-fast-outline" width="14" style="vertical-align:middle;margin-right:5px"></iconify-icon>
+          ${spedizioneSelezionata.servizio}
+        </div>
+        ${gratuita ? '' : '<div class="spediz-servizio">Consegna stimata 3–7 giorni lavorativi</div>'}
+      </div>
+      <div class="spediz-prezzo">${gratuita ? 'GRATIS' : '€10.00'}</div>
+    </div>
+    ${!gratuita ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px">Spedizione gratuita per ordini ≥ €100</div>` : ''}`;
+
   aggiornaRiepilogoOrdine();
 }
 
@@ -41,68 +69,16 @@ function aggiornaRiepilogoOrdine() {
       </div>`).join('')}
     <div class="oline" style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
       <span>${spedizioneSelezionata
-        ? `${spedizioneSelezionata.corriere} — ${spedizioneSelezionata.servizio}`
+        ? spedizioneSelezionata.prezzo === 0 ? 'Spedizione gratuita' : 'Spedizione standard'
         : 'Spedizione'}</span>
       <span>${spedizioneSelezionata
-        ? `€${spedizioneSelezionata.prezzo.toFixed(2)}`
+        ? spedizioneSelezionata.prezzo === 0 ? 'GRATIS' : '€10.00'
         : 'da calcolare'}</span>
     </div>
     <div class="ototal">
       <span>TOTALE</span>
       <span>€${(prodTotale + spedCosto).toFixed(2)}</span>
     </div>`;
-}
-
-async function calcolaSpedizioneCheckout() {
-  const via   = document.getElementById('chkVia').value.trim();
-  const citta = document.getElementById('chkCitta').value.trim();
-  const cap   = document.getElementById('chkCap').value.trim();
-  const naz   = (document.getElementById('chkNazione').value || 'IT').toUpperCase().slice(0, 2);
-
-  if (!via || !citta || !cap) {
-    showMsg('checkoutMsg', 'Inserisci via, città e CAP prima di calcolare la spedizione', 'err');
-    return;
-  }
-
-  showMsg('checkoutMsg', '', '');
-  spedizioneSelezionata = null;
-  aggiornaRiepilogoOrdine();
-
-  const wrap = document.getElementById('spedizioneOpzioni');
-  wrap.innerHTML = '<div class="spediz-loading">CARICAMENTO OPZIONI...</div>';
-
-  try {
-    const r = await fetch(`${API}/spedizione/opzioni?nazione=${encodeURIComponent(naz)}`);
-    const opzioni = await r.json();
-    if (!r.ok) throw new Error(opzioni.error);
-
-    if (!opzioni.length) {
-      wrap.innerHTML = '<div class="msg err">Nessuna opzione di spedizione disponibile per questo paese. Contattaci.</div>';
-      return;
-    }
-
-    wrap.innerHTML = `
-      <div class="spediz-label">SELEZIONA METODO DI SPEDIZIONE *</div>
-      ${opzioni.map(o => `
-        <div class="spediz-opt" data-id="${o.id}" onclick="selezionaSpedizione(${o.id},'${o.nome.replace(/'/g,"\\'")}','${(o.giorni||'').replace(/'/g,"\\'")}',${parseFloat(o.prezzo)})">
-          <div class="spediz-info">
-            <div class="spediz-corriere">${o.nome}</div>
-            ${o.giorni ? `<div class="spediz-servizio">${o.giorni} giorni lavorativi</div>` : ''}
-          </div>
-          <div class="spediz-prezzo">€${parseFloat(o.prezzo).toFixed(2)}</div>
-        </div>`).join('')}`;
-  } catch(e) {
-    wrap.innerHTML = `<div class="msg err">Errore caricamento spedizione: ${e.message}</div>`;
-  }
-}
-
-function selezionaSpedizione(id, corriere, servizio, prezzo) {
-  spedizioneSelezionata = { id, corriere, servizio, prezzo: parseFloat(prezzo) };
-  document.querySelectorAll('.spediz-opt').forEach(el => {
-    el.classList.toggle('selected', el.dataset.id === id);
-  });
-  aggiornaRiepilogoOrdine();
-  showMsg('checkoutMsg', '', '');
 }
 
 async function confermaOrdine() {
@@ -114,7 +90,7 @@ async function confermaOrdine() {
 
   if (!nome || !email) { showMsg('checkoutMsg', 'Nome e email obbligatori', 'err'); return; }
   if (!via || !citta || !cap) { showMsg('checkoutMsg', 'Completa i dati di spedizione: via, città e CAP', 'err'); return; }
-  if (!spedizioneSelezionata) { showMsg('checkoutMsg', 'Calcola e seleziona un metodo di spedizione', 'err'); return; }
+  if (!spedizioneSelezionata) { showMsg('checkoutMsg', 'Seleziona un paese valido per la spedizione', 'err'); return; }
 
   const btn = document.getElementById('confirmarBtn');
   btn.disabled = true;
@@ -140,7 +116,7 @@ async function confermaOrdine() {
         costo_spedizione:      spedizioneSelezionata.prezzo,
         carrier:               spedizioneSelezionata.corriere,
         shipping_service:      spedizioneSelezionata.servizio,
-        shippo_rate_id:        spedizioneSelezionata.id || null,
+        shippo_rate_id:        null,
         tracking_number:       null,
         label_url:             null,
         shippo_transaction_id: null,

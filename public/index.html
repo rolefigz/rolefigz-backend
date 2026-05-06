@@ -444,14 +444,14 @@
           <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
         </div>
       </div>
-      <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1" oninput="resetSpedizione()"/></div>
+      <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1"/></div>
       <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:8px">
-        <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Milano" oninput="resetSpedizione()"/></div>
-        <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="20100" maxlength="10" oninput="resetSpedizione()"/></div>
-        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="MI" maxlength="3" oninput="resetSpedizione()"/></div>
+        <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Milano"/></div>
+        <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="20100" maxlength="10"/></div>
+        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="MI" maxlength="3"/></div>
       </div>
       <div class="field"><label>Paese</label>
-        <select id="chkNazione" onchange="resetSpedizione()">
+        <select id="chkNazione" onchange="calcolaSpedizioneAuto()">
           <option value="IT">🇮🇹 Italia</option>
           <option value="ES">🇪🇸 Spagna</option>
           <option value="DE">🇩🇪 Germania</option>
@@ -465,10 +465,6 @@
           <option value="US">🇺🇸 USA</option>
         </select>
       </div>
-      <button type="button" class="btn-spediz-calc" onclick="calcolaSpedizioneCheckout()">
-        <iconify-icon icon="mdi:truck-fast-outline" width="15" style="vertical-align:middle;margin-right:6px"></iconify-icon>
-        CALCOLA SPEDIZIONE
-      </button>
       <div id="spedizioneOpzioni"></div>
       <div class="field" style="margin-top:12px"><label data-i18n="field_notes">Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
       <div id="checkoutMsg"></div>
