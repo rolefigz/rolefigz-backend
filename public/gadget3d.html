@@ -115,23 +115,66 @@
     /* ── GADGET GRID ── */
     .g3d-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); }
     .g3d-card {
-      background: var(--surface); padding: 32px 28px; cursor: pointer;
+      background: var(--surface); padding: 0 0 24px; cursor: pointer;
       transition: all .2s; border: 2px solid transparent; position: relative;
-      animation: fadeUp .4s ease both;
+      animation: fadeUp .4s ease both; overflow: hidden;
     }
     .g3d-card:hover { background: var(--surface2); }
     .g3d-card.selected { border-color: var(--accent); background: rgba(193,127,58,.04); }
     .g3d-card-check {
-      position: absolute; top: 14px; right: 14px; font-size: 20px;
-      color: var(--accent); display: none;
+      position: absolute; top: 14px; right: 14px; font-size: 22px;
+      color: var(--accent); display: none; z-index: 2;
+      background: rgba(247,245,240,.9); border-radius: 50%; line-height: 1;
     }
     .g3d-card.selected .g3d-card-check { display: block; }
-    .g3d-card-icon { font-size: 48px; color: var(--accent); margin-bottom: 20px; display: block; }
+    .g3d-card-img {
+      width: 100%; height: 180px; object-fit: cover; display: block;
+      margin-bottom: 20px; transition: transform .3s;
+    }
+    .g3d-card:hover .g3d-card-img { transform: scale(1.03); }
     .g3d-card-name {
       font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .5px; color: var(--dark); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: .5px; color: var(--dark);
+      margin: 0 24px 6px;
     }
-    .g3d-card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .g3d-card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0 24px; }
+
+    /* ── CHI SONO ── */
+    .g3d-chi-sono {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      background: var(--dark); color: #f0ece4;
+    }
+    .g3d-chi-text { padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
+    .g3d-chi-img { position: relative; overflow: hidden; min-height: 420px; }
+    .g3d-chi-img img { width: 100%; height: 100%; object-fit: cover; opacity: .7; }
+    .g3d-chi-img::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, var(--dark) 0%, transparent 60%);
+    }
+    .g3d-chi-name {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 52px; font-weight: 900;
+      line-height: .9; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .g3d-chi-name span { color: var(--accent); }
+    .g3d-chi-role {
+      font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 28px;
+    }
+    .g3d-chi-bio { font-size: 14px; color: #aaa; line-height: 1.9; max-width: 420px; margin-bottom: 32px; }
+    .g3d-chi-bio strong { color: #f0ece4; }
+    .g3d-chi-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .g3d-chi-tag {
+      font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+      border: 1px solid rgba(193,127,58,.4); color: var(--accent);
+      padding: 5px 12px; text-transform: uppercase;
+    }
+    @media (max-width: 768px) {
+      .g3d-chi-sono { grid-template-columns: 1fr; }
+      .g3d-chi-img { min-height: 240px; }
+      .g3d-chi-img::after { background: linear-gradient(180deg, transparent 40%, var(--dark) 100%); }
+      .g3d-chi-text { padding: 40px 24px; }
+      .g3d-chi-name { font-size: 40px; }
+    }
 
     /* ── FORM ── */
     .g3d-form-wrap { max-width: 680px; margin: 0 auto; }
@@ -330,6 +373,34 @@
   </div>
 </section>
 
+<!-- CHI SONO -->
+<section class="g3d-chi-sono">
+  <div class="g3d-chi-text">
+    <div class="g3d-label" style="color:var(--accent)">// Chi c'è dietro RoleFigz</div>
+    <div class="g3d-chi-name">OSKAR<br><span>RIZZO</span></div>
+    <div class="g3d-chi-role">Studente · ISII G. Marconi, Piacenza · Imprenditore</div>
+    <p class="g3d-chi-bio">
+      Ho <strong>18 anni</strong> e frequento l'ISII G. Marconi di Piacenza.
+      <strong>Un anno fa ho fondato RoleFigz</strong> con una stampante 3D,
+      tanta curiosità e la voglia di trasformare un hobby in qualcosa di concreto.<br><br>
+      Oggi stampo gadget personalizzati per privati e aziende, ma voglio crescere.
+      <strong>Sto cercando aziende del territorio disposte a collaborare</strong> —
+      che si tratti di gadget promozionali, prototipi, premi aziendali o semplice curiosità
+      per la stampa 3D: posso essere il vostro fornitore giovane, flessibile e locale.
+    </p>
+    <div class="g3d-chi-tags">
+      <span class="g3d-chi-tag">Stampa 3D</span>
+      <span class="g3d-chi-tag">Gadget aziendali</span>
+      <span class="g3d-chi-tag">Prototipazione</span>
+      <span class="g3d-chi-tag">Made in Piacenza</span>
+      <span class="g3d-chi-tag">Cerco collaborazioni</span>
+    </div>
+  </div>
+  <div class="g3d-chi-img">
+    <img src="/assets/gadget/Impresoras.jpeg" alt="RoleFigz stampante 3D"/>
+  </div>
+</section>
+
 <!-- SELEZIONE GADGET -->
 <section class="g3d-section" id="g3d-scegli">
   <div class="g3d-label">// Passo 1</div>
@@ -337,37 +408,37 @@
   <div class="g3d-grid" id="g3dGadgetGrid">
     <div class="g3d-card" data-gadget="Porta biglietti" style="animation-delay:.05s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:card-account-details"></span></span>
+      <img src="/assets/gadget/calamitaelim.jpg" alt="Porta biglietti" class="g3d-card-img"/>
       <div class="g3d-card-name">Porta biglietti</div>
       <div class="g3d-card-desc">Porta biglietti da visita in stampa 3D con logo aziendale in rilievo. Elegante e funzionale.</div>
     </div>
     <div class="g3d-card" data-gadget="Organizer scrivania" style="animation-delay:.1s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:pencil-box"></span></span>
+      <img src="/assets/gadget/Impresoras.jpeg" alt="Organizer scrivania" class="g3d-card-img"/>
       <div class="g3d-card-name">Organizer scrivania</div>
       <div class="g3d-card-desc">Organizer da scrivania modulare con incisione del brand. Tiene penne, cavi e oggetti.</div>
     </div>
     <div class="g3d-card" data-gadget="Portachiavi" style="animation-delay:.15s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:key-chain"></span></span>
+      <img src="/assets/gadget/Portachiave2M.jpg" alt="Portachiavi" class="g3d-card-img"/>
       <div class="g3d-card-name">Portachiavi</div>
       <div class="g3d-card-desc">Portachiavi personalizzato con logo 3D. Resistente, leggero, disponibile in vari colori.</div>
     </div>
     <div class="g3d-card" data-gadget="Miniatura prodotto" style="animation-delay:.2s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:factory"></span></span>
+      <img src="/assets/gadget/MiniaturaProdotto.png" alt="Miniatura prodotto" class="g3d-card-img"/>
       <div class="g3d-card-name">Miniatura prodotto</div>
       <div class="g3d-card-desc">Replica in scala del tuo prodotto o macchinario. Perfetta per stand fieristici.</div>
     </div>
     <div class="g3d-card" data-gadget="Trofeo / Premio" style="animation-delay:.25s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:trophy"></span></span>
+      <img src="/assets/gadget/Trofeo.png" alt="Trofeo" class="g3d-card-img"/>
       <div class="g3d-card-name">Trofeo / Premio</div>
       <div class="g3d-card-desc">Trofeo personalizzato per premi interni o riconoscimenti. Design esclusivo su misura.</div>
     </div>
     <div class="g3d-card" data-gadget="Targhetta" style="animation-delay:.3s">
       <span class="g3d-card-check"><span class="iconify" data-icon="mdi:check-circle"></span></span>
-      <span class="g3d-card-icon"><span class="iconify" data-icon="mdi:sign-text"></span></span>
+      <img src="/assets/gadget/Segnaletica.jpg" alt="Targhetta" class="g3d-card-img"/>
       <div class="g3d-card-name">Targhetta</div>
       <div class="g3d-card-desc">Targhetta nominativa o di reparto con logo. Professionale e personalizzabile.</div>
     </div>
