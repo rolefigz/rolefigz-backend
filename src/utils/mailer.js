@@ -1,23 +1,22 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 require("dotenv").config();
 
 const ADMIN = process.env.EMAIL_USER;
 
-// Transport creato solo al primo invio, non al caricamento del modulo
-let _t = null;
-function getTransport() {
-  if (!_t) _t = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls: { rejectUnauthorized: false },
-  });
-  return _t;
+let _resend = null;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
 }
 
 async function invia(to, subject, html) {
-  await getTransport().sendMail({ from: process.env.EMAIL_FROM, to, subject, html });
+  const { error } = await getResend().emails.send({
+    from:    process.env.EMAIL_FROM,
+    to,
+    subject,
+    html,
+  });
+  if (error) throw new Error(error.message);
 }
 
 const emailConfirmacionPedido = async (ordine, dettagli) => {
