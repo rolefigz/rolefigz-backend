@@ -60,13 +60,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || "Errore interno del server" });
 });
 
-// ── DB + Server ───────────────────────────────────────────
-sequelize
-  .sync({ alter: true })
-  .then(() => {
-    console.log("✅ Database sincronizzato");
-    app.listen(process.env.PORT, () => {
-      console.log(`🚀 Server avviato su http://localhost:${process.env.PORT}`);
-    });
-  })
-  .catch(err => console.error("❌ Errore DB:", err));
+// ── Server — parte subito, DB si sincronizza in background ───────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server avviato sulla porta ${PORT}`);
+  sequelize
+    .sync({ alter: true })
+    .then(() => console.log("✅ Database sincronizzato"))
+    .catch(err => console.error("❌ Errore DB:", err.message));
+});
