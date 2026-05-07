@@ -58,7 +58,15 @@ async function accedi() {
       body: JSON.stringify({ email, password: pass })
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Errore');
+    if (!r.ok) {
+      if (data.verificacion_pendiente) {
+        emailAttesaVerifica = data.email;
+        mostraPannelloVerifica(data.email);
+        showMsg('verificaMsg', '✅ Codice inviato! Controlla la tua email.', 'ok');
+        return;
+      }
+      throw new Error(data.error || 'Errore');
+    }
     token = data.token;
     localStorage.setItem('rfToken', token);
     utente = data.usuario;
@@ -98,12 +106,8 @@ async function registrati() {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    token = data.token;
-    localStorage.setItem('rfToken', token);
-    utente = data.usuario;
-    impostaSessione();
-    chiudiModalAuth();
-    mostraVista('tienda');
+    emailAttesaVerifica = email;
+    mostraPannelloVerifica(email);
   } catch(e) {
     showMsg('registerMsg', e.message, 'err');
   } finally {
