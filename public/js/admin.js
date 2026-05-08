@@ -7,6 +7,7 @@ async function caricaCategorie() {
 }
 
 async function adminTab(tab, el) {
+  fermaPollingTicketAdmin();
   document.querySelectorAll('.admin-menu-item').forEach(x => x.classList.remove('active'));
   if (el) el.classList.add('active');
   const content = document.getElementById('adminContent');
@@ -1029,6 +1030,22 @@ async function adminCaricaConversazione(id, asunto, content) {
     const messaggi = data.mensajes;
     aggiornaBadgeAdmin(0);
 
+    const msgHtml = messaggi.map(m => `
+      <div class="chat-msg ${m.remitente === 'admin' ? 'mine' : 'theirs'}">
+        ${m.remitente === 'cliente' ? `<div class="chat-msg-sender" style="color:var(--muted)">${ticket.Utente?.nombre || 'CLIENTE'}</div>` : `<div class="chat-msg-sender">TU (ADMIN)</div>`}
+        <div class="chat-msg-bubble">${escapeAdminHtml(m.texto)}</div>
+        <div class="chat-msg-time">${adminFormatTime(m.createdAt)}</div>
+      </div>`).join('');
+
+    // Se la conversazione è già aperta aggiorna solo i messaggi, senza toccare l'input
+    const msgEl = document.getElementById('adminConvMessages');
+    if (msgEl) {
+      msgEl.innerHTML = msgHtml;
+      msgEl.scrollTop = msgEl.scrollHeight;
+      return;
+    }
+
+    // Prima apertura — render completo
     content.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <button class="action-btn" onclick="fermaPollingTicketAdmin();adminTabTicket(document.getElementById('adminContent'))">← Indietro</button>
@@ -1039,12 +1056,7 @@ async function adminCaricaConversazione(id, asunto, content) {
           : `<button class="action-btn" style="border-color:var(--green);color:var(--green)" onclick="adminCambiaStato(${id},'abierto','${asunto.replace(/'/g,"\\'")}')">RIAPRI</button>`}
       </div>
       <div id="adminConvMessages" style="height:340px;overflow-y:auto;border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-        ${messaggi.map(m => `
-          <div class="chat-msg ${m.remitente === 'admin' ? 'mine' : 'theirs'}">
-            ${m.remitente === 'cliente' ? `<div class="chat-msg-sender" style="color:var(--muted)">${ticket.Utente?.nombre || 'CLIENTE'}</div>` : `<div class="chat-msg-sender">TU (ADMIN)</div>`}
-            <div class="chat-msg-bubble">${escapeAdminHtml(m.texto)}</div>
-            <div class="chat-msg-time">${adminFormatTime(m.createdAt)}</div>
-          </div>`).join('')}
+        ${msgHtml}
       </div>
       ${ticket.estado === 'abierto' ? `
       <div style="display:flex;gap:8px">
@@ -1052,8 +1064,7 @@ async function adminCaricaConversazione(id, asunto, content) {
         <button class="btn-submit" style="height:auto;padding:0 20px" onclick="adminInviaRisposta(${id},'${asunto.replace(/'/g,"\\'")}')">INVIA</button>
       </div>` : '<div class="msg" style="font-family:DM Mono;font-size:9px;letter-spacing:1px;color:var(--muted);padding:10px;border:1px solid var(--border)">TICKET CHIUSO — riapri per rispondere</div>'}`;
 
-    const msgEl = document.getElementById('adminConvMessages');
-    if (msgEl) msgEl.scrollTop = msgEl.scrollHeight;
+    document.getElementById('adminConvMessages').scrollTop = 999999;
   } catch {}
 }
 
