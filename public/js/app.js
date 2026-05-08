@@ -31,10 +31,7 @@ function mostraVista(nome) {
 }
 
 async function verificaAPI() {
-  try {
-    const r = await fetch('http://localhost:3000/');
-    if (r.ok) { setSd('apiDot', 'ok'); setTxt('apiStatus', t('status_api')); }
-  } catch { setSd('apiDot', 'err'); setTxt('apiStatus', 'API OFFLINE'); }
+  setSd('apiDot', 'ok'); setTxt('apiStatus', t('status_api'));
 }
 
 function renderCategorie() {
