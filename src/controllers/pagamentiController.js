@@ -138,11 +138,7 @@ const crearSesion = async (req, res) => {
         data_consegna:       d.data_consegna,
         supplemento_express: d.supplemento_express,
       }, { transaction: t });
-
-      await d.prodotto.update(
-        { stock: d.prodotto.stock - d.cantidad },
-        { transaction: t }
-      );
+      // Stock decrementato solo dopo conferma pagamento
     }
 
     await t.commit();
@@ -192,6 +188,12 @@ const confirmarPago = async (req, res) => {
 
     if (ordine.estado !== "confirmado") {
       await ordine.update({ estado: "confirmado" });
+
+      // Decrementa stock solo ora che il pagamento è confermato
+      for (const d of ordine.detalles) {
+        await Prodotto.decrement("stock", { by: d.cantidad, where: { id: d.producto_id } });
+      }
+
       emailConfirmacionPedido(ordine, ordine.detalles).catch(console.error);
       emailNuevoPedidoAdmin(ordine).catch(console.error);
     }

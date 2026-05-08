@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { Op } = require("sequelize");
 const { Ordine, DettaglioOrdine, Prodotto } = require("../models");
 const { emailConfirmacionPedido, emailNuevoPedidoAdmin } = require("../utils/mailer");
 
@@ -95,6 +96,7 @@ const crearOrden = async (req, res) => {
 const getOrdenes = async (req, res) => {
   try {
     const ordini = await Ordine.findAll({
+      where: { estado: { [Op.ne]: "pendiente" } },
       order: [["createdAt", "DESC"]],
       include: [{
         model: DettaglioOrdine,
