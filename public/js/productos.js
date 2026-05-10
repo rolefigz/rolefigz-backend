@@ -179,29 +179,36 @@ function renderDettaglioProdotto(p) {
       </div>
       ${p.selettore_data ? `
       <div class="data-consegna-wrap" id="dataConsegnaWrap">
-        <div class="data-consegna-label">
-          <iconify-icon icon="mdi:calendar-clock" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>DATA DI PRODUZIONE <span style="color:var(--accent)">*</span>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;padding:8px 10px;background:var(--surface2);border-left:2px solid var(--accent)">
-          ⚠ Seleziona la data in cui vuoi che il prodotto sia pronto. La consegna avverrà nei giorni successivi tramite corriere.
-        </div>
-        <div class="cal-nav">
-          <button class="cal-nav-btn" onclick="cambiaMesseCalendario(-1)">←</button>
-          <span class="cal-mese-anno" id="calMeseAnno"></span>
-          <button class="cal-nav-btn" onclick="cambiaMesseCalendario(1)">→</button>
-        </div>
-        <div class="cal-settimana">
-          <span>LUN</span><span>MAR</span><span>MER</span><span>GIO</span><span>VEN</span><span>SAB</span><span>DOM</span>
-        </div>
-        <div class="cal-griglia" id="calGiorni"></div>
-        <div class="cal-legenda">
-          <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>NON DISP.</div>
-          ${p.prezzo_per_giorno_express > 0 ? `<div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(193,127,58,.2);border:1px solid var(--accent)"></div>EXPRESS (+€${parseFloat(p.prezzo_per_giorno_express).toFixed(2)}/gg)</div>` : ''}
-          <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(76,175,80,.2);border:1px solid var(--green)"></div>STANDARD (${(p.giorni_produzione || 7) + (p.giorni_spedizione || 3)} gg)</div>
-        </div>
-        <div class="cal-info-box" id="dataSelezionataInfo" style="display:none">
-          <span id="dataSelezionataLabel"></span>
-          <span id="supplementoLabel"></span>
+        <button class="cal-urgenza-btn" id="calUrgenzaBtn" onclick="apriCalendario()">
+          <iconify-icon icon="mdi:lightning-bolt" width="15" style="vertical-align:middle;margin-right:6px;color:var(--accent)"></iconify-icon>
+          Hai bisogno urgente? Scegli quando vuoi che inizi la produzione
+          <iconify-icon icon="mdi:chevron-down" width="16" style="vertical-align:middle;margin-left:8px" id="calChevron"></iconify-icon>
+        </button>
+        <div id="calBody" style="display:none">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;padding:8px 10px;background:var(--surface2);border-left:2px solid var(--accent)">
+            Seleziona la data in cui desideri che iniziamo a produrre il tuo articolo. La spedizione avverrà nei giorni successivi al completamento.
+          </div>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="cambiaMesseCalendario(-1)">←</button>
+            <span class="cal-mese-anno" id="calMeseAnno"></span>
+            <button class="cal-nav-btn" onclick="cambiaMesseCalendario(1)">→</button>
+          </div>
+          <div class="cal-settimana">
+            <span>LUN</span><span>MAR</span><span>MER</span><span>GIO</span><span>VEN</span><span>SAB</span><span>DOM</span>
+          </div>
+          <div class="cal-griglia" id="calGiorni"></div>
+          <div class="cal-legenda">
+            <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>NON DISP.</div>
+            ${p.prezzo_per_giorno_express > 0 ? `<div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(193,127,58,.2);border:1px solid var(--accent)"></div>EXPRESS (+€${parseFloat(p.prezzo_per_giorno_express).toFixed(2)}/gg)</div>` : ''}
+            <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(76,175,80,.2);border:1px solid var(--green)"></div>STANDARD (${(p.giorni_produzione || 7) + (p.giorni_spedizione || 3)} gg)</div>
+          </div>
+          <div class="cal-info-box" id="dataSelezionataInfo" style="display:none">
+            <span id="dataSelezionataLabel"></span>
+            <span id="supplementoLabel"></span>
+          </div>
+          <button onclick="chiudiCalendario()" style="margin-top:10px;background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;cursor:pointer;padding:0">
+            ✕ Annulla selezione data
+          </button>
         </div>
       </div>` : ''}
       ${p.richiede_foto ? `
@@ -239,18 +246,7 @@ function renderDettaglioProdotto(p) {
       </div>
     </div>`;
 
-  // Inizializza calendario: naviga al primo mese con date disponibili
-  if (p.selettore_data) setTimeout(() => {
-    const oggi = new Date(); oggi.setHours(0,0,0,0);
-    const dataMinima = new Date(oggi);
-    dataMinima.setDate(dataMinima.getDate() + 1 + (p.giorni_spedizione || 3));
-    // Se il mese corrente è tutto grigio avanza al mese di dataMinima
-    const ultimoMeseCorrente = new Date(calMeseCorrente.anno, calMeseCorrente.mese + 1, 0);
-    if (ultimoMeseCorrente < dataMinima) {
-      calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
-    }
-    renderCalendario();
-  }, 0);
+  // Il calendario parte chiuso — si apre solo al click del pulsante
 
   // Recensioni fuori dal grid per evitare sovrapposizione con elementi sticky
   const vista = document.getElementById('view-producto');
@@ -326,6 +322,43 @@ async function caricaFotoCliente(input) {
 // ── Calendario data di consegna ───────────────────────────────────────────────
 
 const MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+function apriCalendario() {
+  const body = document.getElementById('calBody');
+  if (!body) return;
+  const aperto = body.style.display !== 'none';
+  if (aperto) { chiudiCalendario(); return; }
+  body.style.display = '';
+  document.getElementById('calChevron')?.setAttribute('icon', 'mdi:chevron-up');
+  // Naviga al primo mese con date disponibili
+  const p = prodottoCorrente;
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const dataMinima = new Date(oggi);
+  dataMinima.setDate(dataMinima.getDate() + 1 + (p.giorni_spedizione || 3));
+  const ultimoMeseCorrente = new Date(calMeseCorrente.anno, calMeseCorrente.mese + 1, 0);
+  if (ultimoMeseCorrente < dataMinima) {
+    calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
+  }
+  renderCalendario();
+}
+
+function chiudiCalendario() {
+  const body = document.getElementById('calBody');
+  if (body) body.style.display = 'none';
+  document.getElementById('calChevron')?.setAttribute('icon', 'mdi:chevron-down');
+  dataConsegnaSelezionata    = null;
+  supplementoExpressCorrente = 0;
+  // Riporta il prezzo al base
+  if (prodottoCorrente) {
+    const base = parseFloat(prodottoCorrente.precio);
+    let extra = 0;
+    prodottoCorrente.variantes?.forEach(v => {
+      if (varianteSelezionata[v.tipo] === v.valor) extra += parseFloat(v.precio_extra || 0);
+    });
+    document.getElementById('precioDisplay').childNodes[0].textContent = `€${(base + extra).toFixed(2)}`;
+    setTxt('precioExtra', extra > 0 ? `+€${extra.toFixed(2)}` : '');
+  }
+}
 
 function isoLocale(d) {
   // Evita lo sfasamento di toISOString() con i fusi orari
