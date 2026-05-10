@@ -116,7 +116,7 @@ function t(key) {
 function impostaLingua(lang, naviga = false) {
   if (naviga) {
     localStorage.setItem('rfLang', lang);
-    window.location.href = `/${lang}/`;
+    window.location.href = `/${lang}`;
     return;
   }
   linguaCorrente = lang;

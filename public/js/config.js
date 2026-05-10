@@ -6,7 +6,7 @@ let utente = null;
 let prodotti = [];
 let categorie = [];
 let carrello = [];
-const _urlLang = ['it','es','en'].find(l => window.location.pathname.startsWith(`/${l}/`) || window.location.pathname === `/${l}`);
+const _urlLang = ['it','es','en'].find(l => window.location.pathname === `/${l}` || window.location.pathname.startsWith(`/${l}/`));
 let linguaCorrente = _urlLang || localStorage.getItem('rfLang') || 'it';
 let prodottoCorrente = null;
 let varianteSelezionata = {};
