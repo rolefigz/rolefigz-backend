@@ -180,7 +180,10 @@ function renderDettaglioProdotto(p) {
       ${p.selettore_data ? `
       <div class="data-consegna-wrap" id="dataConsegnaWrap">
         <div class="data-consegna-label">
-          <iconify-icon icon="mdi:calendar-clock" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>DATA DI CONSEGNA <span style="color:var(--accent)">*</span>
+          <iconify-icon icon="mdi:calendar-clock" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>DATA DI PRODUZIONE <span style="color:var(--accent)">*</span>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;padding:8px 10px;background:var(--surface2);border-left:2px solid var(--accent)">
+          ⚠ Seleziona la data in cui vuoi che il prodotto sia pronto. La consegna avverrà nei giorni successivi tramite corriere.
         </div>
         <div class="cal-nav">
           <button class="cal-nav-btn" onclick="cambiaMesseCalendario(-1)">←</button>
