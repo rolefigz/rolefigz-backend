@@ -69,15 +69,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   gestisciRitornoStripe();
 
   const percorso = window.location.pathname;
-  if (percorso.startsWith('/producto/')) {
-    const slug = percorso.replace('/producto/', '').split('/')[0];
+  const blogMatch = percorso.match(/\/blog\/([^/]+)/);
+  if (blogMatch) {
+    await vediArticolo(blogMatch[1]);
+  } else if (percorso.match(/\/producto\/([^/]+)/)) {
+    const slug = percorso.match(/\/producto\/([^/]+)/)[1];
     if (slug) await vediProdotto(slug);
   } else {
     tracciVisita('home');
   }
 
   window.addEventListener('popstate', (e) => {
-    if (e.state?.tipo === 'producto') {
+    if (e.state?.tipo === 'articolo') {
+      vediArticolo(e.state.slug);
+    } else if (e.state?.tipo === 'producto') {
       vediProdotto(e.state.slug);
     } else {
       mostraVista('tienda');

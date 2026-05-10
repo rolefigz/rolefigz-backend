@@ -262,30 +262,78 @@ async function adminTab(tab, el) {
   if (tab === 'blog') {
     content.innerHTML = '<div class="loading">CARICAMENTO</div>';
     try {
-      const rA = await fetch(`${API}/articoli`, { headers: { Authorization: `Bearer ${token}` } });
-      const publist = await rA.json();
+      const rA = await fetch(`${API}/articoli/admin/all`, { headers: { Authorization: `Bearer ${token}` } });
+      const lista = await rA.json();
+      const pub   = lista.filter(a => a.pubblicato).length;
 
       content.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <div class="admin-form-title" style="margin:0">BLOG (${publist.length} pubblicati)</div>
+          <div class="admin-form-title" style="margin:0">BLOG (${pub} pubblicati · ${lista.length - pub} bozze)</div>
           <button class="btn-submit" onclick="adminNuovoArticolo()">+ NUOVO ARTICOLO</button>
         </div>
         <table><thead><tr><th>Titolo</th><th>Slug</th><th>Stato</th><th>Data</th><th>Azioni</th></tr></thead>
-        <tbody>${publist.map(a => `
+        <tbody>${lista.map(a => `
           <tr>
             <td><strong>${a.titolo}</strong></td>
-            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${a.slug}</td>
-            <td><span class="pill green">PUBBLICATO</span></td>
+            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">/blog/${a.slug}</td>
+            <td><span class="pill ${a.pubblicato ? 'green' : ''}">${a.pubblicato ? 'PUBBLICATO' : 'BOZZA'}</span></td>
             <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${new Date(a.createdAt).toLocaleDateString('it-IT')}</td>
             <td>
-              <button class="action-btn" onclick="adminModificaArticolo('${a.slug}')">MODIFICA</button>
-              <button class="action-btn danger" onclick="alternaArticolo(${a.id}, false)">BOZZA</button>
+              <button class="action-btn" onclick="adminModificaArticolo(${a.id})">MODIFICA</button>
+              <button class="action-btn ${a.pubblicato ? 'danger' : ''}" onclick="alternaArticolo(${a.id})">${a.pubblicato ? 'BOZZA' : 'PUBBLICA'}</button>
             </td>
           </tr>`).join('')}
         </tbody></table>
         <div id="blogFormWrap" style="margin-top:32px"></div>`;
     } catch { content.innerHTML = '<div class="msg err">Errore</div>'; }
   }
+}
+
+// ── Quill editor blog ────────────────────────────────────────────────────────
+let _quillBlog = null;
+
+function initQuillBlog(containerId, html = '') {
+  setTimeout(() => {
+    _quillBlog = new Quill(`#${containerId}`, {
+      theme: 'snow',
+      modules: {
+        toolbar: {
+          container: [
+            ['bold','italic','underline','strike'],
+            ['blockquote','code-block'],
+            [{ header: [1,2,3,false] }],
+            [{ list:'ordered' },{ list:'bullet' }],
+            [{ color:[] },{ background:[] }],
+            ['link','image','video'],
+            ['clean']
+          ],
+          handlers: { image: quillBlogUploadImmagine }
+        }
+      }
+    });
+    if (html) _quillBlog.root.innerHTML = html;
+  }, 0);
+}
+
+async function quillBlogUploadImmagine() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.click();
+  input.onchange = async () => {
+    const file = input.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append('image', file);
+    try {
+      const r = await fetch(`${API}/articoli/upload-image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      });
+      const data = await r.json();
+      if (data.url) {
+        const range = _quillBlog.getSelection() || { index: _quillBlog.getLength() };
+        _quillBlog.insertEmbed(range.index, 'image', data.url);
+      }
+    } catch { alert('Errore upload immagine'); }
+  };
 }
 
 function adminNuovoArticolo() {
@@ -295,7 +343,10 @@ function adminNuovoArticolo() {
     <div class="admin-form-title" style="font-size:19px;margin-bottom:16px">NUOVO ARTICOLO</div>
     <div class="field"><label>Titolo *</label><input id="aTitolo" type="text" placeholder="Come stampare in 3D..."/></div>
     <div class="field"><label>Estratto</label><textarea id="aEstratto" placeholder="Breve descrizione..."></textarea></div>
-    <div class="field"><label>Contenuto * (supporta HTML)</label><textarea id="aContenuto" style="min-height:200px" placeholder="<p>Testo dell'articolo...</p>"></textarea></div>
+    <div class="field">
+      <label>Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+      <div id="aContenutoEditor" style="min-height:280px;background:var(--bg);border:1px solid var(--border)"></div>
+    </div>
     <div class="field">
       <label>Meta descrizione (<span id="metaCount">0</span>/160)</label>
       <input id="aMetaDesc" type="text" maxlength="160" placeholder="Descrizione per i motori di ricerca..."
@@ -303,10 +354,10 @@ function adminNuovoArticolo() {
     </div>
     <div class="field"><label>Tags (separati da virgola)</label><input id="aTags" type="text" placeholder="stampa3d,figure,anime"/></div>
     <div class="field">
-      <label>Immagine</label>
+      <label>Immagine di copertina</label>
       <div class="img-preview-wrap" id="aImgWrap"><img id="aImgPreview" src=""/></div>
       <input type="file" id="aImagen" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="anteprimaImmagineBlog(this)"/>
-      <button type="button" class="add-file-btn" onclick="document.getElementById('aImagen').click()">📁 SELEZIONA IMMAGINE</button>
+      <button type="button" class="add-file-btn" onclick="document.getElementById('aImagen').click()">📁 SELEZIONA COPERTINA</button>
     </div>
     <div class="field" style="display:flex;align-items:center;gap:10px;margin-bottom:0">
       <input type="checkbox" id="aPubblica" style="width:auto"/>
@@ -314,41 +365,53 @@ function adminNuovoArticolo() {
     </div>
     <button class="btn-submit" style="margin-top:16px" onclick="creaArticoloAdmin()">CREA ARTICOLO</button>
     <div id="articoloMsg"></div>`;
+  initQuillBlog('aContenutoEditor');
 }
 
-async function adminModificaArticolo(slug) {
+async function adminModificaArticolo(id) {
   const content = document.getElementById('adminContent');
   content.innerHTML = '<div class="loading">CARICAMENTO</div>';
   try {
-    const r = await fetch(`${API}/articoli/${slug}`);
-    const a = await r.json();
+    const r = await fetch(`${API}/articoli/admin/all`, { headers: { Authorization: `Bearer ${token}` } });
+    const lista = await r.json();
+    const a = lista.find(x => x.id === id);
+    if (!a) throw new Error('Non trovato');
+
     content.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
         <button class="action-btn" onclick="adminTab('blog',null)">← INDIETRO</button>
-        <div class="admin-form-title" style="margin:0">MODIFICA: ${a.titolo}</div>
+        <div class="admin-form-title" style="margin:0;flex:1">MODIFICA: ${a.titolo}</div>
+        <a href="/blog/${a.slug}" target="_blank" class="action-btn" style="text-decoration:none">🔗 ANTEPRIMA</a>
       </div>
-      <div class="field"><label>Titolo *</label><input id="eTitolo" type="text" value="${a.titolo}"/></div>
+      <div class="field"><label>Titolo *</label><input id="eTitolo" type="text" value="${a.titolo.replace(/"/g,'&quot;')}"/></div>
       <div class="field"><label>Estratto</label><textarea id="eEstratto">${a.estratto || ''}</textarea></div>
-      <div class="field"><label>Contenuto * (supporta HTML)</label><textarea id="eContenuto" style="min-height:200px">${a.contenuto}</textarea></div>
+      <div class="field">
+        <label>Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+        <div id="eContenutoEditor" style="min-height:280px;background:var(--bg);border:1px solid var(--border)"></div>
+      </div>
       <div class="field">
         <label>Meta descrizione (<span id="metaCountE">${(a.meta_desc||'').length}</span>/160)</label>
-        <input id="eMetaDesc" type="text" maxlength="160" value="${a.meta_desc || ''}"
+        <input id="eMetaDesc" type="text" maxlength="160" value="${(a.meta_desc||'').replace(/"/g,'&quot;')}"
           oninput="document.getElementById('metaCountE').textContent=this.value.length"/>
       </div>
-      <div class="field"><label>Tags</label><input id="eTags" type="text" value="${a.tags || ''}"/></div>
+      <div class="field"><label>Tags</label><input id="eTags" type="text" value="${(a.tags||'').replace(/"/g,'&quot;')}"/></div>
       <div class="field" style="display:flex;align-items:center;gap:10px;margin-bottom:0">
         <input type="checkbox" id="ePubblica" style="width:auto" ${a.pubblicato ? 'checked' : ''}/>
         <label style="margin:0;letter-spacing:1px">Pubblicato</label>
       </div>
       <button class="btn-submit" style="margin-top:16px" onclick="salvaArticoloAdmin(${a.id})">SALVA MODIFICHE</button>
       <div id="articoloMsg"></div>`;
-  } catch { content.innerHTML = '<div class="msg err">Errore</div>'; }
+
+    initQuillBlog('eContenutoEditor', a.contenuto || '');
+  } catch { content.innerHTML = '<div class="msg err">Errore caricamento articolo</div>'; }
 }
 
 async function creaArticoloAdmin() {
-  const titolo   = document.getElementById('aTitolo').value.trim();
-  const contenuto = document.getElementById('aContenuto').value.trim();
-  if (!titolo || !contenuto) { showMsg('articoloMsg', 'Titolo e contenuto obbligatori', 'err'); return; }
+  const titolo    = document.getElementById('aTitolo').value.trim();
+  const contenuto = _quillBlog ? _quillBlog.root.innerHTML.trim() : '';
+  if (!titolo || !contenuto || contenuto === '<p><br></p>') {
+    showMsg('articoloMsg', 'Titolo e contenuto obbligatori', 'err'); return;
+  }
   const body = {
     titolo,
     estratto:   document.getElementById('aEstratto').value,
@@ -372,14 +435,16 @@ async function creaArticoloAdmin() {
 
 async function salvaArticoloAdmin(id) {
   const body = {
-    titolo:    document.getElementById('eTitolo').value.trim(),
-    estratto:  document.getElementById('eEstratto').value,
-    contenuto: document.getElementById('eContenuto').value.trim(),
-    meta_desc: document.getElementById('eMetaDesc').value,
-    tags:      document.getElementById('eTags').value,
+    titolo:     document.getElementById('eTitolo').value.trim(),
+    estratto:   document.getElementById('eEstratto').value,
+    contenuto:  _quillBlog ? _quillBlog.root.innerHTML.trim() : '',
+    meta_desc:  document.getElementById('eMetaDesc').value,
+    tags:       document.getElementById('eTags').value,
     pubblicato: document.getElementById('ePubblica').checked,
   };
-  if (!body.titolo || !body.contenuto) { showMsg('articoloMsg', 'Titolo e contenuto obbligatori', 'err'); return; }
+  if (!body.titolo || !body.contenuto || body.contenuto === '<p><br></p>') {
+    showMsg('articoloMsg', 'Titolo e contenuto obbligatori', 'err'); return;
+  }
   try {
     const r = await fetch(`${API}/articoli/${id}`, {
       method: 'PUT',
