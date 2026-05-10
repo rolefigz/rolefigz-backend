@@ -314,6 +314,11 @@ async function caricaFotoCliente(input) {
 
 const MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 
+function isoLocale(d) {
+  // Evita lo sfasamento di toISOString() con i fusi orari
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function renderCalendario() {
   if (!prodottoCorrente || !prodottoCorrente.selettore_data) return;
   const { anno, mese } = calMeseCorrente;
@@ -324,41 +329,46 @@ function renderCalendario() {
   const giorniSpediz = p.giorni_spedizione || 3;
   const prezzoGiorno = parseFloat(p.prezzo_per_giorno_express || 0);
 
-  // Data standard = oggi + prod + spedizione
+  // Prima data selezionabile = oggi + 1 giorno (minimo produzione) + spedizione
+  const dataMinima = new Date(oggi);
+  dataMinima.setDate(dataMinima.getDate() + 1 + giorniSpediz);
+
+  // Data standard = oggi + produzione completa + spedizione
   const dataStandard = new Date(oggi);
   dataStandard.setDate(dataStandard.getDate() + giorniProd + giorniSpediz);
 
-  // Data minima = oggi + spedizione + 1 giorno produzione minimo
-  const dataMinima = new Date(oggi);
-  dataMinima.setDate(dataMinima.getDate() + giorniSpediz + 1);
+  // Se tutte le date del mese corrente sono grigie, avanza automaticamente
+  const ultimoGiornoMese = new Date(anno, mese + 1, 0);
+  if (ultimoGiornoMese < dataMinima) {
+    calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
+    renderCalendario();
+    return;
+  }
 
   // Header mese/anno
   setTxt('calMeseAnno', `${MESI_IT[mese]} ${anno}`);
 
   // Costruisci griglia giorni
-  const primoGiorno = new Date(anno, mese, 1);
+  const primoGiorno  = new Date(anno, mese, 1);
   const ultimoGiorno = new Date(anno, mese + 1, 0);
   const offsetInizio = (primoGiorno.getDay() + 6) % 7; // 0=Lun
 
   let html = '';
-
-  // Celle vuote iniziali
   for (let i = 0; i < offsetInizio; i++) html += `<div class="cal-day"></div>`;
 
   for (let g = 1; g <= ultimoGiorno.getDate(); g++) {
     const data = new Date(anno, mese, g);
-    const iso  = data.toISOString().slice(0, 10);
+    const iso  = isoLocale(data);
     const sel  = iso === dataConsegnaSelezionata;
 
     if (data < dataMinima) {
       html += `<div class="cal-day cal-day--dis"><span class="cal-day-n">${g}</span></div>`;
     } else if (data < dataStandard) {
-      // Express — calcola supplemento
       const giorniAnticipo = Math.round((dataStandard - data) / 864e5);
       const supp = giorniAnticipo * prezzoGiorno;
       html += `<div class="cal-day cal-day--exp${sel ? ' cal-day--sel' : ''}" onclick="selezionaDataConsegna('${iso}',${supp})">
         <span class="cal-day-n">${g}</span>
-        <span class="cal-day-badge">${prezzoGiorno > 0 ? `+€${supp.toFixed(0)}` : 'EXP'}</span>
+        ${prezzoGiorno > 0 ? `<span class="cal-day-badge">+€${supp.toFixed(0)}</span>` : ''}
       </div>`;
     } else {
       const isStd = data.getTime() === dataStandard.getTime();
