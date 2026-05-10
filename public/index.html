@@ -27,12 +27,29 @@
 
 <!-- ══ HEADER ══ -->
 <header>
+  <!-- Logo -->
   <img class="logo-img" src="/assets/logo.png" alt="Rolefigz" onclick="tornaAlNegozio()" style="cursor:pointer">
-  <div style="display:flex;align-items:center;gap:8px">
-    <button class="nav-btn" onclick="mostraVista('tienda')" data-i18n="nav_shop">NEGOZIO</button>
-    <button class="nav-btn primary" onclick="apriAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
 
-    <!-- Avatar dropdown (visibile solo da loggati) -->
+  <!-- Nav centrale (desktop) -->
+  <nav class="header-nav">
+    <button class="hn-link" onclick="mostraVista('tienda')" data-i18n="nav_shop">NEGOZIO</button>
+    <button class="hn-link" onclick="mostraVista('blog');loadArticoli()" data-i18n="nav_blog">BLOG</button>
+  </nav>
+
+  <!-- Azioni destra -->
+  <div class="header-actions">
+    <div class="lang-btns">
+      <button class="lang-btn" onclick="impostaLingua('it',true)">IT</button>
+      <button class="lang-btn" onclick="impostaLingua('es',true)">ES</button>
+      <button class="lang-btn" onclick="impostaLingua('en',true)">EN</button>
+    </div>
+    <button class="hn-icon" onclick="apriCarrello()" aria-label="Carrello" style="position:relative">
+      <iconify-icon icon="mdi:cart-outline" width="20"></iconify-icon>
+      <span class="cart-badge" id="cartBadge"></span>
+    </button>
+    <button class="hn-login" onclick="apriAuth('login')" id="headerLoginBtn" data-i18n="nav_login">ACCEDI</button>
+
+    <!-- Avatar dropdown -->
     <div class="avatar-wrap" id="avatarWrap" style="display:none">
       <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdownProfilo(event)" aria-label="Profilo">
         <img id="avatarFoto" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
@@ -57,6 +74,7 @@
       </div>
     </div>
 
+    <!-- Hamburger (solo mobile) -->
     <button class="menu-toggle" id="menuToggle" onclick="apriMenuNav()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
