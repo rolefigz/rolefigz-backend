@@ -259,10 +259,18 @@ function cambiaImmagine(url, idx) {
 }
 
 function selezionaVariante(tipo, valore, prezzoExtra, btn) {
+  const eraSelezionato = btn.classList.contains('selected');
   btn.closest('.variantes-grid').querySelectorAll('.variante-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  varianteSelezionata[tipo] = valore;
-  setTxt(`sel-${tipo}`, valore);
+
+  if (eraSelezionato) {
+    delete varianteSelezionata[tipo];
+    setTxt(`sel-${tipo}`, '—');
+  } else {
+    btn.classList.add('selected');
+    varianteSelezionata[tipo] = valore;
+    setTxt(`sel-${tipo}`, valore);
+  }
+
   const base = parseFloat(prodottoCorrente.precio);
   let extra = 0;
   prodottoCorrente.variantes.forEach(v => {
