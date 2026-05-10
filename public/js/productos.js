@@ -236,8 +236,18 @@ function renderDettaglioProdotto(p) {
       </div>
     </div>`;
 
-  // Inizializza calendario dopo che l'HTML è nel DOM
-  if (p.selettore_data) setTimeout(() => renderCalendario(), 0);
+  // Inizializza calendario: naviga al primo mese con date disponibili
+  if (p.selettore_data) setTimeout(() => {
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const dataMinima = new Date(oggi);
+    dataMinima.setDate(dataMinima.getDate() + 1 + (p.giorni_spedizione || 3));
+    // Se il mese corrente è tutto grigio avanza al mese di dataMinima
+    const ultimoMeseCorrente = new Date(calMeseCorrente.anno, calMeseCorrente.mese + 1, 0);
+    if (ultimoMeseCorrente < dataMinima) {
+      calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
+    }
+    renderCalendario();
+  }, 0);
 
   // Recensioni fuori dal grid per evitare sovrapposizione con elementi sticky
   const vista = document.getElementById('view-producto');
@@ -337,14 +347,6 @@ function renderCalendario() {
   const dataStandard = new Date(oggi);
   dataStandard.setDate(dataStandard.getDate() + giorniProd + giorniSpediz);
 
-  // Se tutte le date del mese corrente sono grigie, avanza automaticamente
-  const ultimoGiornoMese = new Date(anno, mese + 1, 0);
-  if (ultimoGiornoMese < dataMinima) {
-    calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
-    renderCalendario();
-    return;
-  }
-
   // Header mese/anno
   setTxt('calMeseAnno', `${MESI_IT[mese]} ${anno}`);
 
@@ -407,11 +409,11 @@ function cambiaMesseCalendario(delta) {
   mese += delta;
   if (mese > 11) { mese = 0; anno++; }
   if (mese < 0)  { mese = 11; anno--; }
-  // Non andare prima del mese corrente
+  // Non andare prima del mese corrente dell'anno corrente
   const ora = new Date();
   if (anno < ora.getFullYear() || (anno === ora.getFullYear() && mese < ora.getMonth())) return;
   calMeseCorrente = { anno, mese };
-  renderCalendario();
+  renderCalendario(); // Nessun auto-avanzamento — l'utente naviga liberamente
 }
 
 function selezionaDataConsegna(iso, supplemento) {
