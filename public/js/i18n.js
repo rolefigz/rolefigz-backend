@@ -113,7 +113,12 @@ function t(key) {
   return (i18n[linguaCorrente] && i18n[linguaCorrente][key]) || (i18n['it'][key]) || key;
 }
 
-function impostaLingua(lang) {
+function impostaLingua(lang, naviga = false) {
+  if (naviga) {
+    localStorage.setItem('rfLang', lang);
+    window.location.href = `/${lang}/`;
+    return;
+  }
   linguaCorrente = lang;
   localStorage.setItem('rfLang', lang);
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
