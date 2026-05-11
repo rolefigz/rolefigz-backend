@@ -52,36 +52,46 @@ function renderCategorie() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Cambia vista immediatamente in base all'URL, prima di qualsiasi await
-  const _percorso = window.location.pathname;
-  if (_percorso.match(/^\/producto\//)) mostraVista('producto');
-  else if (_percorso.match(/^\/blog\//))    mostraVista('blog');
-  else if (_percorso === '/checkout')       mostraVista('checkout');
-
-  await verificaAPI();
-  await caricaCategorie();
-  await caricaProdotti();
-  aggiornaUICarrello();
-  impostaLingua(linguaCorrente);
-  verificaToken();
-  if (token) {
-    try {
-      utente = JSON.parse(atob(token.split('.')[1]));
-      impostaSessione(utente);
-    } catch(e) { disconnetti(); }
-  }
-  setInterval(verificaToken, 5 * 60 * 1000);
-  if (document.getElementById('resenasDestacadas')) caricaRecensioniInEvidenza();
-  gestisciRitornoStripe();
-
   const percorso = window.location.pathname;
-  const blogMatch = percorso.match(/\/blog\/([^/]+)/);
-  if (blogMatch) {
+  const productMatch = percorso.match(/^\/producto\/([^/]+)/);
+  const blogMatch    = percorso.match(/^\/blog\/([^/]+)/);
+
+  function initAuth() {
+    verificaToken();
+    if (token) {
+      try { utente = JSON.parse(atob(token.split('.')[1])); impostaSessione(utente); }
+      catch(e) { disconnetti(); }
+    }
+    setInterval(verificaToken, 5 * 60 * 1000);
+  }
+
+  if (productMatch) {
+    // Prodotto: carica subito senza aspettare il negozio
+    mostraVista('producto');
+    initAuth();
+    await vediProdotto(productMatch[1]);
+    // Store init in background
+    caricaCategorie();
+    caricaProdotti().then(() => aggiornaUICarrello());
+
+  } else if (blogMatch) {
+    mostraVista('blog');
+    initAuth();
     await vediArticolo(blogMatch[1]);
-  } else if (percorso.match(/\/producto\/([^/]+)/)) {
-    const slug = percorso.match(/\/producto\/([^/]+)/)[1];
-    if (slug) await vediProdotto(slug);
+    caricaCategorie();
+    caricaProdotti().then(() => aggiornaUICarrello());
+
   } else {
+    // Store normale: init completo
+    if (percorso === '/checkout') mostraVista('checkout');
+    await verificaAPI();
+    await caricaCategorie();
+    await caricaProdotti();
+    aggiornaUICarrello();
+    impostaLingua(linguaCorrente);
+    initAuth();
+    if (document.getElementById('resenasDestacadas')) caricaRecensioniInEvidenza();
+    gestisciRitornoStripe();
     tracciVisita('home');
   }
 
