@@ -293,6 +293,84 @@
   </div>
 </div>
 
+<!-- ══ VISTA: CHECKOUT ══ -->
+<div class="view" id="view-checkout">
+  <div class="chk-page">
+
+    <!-- Sinistra: articoli -->
+    <div class="chk-left">
+      <div class="chk-eyebrow">// Riepilogo ordine</div>
+      <div class="chk-title">IL TUO<br><em>ORDINE</em></div>
+      <div id="chkItemsPage"></div>
+    </div>
+
+    <!-- Destra: form + riepilogo -->
+    <div class="chk-right">
+
+      <div class="chk-box">
+        <div class="chk-box-title">// Dati di spedizione</div>
+        <div class="field"><label>Nome completo *</label><input type="text" id="chkNombre" placeholder="Mario Rossi"/></div>
+        <div class="field"><label>Email *</label><input type="email" id="chkEmail" placeholder="mario@email.com"/></div>
+        <div class="field">
+          <label>Telefono</label>
+          <div class="phone-wrap">
+            <select id="chkPrefijo" class="phone-prefix">
+              <option value="+39">🇮🇹 +39</option>
+              <option value="+34">🇪🇸 +34</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+49">🇩🇪 +49</option>
+              <option value="+33">🇫🇷 +33</option>
+              <option value="+54">🇦🇷 +54</option>
+              <option value="+52">🇲🇽 +52</option>
+              <option value="+55">🇧🇷 +55</option>
+              <option value="+351">🇵🇹 +351</option>
+              <option value="+41">🇨🇭 +41</option>
+              <option value="+31">🇳🇱 +31</option>
+              <option value="+32">🇧🇪 +32</option>
+              <option value="+61">🇦🇺 +61</option>
+              <option value="+81">🇯🇵 +81</option>
+            </select>
+            <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
+          </div>
+        </div>
+        <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1"/></div>
+        <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:8px">
+          <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Roma"/></div>
+          <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="00100" maxlength="10"/></div>
+          <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="RM" maxlength="3"/></div>
+        </div>
+        <div class="field"><label>Paese</label>
+          <select id="chkNazione" onchange="calcolaSpedizioneAuto()">
+            <option value="IT">🇮🇹 Italia</option>
+            <option value="ES">🇪🇸 Spagna</option>
+            <option value="DE">🇩🇪 Germania</option>
+            <option value="FR">🇫🇷 Francia</option>
+            <option value="CH">🇨🇭 Svizzera</option>
+            <option value="GB">🇬🇧 Regno Unito</option>
+            <option value="NL">🇳🇱 Paesi Bassi</option>
+            <option value="BE">🇧🇪 Belgio</option>
+            <option value="AT">🇦🇹 Austria</option>
+            <option value="PT">🇵🇹 Portogallo</option>
+            <option value="US">🇺🇸 USA</option>
+          </select>
+        </div>
+        <div id="spedizioneOpzioni"></div>
+        <div class="field" style="margin-top:12px"><label>Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
+      </div>
+
+      <div class="chk-box">
+        <div class="chk-box-title">// Riepilogo</div>
+        <div id="orderSummary"></div>
+        <div id="checkoutMsg" style="margin-top:10px"></div>
+        <button class="big-btn" onclick="confermaOrdine()" id="confirmarBtn" style="margin-top:16px">CONFERMA ORDINE</button>
+        <button class="btn-ghost" onclick="chiudiCheckout()" style="margin-top:8px">← TORNA AL CARRELLO</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- CARRELLO -->
 <div class="overlay" id="cartOverlay" onclick="chiudiCarrello()"></div>
 <div class="drawer" id="cartDrawer">
@@ -413,70 +491,6 @@
       </div>
 
       <button class="btn-ghost" onclick="chiudiModalAuth()">ANNULLA</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODALE ORDINE -->
-<div class="modal-bg" id="checkoutModal">
-  <div class="modal">
-    <div class="modal-hd">
-      <div class="modal-title">IL TUO ORDINE</div>
-      <div class="modal-sub">// DATI DI SPEDIZIONE</div>
-    </div>
-    <div class="modal-bd" id="checkoutBody">
-      <div class="osummary" id="orderSummary"></div>
-      <div class="field"><label>Nome completo *</label><input type="text" id="chkNombre" placeholder="Mario Rossi"/></div>
-      <div class="field"><label>Email *</label><input type="email" id="chkEmail" placeholder="mario@email.com"/></div>
-      <div class="field">
-        <label>Telefono</label>
-        <div class="phone-wrap">
-          <select id="chkPrefijo" class="phone-prefix">
-            <option value="+39">🇮🇹 +39</option>
-            <option value="+34">🇪🇸 +34</option>
-            <option value="+1">🇺🇸 +1</option>
-            <option value="+44">🇬🇧 +44</option>
-            <option value="+49">🇩🇪 +49</option>
-            <option value="+33">🇫🇷 +33</option>
-            <option value="+54">🇦🇷 +54</option>
-            <option value="+52">🇲🇽 +52</option>
-            <option value="+55">🇧🇷 +55</option>
-            <option value="+351">🇵🇹 +351</option>
-            <option value="+41">🇨🇭 +41</option>
-            <option value="+31">🇳🇱 +31</option>
-            <option value="+32">🇧🇪 +32</option>
-            <option value="+61">🇦🇺 +61</option>
-            <option value="+81">🇯🇵 +81</option>
-          </select>
-          <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
-        </div>
-      </div>
-      <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1"/></div>
-      <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:8px">
-        <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Roma"/></div>
-        <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="00100" maxlength="10"/></div>
-        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="RM" maxlength="3"/></div>
-      </div>
-      <div class="field"><label>Paese</label>
-        <select id="chkNazione" onchange="calcolaSpedizioneAuto()">
-          <option value="IT">🇮🇹 Italia</option>
-          <option value="ES">🇪🇸 Spagna</option>
-          <option value="DE">🇩🇪 Germania</option>
-          <option value="FR">🇫🇷 Francia</option>
-          <option value="CH">🇨🇭 Svizzera</option>
-          <option value="GB">🇬🇧 Regno Unito</option>
-          <option value="NL">🇳🇱 Paesi Bassi</option>
-          <option value="BE">🇧🇪 Belgio</option>
-          <option value="AT">🇦🇹 Austria</option>
-          <option value="PT">🇵🇹 Portogallo</option>
-          <option value="US">🇺🇸 USA</option>
-        </select>
-      </div>
-      <div id="spedizioneOpzioni"></div>
-      <div class="field" style="margin-top:12px"><label>Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
-      <div id="checkoutMsg"></div>
-      <button class="btn-full" onclick="confermaOrdine()" id="confirmarBtn">CONFERMA ORDINE</button>
-      <button class="btn-ghost" onclick="chiudiCheckout()">ANNULLA</button>
     </div>
   </div>
 </div>

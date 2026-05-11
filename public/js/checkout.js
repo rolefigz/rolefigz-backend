@@ -12,12 +12,34 @@ function apriCheckout() {
     prefisso.dataset.set = '1';
   }
   spedizioneSelezionata = null;
-  document.getElementById('checkoutModal').classList.add('on');
+  renderItemsCheckout();
+  mostraVista('checkout');
+  history.pushState({ tipo: 'checkout' }, 'Checkout — RoleFigz', '/checkout');
   calcolaSpedizioneAuto();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function chiudiCheckout() {
-  document.getElementById('checkoutModal').classList.remove('on');
+  history.back();
+}
+
+function renderItemsCheckout() {
+  const el = document.getElementById('chkItemsPage');
+  if (!el) return;
+  el.innerHTML = carrello.map(i => {
+    const img = i.prodotto.imagenes?.[0]?.url || i.prodotto.imagen || null;
+    return `
+      <div class="chk-item">
+        ${img ? `<img class="chk-item-img" src="${img}" alt="${i.prodotto.nombre}">` : '<div class="chk-item-ph">3D</div>'}
+        <div>
+          <div class="chk-item-name">${i.prodotto.nombre}</div>
+          ${i.variante ? `<div class="chk-item-meta">${i.variante}</div>` : ''}
+          ${i.dataConsegna ? `<div class="chk-item-meta">📅 ${new Date(i.dataConsegna+'T00:00:00').toLocaleDateString('it-IT')}</div>` : ''}
+          <div class="chk-item-qty">Qtà: ${i.quantita}</div>
+        </div>
+        <div class="chk-item-price">€${(i.prezzo * i.quantita).toFixed(2)}</div>
+      </div>`;
+  }).join('');
 }
 
 function calcolaSpedizioneAuto() {
@@ -61,23 +83,23 @@ function aggiornaRiepilogoOrdine() {
   const spedCosto  = spedizioneSelezionata ? spedizioneSelezionata.prezzo : 0;
 
   document.getElementById('orderSummary').innerHTML = `
-    <div class="osummary-title">// RIEPILOGO</div>
-    ${carrello.map(i => `
-      <div class="oline">
-        <span>${i.prodotto.nombre}${i.variante ? ` (${i.variante})` : ''} × ${i.quantita}</span>
-        <span>€${(i.prezzo * i.quantita).toFixed(2)}</span>
-      </div>`).join('')}
-    <div class="oline" style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
+    <div class="chk-summary-row">
+      <span>Subtotale</span>
+      <span>€${prodTotale.toFixed(2)}</span>
+    </div>
+    <div class="chk-summary-row">
       <span>${spedizioneSelezionata
         ? spedizioneSelezionata.prezzo === 0 ? 'Spedizione gratuita' : 'Spedizione standard'
         : 'Spedizione'}</span>
-      <span>${spedizioneSelezionata
-        ? spedizioneSelezionata.prezzo === 0 ? 'GRATIS' : '€10.00'
-        : 'da calcolare'}</span>
+      <span style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
+        ${spedizioneSelezionata
+          ? spedizioneSelezionata.prezzo === 0 ? 'GRATIS' : '€10.00'
+          : '—'}
+      </span>
     </div>
-    <div class="ototal">
-      <span>TOTALE</span>
-      <span>€${(prodTotale + spedCosto).toFixed(2)}</span>
+    <div class="chk-total">
+      <span class="chk-total-label">TOTALE</span>
+      <span class="chk-total-val">€${(prodTotale + spedCosto).toFixed(2)}</span>
     </div>`;
 }
 

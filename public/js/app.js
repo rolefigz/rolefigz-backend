@@ -84,6 +84,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       vediArticolo(e.state.slug);
     } else if (e.state?.tipo === 'producto') {
       vediProdotto(e.state.slug);
+    } else if (e.state?.tipo === 'checkout') {
+      mostraVista('checkout');
     } else {
       mostraVista('tienda');
       document.title = 'RoleFigz — Stampa 3D & Personalizzazione';
