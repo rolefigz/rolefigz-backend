@@ -54,12 +54,11 @@ function calcolaSpedizioneAuto() {
     return;
   }
 
-  const gratuita = totProdotti >= 100;
   spedizioneSelezionata = {
     id:       'it-fisso',
     corriere: 'Standard',
-    servizio: gratuita ? 'Spedizione gratuita' : 'Spedizione standard',
-    prezzo:   gratuita ? 0 : 10,
+    servizio: 'Spedizione standard',
+    prezzo:   10,
   };
 
   wrap.innerHTML = `
@@ -67,13 +66,12 @@ function calcolaSpedizioneAuto() {
       <div class="spediz-info">
         <div class="spediz-corriere">
           <iconify-icon icon="mdi:truck-fast-outline" width="14" style="vertical-align:middle;margin-right:5px"></iconify-icon>
-          ${spedizioneSelezionata.servizio}
+          Spedizione standard
         </div>
-        ${gratuita ? '' : '<div class="spediz-servizio">Consegna stimata 3–7 giorni lavorativi</div>'}
+        <div class="spediz-servizio">Consegna stimata 3–7 giorni lavorativi</div>
       </div>
-      <div class="spediz-prezzo">${gratuita ? 'GRATIS' : '€10.00'}</div>
-    </div>
-    ${!gratuita ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px">Spedizione gratuita per ordini ≥ €100</div>` : ''}`;
+      <div class="spediz-prezzo">€10.00</div>
+    </div>`;
 
   aggiornaRiepilogoOrdine();
 }
@@ -88,13 +86,9 @@ function aggiornaRiepilogoOrdine() {
       <span>€${prodTotale.toFixed(2)}</span>
     </div>
     <div class="chk-summary-row">
-      <span>${spedizioneSelezionata
-        ? spedizioneSelezionata.prezzo === 0 ? 'Spedizione gratuita' : 'Spedizione standard'
-        : 'Spedizione'}</span>
+      <span>${spedizioneSelezionata ? 'Spedizione standard' : 'Spedizione'}</span>
       <span style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
-        ${spedizioneSelezionata
-          ? spedizioneSelezionata.prezzo === 0 ? 'GRATIS' : '€10.00'
-          : '—'}
+        ${spedizioneSelezionata ? '€10.00' : '—'}
       </span>
     </div>
     <div class="chk-total">

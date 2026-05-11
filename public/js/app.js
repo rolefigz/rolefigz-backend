@@ -52,6 +52,12 @@ function renderCategorie() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Cambia vista immediatamente in base all'URL, prima di qualsiasi await
+  const _percorso = window.location.pathname;
+  if (_percorso.match(/^\/producto\//)) mostraVista('producto');
+  else if (_percorso.match(/^\/blog\//))    mostraVista('blog');
+  else if (_percorso === '/checkout')       mostraVista('checkout');
+
   await verificaAPI();
   await caricaCategorie();
   await caricaProdotti();

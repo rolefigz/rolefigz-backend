@@ -284,7 +284,9 @@ function disconnetti() {
     if (chatPanel) chatPanel.classList.remove('on');
     const bar = document.getElementById('statusBar');
     if (bar) bar.style.display = 'none';
-    mostraVista('tienda');
+    if (!window.location.pathname.match(/^\/(producto|blog|checkout)/)) {
+      mostraVista('tienda');
+    }
   }
 }
 
