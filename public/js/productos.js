@@ -485,13 +485,6 @@ function aggiungiAlCarrelloDettaglio() {
     return;
   }
 
-  // Verifica data obbligatoria
-  if (prodottoCorrente.selettore_data && !dataConsegnaSelezionata) {
-    document.getElementById('dataConsegnaWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    document.getElementById('calMeseAnno')?.closest('.data-consegna-wrap')?.classList.add('cal-avviso');
-    setTimeout(() => document.getElementById('calMeseAnno')?.closest('.data-consegna-wrap')?.classList.remove('cal-avviso'), 1200);
-    return;
-  }
 
   const varianteStr = Object.entries(varianteSelezionata).map(([k, v]) => `${k}: ${v}`).join(', ');
   const base = parseFloat(prodottoCorrente.precio);
