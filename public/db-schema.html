@@ -85,10 +85,10 @@
     <div style="font-family:'DM Mono',monospace;font-size:12px;color:#888">MySQL · Sequelize ORM · Node.js / Express</div>
   </div>
   <div class="cover-stats">
-    <div class="stat"><div class="stat-n">13</div><div class="stat-l">TABELLE</div></div>
+    <div class="stat"><div class="stat-n">14</div><div class="stat-l">TABELLE</div></div>
     <div class="stat"><div class="stat-n">10</div><div class="stat-l">FOREIGN KEYS</div></div>
     <div class="stat"><div class="stat-n">8</div><div class="stat-l">RELAZIONI</div></div>
-    <div class="stat"><div class="stat-n">~60</div><div class="stat-l">COLONNE TOTALI</div></div>
+    <div class="stat"><div class="stat-n">~73</div><div class="stat-l">COLONNE TOTALI</div></div>
   </div>
   <div class="cover-date">Generato il: <script>document.write(new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'}))</script></div>
 </div>
@@ -346,6 +346,30 @@
     </table>
   </div>
 
+  <!-- RICHIESTE GADGET -->
+  <div class="table-card">
+    <div class="table-header">
+      <div><div class="table-model">Model: RichiestaGadget</div><div class="table-name">RICHIESTE GADGET 3D</div></div>
+      <div class="table-db">TABLE: richieste_gadget</div>
+    </div>
+    <table>
+      <tr><th>Colonna</th><th>Tipo</th><th>Vincoli</th><th>Note</th></tr>
+      <tr><td class="col-name pk">id</td><td class="type-tag">INTEGER</td><td><span class="badge badge-ai">AUTO_INCREMENT</span><span class="badge badge-nn">PK</span></td><td></td></tr>
+      <tr><td class="col-name">order_id</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span><span class="badge badge-uniq">UNIQUE</span></td><td>ID ordine preventivo</td></tr>
+      <tr><td class="col-name">nome</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Nome contatto</td></tr>
+      <tr><td class="col-name">azienda</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">email</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+      <tr><td class="col-name">logo_url</td><td class="type-tag">VARCHAR(255)</td><td></td><td>URL logo caricato</td></tr>
+      <tr><td class="col-name">gadget</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Tipo gadget scelto</td></tr>
+      <tr><td class="col-name">settore</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Settore aziendale</td></tr>
+      <tr><td class="col-name">dimensione</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Dimensione azienda</td></tr>
+      <tr><td class="col-name">utilizzo</td><td class="type-tag">VARCHAR(255)</td><td><span class="badge badge-nn">NOT NULL</span></td><td>Uso previsto gadget</td></tr>
+      <tr><td class="col-name">note</td><td class="type-tag">TEXT</td><td></td><td>Note libere</td></tr>
+      <tr><td class="col-name">stato</td><td class="type-tag">ENUM</td><td><span class="badge badge-enum">ricevuta · in_lavorazione · spedita</span></td><td><span class="badge badge-def">DEF: ricevuta</span></td></tr>
+      <tr><td class="col-name">createdAt / updatedAt</td><td class="type-tag">DATETIME</td><td><span class="badge badge-nn">NOT NULL</span></td><td></td></tr>
+    </table>
+  </div>
+
   <!-- VISITE -->
   <div class="table-card">
     <div class="table-header">
@@ -452,11 +476,16 @@
 
   </div>
 
-  <!-- TABELLA INDIPENDENTE -->
+  <!-- TABELLE INDIPENDENTI -->
   <div style="margin-top:20px;padding:14px 16px;border:1px solid var(--border);border-left:4px solid var(--green)">
     <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">TABELLA STANDALONE</div>
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">OPZIONI_SPEDIZIONE</div>
     <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px">Nessuna foreign key. Configurazione tariffe fisse admin (IT / EU / MONDO / ALL) consultata al checkout.</div>
+  </div>
+  <div style="margin-top:12px;padding:14px 16px;border:1px solid var(--border);border-left:4px solid var(--accent)">
+    <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">TABELLA STANDALONE</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">RICHIESTE_GADGET</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px">Nessuna foreign key. Preventivi B2B ricevuti dal form gadget3d.html. Stati: ricevuta → in_lavorazione → spedita.</div>
   </div>
 </div>
 
