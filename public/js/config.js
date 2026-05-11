@@ -7,7 +7,8 @@ let prodotti = [];
 let categorie = [];
 let carrello = [];
 const _urlLang = ['it','es','en'].find(l => window.location.pathname === `/${l}` || window.location.pathname.startsWith(`/${l}/`));
-let linguaCorrente = _urlLang || localStorage.getItem('rfLang') || 'it';
+let linguaCorrente = _urlLang || localStorage.getItem('rfLang') || 'es';
+function localeDate() { return {'it':'it-IT','es':'es-ES','en':'en-US'}[linguaCorrente]||'es-ES'; }
 let prodottoCorrente = null;
 let varianteSelezionata = {};
 let quantitaSelezionata = 1;

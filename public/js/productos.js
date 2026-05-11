@@ -23,15 +23,15 @@ function filtraProdotti(q) {
 
 async function caricaProdotti() {
   const el = document.getElementById('productosList');
-  el.innerHTML = '<div class="loading">CARICAMENTO CATALOGO</div>';
+  el.innerHTML = '<div class="loading">CARGANDO CATÁLOGO</div>';
   try {
     const r = await fetch(`${API}/productos`);
     prodotti = await r.json();
-    setTxt('productCount', `${prodotti.length} PRODOTTI`);
+    setTxt('productCount', `${prodotti.length} PRODUCTOS`);
     setTxt('heroCounter', prodotti.length);
     renderProdotti();
   } catch {
-    el.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>NESSUNA CONNESSIONE</h3><p>Verifica che il server sia attivo</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>SIN CONEXIÓN</h3><p>Verifica que el servidor esté activo</p></div>';
   }
 }
 
@@ -39,14 +39,14 @@ function renderProdotti(lista) {
   lista = lista || prodotti;
   const el = document.getElementById('productosList');
   if (!lista.length) {
-    el.innerHTML = '<div class="empty-state"><div class="ei"><iconify-icon icon="mdi:package-variant-closed-remove" width="40"></iconify-icon></div><h3>NESSUN PRODOTTO</h3><p>Aggiungi prodotti dal pannello admin.</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="ei"><iconify-icon icon="mdi:package-variant-closed-remove" width="40"></iconify-icon></div><h3>SIN PRODUCTOS</h3><p>Añade productos desde el panel admin.</p></div>';
     return;
   }
   el.innerHTML = `<div class="grid">${lista.map(p => {
     const img = getImgUrl(p);
     return `
       <div class="card" onclick="vediProdotto(${p.id})">
-        ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">${linguaCorrente === 'it' ? 'ULTIMI' : 'ÚLTIMAS'}</div>` : ''}
+        ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">ÚLTIMAS</div>` : ''}
         ${p.stock === 0 ? `<div class="card-badge" style="background:var(--muted)">${t('sold_out')}</div>` : ''}
         ${img ? `<img class="card-img" src="${img}" alt="${p.nombre}" onerror="this.outerHTML='<div class=card-ph>3D</div>'">` : '<div class="card-ph">3D</div>'}
         <div class="card-body">
@@ -68,7 +68,7 @@ function renderProdotti(lista) {
 async function vediProdotto(idOrSlug) {
   mostraVista('producto');
   const layout = document.getElementById('productoLayout');
-  layout.innerHTML = '<div class="loading" style="padding:120px">CARICAMENTO</div>';
+  layout.innerHTML = '<div class="loading" style="padding:120px">CARGANDO</div>';
   try {
     const isId = /^\d+$/.test(String(idOrSlug));
     const url  = isId ? `${API}/productos/${idOrSlug}` : `${API}/productos/slug/${idOrSlug}`;
@@ -97,13 +97,13 @@ async function vediProdotto(idOrSlug) {
     caricaRecensioni(p.id);
     tracciVisita('producto', p.id);
   } catch {
-    layout.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>PRODOTTO NON TROVATO</h3><p>Il link potrebbe essere scaduto o il prodotto non è più disponibile.</p></div>';
+    layout.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>PRODUCTO NO ENCONTRADO</h3><p>El enlace puede haber caducado o el producto ya no está disponible.</p></div>';
   }
 }
 
 function tornaAlNegozio() {
   window.history.pushState({}, 'RoleFigz', '/');
-  document.title = 'RoleFigz — Stampa 3D & Personalizzazione';
+  document.title = 'RoleFigz — Impresión 3D & Personalización';
   mostraVista('tienda');
 }
 
@@ -111,7 +111,7 @@ function copiaLink(slug, btn) {
   const url = `${window.location.origin}/producto/${slug}`;
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '✓ COPIATO';
+    btn.textContent = '✓ COPIADO';
     btn.style.borderColor = 'var(--green)';
     btn.style.color = 'var(--green)';
     setTimeout(() => {
@@ -149,9 +149,9 @@ function renderDettaglioProdotto(p) {
     <div class="producto-info">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
         <div class="producto-breadcrumb" onclick="tornaAlNegozio()" style="margin:0;flex:1">
-          ${t('nav_shop')} / <span>${p.Categoria ? p.Categoria.nombre.toUpperCase() : 'PRODOTTI'}</span> / ${p.nombre.toUpperCase()}
+          ${t('nav_shop')} / <span>${p.Categoria ? p.Categoria.nombre.toUpperCase() : 'PRODUCTOS'}</span> / ${p.nombre.toUpperCase()}
         </div>
-        ${p.slug ? `<button onclick="copiaLink('${p.slug}',this)" class="share-btn">🔗 COPIA LINK</button>` : ''}
+        ${p.slug ? `<button onclick="copiaLink('${p.slug}',this)" class="share-btn">🔗 COPIAR ENLACE</button>` : ''}
       </div>
       <div class="producto-cat">${p.Categoria ? p.Categoria.nombre : ''}</div>
       <div class="producto-nombre">${p.nombre}</div>
@@ -175,18 +175,18 @@ function renderDettaglioProdotto(p) {
       <div class="producto-desc">${p.descripcion || ''}</div>
       <div class="producto-stock">
         <div class="stock-dot ${p.stock > 5 ? 'ok' : p.stock > 0 ? 'low' : 'out'}"></div>
-        <span>${p.stock > 5 ? 'DISPONIBILE' : p.stock > 0 ? `ULTIME ${p.stock} UNITÀ` : t('sold_out')}</span>
+        <span>${p.stock > 5 ? 'DISPONIBLE' : p.stock > 0 ? `ÚLTIMAS ${p.stock} UNIDADES` : t('sold_out')}</span>
       </div>
       ${p.selettore_data ? `
       <div class="data-consegna-wrap" id="dataConsegnaWrap">
         <button class="cal-urgenza-btn" id="calUrgenzaBtn" onclick="apriCalendario()">
           <iconify-icon icon="mdi:lightning-bolt" width="15" style="vertical-align:middle;margin-right:6px;color:var(--accent)"></iconify-icon>
-          Hai bisogno urgente? Scegli quando vuoi che inizi la produzione
+          ¿Lo necesitas urgente? Elige cuándo quieres que empiece la producción
           <iconify-icon icon="mdi:chevron-down" width="16" style="vertical-align:middle;margin-left:8px" id="calChevron"></iconify-icon>
         </button>
         <div id="calBody" style="display:none">
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;padding:8px 10px;background:var(--surface2);border-left:2px solid var(--accent)">
-            Seleziona la data in cui desideri che iniziamo a produrre il tuo articolo. La spedizione avverrà nei giorni successivi al completamento.
+            Selecciona la fecha en la que quieres que empecemos a producir tu artículo. El envío se realizará en los días siguientes a la finalización.
           </div>
           <div class="cal-nav">
             <button class="cal-nav-btn" onclick="cambiaMesseCalendario(-1)">←</button>
@@ -194,11 +194,11 @@ function renderDettaglioProdotto(p) {
             <button class="cal-nav-btn" onclick="cambiaMesseCalendario(1)">→</button>
           </div>
           <div class="cal-settimana">
-            <span>LUN</span><span>MAR</span><span>MER</span><span>GIO</span><span>VEN</span><span>SAB</span><span>DOM</span>
+            <span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span><span>DOM</span>
           </div>
           <div class="cal-griglia" id="calGiorni"></div>
           <div class="cal-legenda">
-            <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>NON DISP.</div>
+            <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>NO DISP.</div>
             ${p.prezzo_per_giorno_express > 0 ? `<div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(193,127,58,.2);border:1px solid var(--accent)"></div>EXPRESS (+€${parseFloat(p.prezzo_per_giorno_express).toFixed(2)}/gg)</div>` : ''}
             <div class="cal-legenda-item"><div class="cal-legenda-dot" style="background:rgba(76,175,80,.2);border:1px solid var(--green)"></div>STANDARD (${(p.giorni_produzione || 7) + (p.giorni_spedizione || 3)} gg)</div>
           </div>
@@ -207,22 +207,22 @@ function renderDettaglioProdotto(p) {
             <span id="supplementoLabel"></span>
           </div>
           <button onclick="chiudiCalendario()" style="margin-top:10px;background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;cursor:pointer;padding:0">
-            ✕ Annulla selezione data
+            ✕ Cancelar selección de fecha
           </button>
         </div>
       </div>` : ''}
       ${p.richiede_foto ? `
       <div class="foto-upload-wrap" id="fotoUploadWrap">
-        <div class="foto-upload-label"><iconify-icon icon="mdi:camera-outline" width="14" style="vertical-align:middle;margin-right:6px"></iconify-icon>CARICA LA TUA FOTO <span style="color:var(--accent)">*</span></div>
+        <div class="foto-upload-label"><iconify-icon icon="mdi:camera-outline" width="14" style="vertical-align:middle;margin-right:6px"></iconify-icon>SUBE TU FOTO <span style="color:var(--accent)">*</span></div>
         <div class="foto-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoClienteInput').click()">
           <div id="fotoUploadPlaceholder">
             <iconify-icon icon="mdi:upload" width="28" style="color:var(--muted)"></iconify-icon>
-            <div style="font-size:10px;letter-spacing:1px;margin-top:6px">CLICCA PER CARICARE</div>
-            <div style="font-size:9px;color:var(--muted);margin-top:3px">JPG, PNG, WEBP — max 5MB</div>
+            <div style="font-size:10px;letter-spacing:1px;margin-top:6px">HAZ CLIC PARA SUBIR</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:3px">JPG, PNG, WEBP — máx 5MB</div>
           </div>
           <div id="fotoUploadPreview" style="display:none;position:relative">
             <img id="fotoUploadImg" src="" style="max-height:120px;max-width:100%;object-fit:contain"/>
-            <div style="font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:1px">Clicca per cambiare</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:1px">Haz clic para cambiar</div>
           </div>
         </div>
         <input type="file" id="fotoClienteInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="caricaFotoCliente(this)"/>
@@ -240,9 +240,9 @@ function renderDettaglioProdotto(p) {
       </div>
       <div class="producto-meta">
         <div class="meta-row"><span class="meta-key">CATEGORIA</span><span>${p.Categoria ? p.Categoria.nombre : '—'}</span></div>
-        <div class="meta-row"><span class="meta-key">MATERIALE</span><span>PLA Premium</span></div>
-        <div class="meta-row"><span class="meta-key">RIFERIMENTO</span><span style="font-family:'DM Mono',monospace;font-size:10px">RF-${String(p.id).padStart(4, '0')}</span></div>
-        ${haVarianti ? `<div class="meta-row"><span class="meta-key">VARIANTI</span><span>${p.variantes.length} opzioni</span></div>` : ''}
+        <div class="meta-row"><span class="meta-key">MATERIAL</span><span>PLA Premium</span></div>
+        <div class="meta-row"><span class="meta-key">REFERENCIA</span><span style="font-family:'DM Mono',monospace;font-size:10px">RF-${String(p.id).padStart(4, '0')}</span></div>
+        ${haVarianti ? `<div class="meta-row"><span class="meta-key">VARIANTES</span><span>${p.variantes.length} opciones</span></div>` : ''}
       </div>
     </div>`;
 
@@ -255,9 +255,9 @@ function renderDettaglioProdotto(p) {
   const recensioniEl = document.createElement('div');
   recensioniEl.className = 'producto-resenas';
   recensioniEl.innerHTML = `
-    <div class="section-eyebrow" style="margin-bottom:8px">// Opinioni dei clienti</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;margin-bottom:28px;color:var(--dark)">RECENSIONI</div>
-    <div id="resenas-list"><div class="loading" style="padding:20px 0">CARICAMENTO</div></div>
+    <div class="section-eyebrow" style="margin-bottom:8px">// Opiniones de clientes</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;margin-bottom:28px;color:var(--dark)">RESEÑAS</div>
+    <div id="resenas-list"><div class="loading" style="padding:20px 0">CARGANDO</div></div>
     <div id="resenas-form-wrap" style="margin-top:32px;padding-top:28px;border-top:1px solid var(--border)"></div>`;
   vista.appendChild(recensioniEl);
 }
@@ -298,7 +298,7 @@ async function caricaFotoCliente(input) {
   const file = input.files[0];
   if (!file) return;
   const msgEl = document.getElementById('fotoUploadMsg');
-  msgEl.textContent = 'Caricamento...';
+  msgEl.textContent = 'Subiendo...';
   msgEl.style.color = 'var(--muted)';
   const fd = new FormData();
   fd.append('foto', file);
@@ -310,7 +310,7 @@ async function caricaFotoCliente(input) {
     document.getElementById('fotoUploadImg').src = data.url;
     document.getElementById('fotoUploadPreview').style.display = 'block';
     document.getElementById('fotoUploadPlaceholder').style.display = 'none';
-    msgEl.textContent = '✓ Foto caricata';
+    msgEl.textContent = '✓ Foto subida';
     msgEl.style.color = 'var(--green)';
   } catch(e) {
     fotoClienteUrl = null;
@@ -321,7 +321,7 @@ async function caricaFotoCliente(input) {
 
 // ── Calendario data di consegna ───────────────────────────────────────────────
 
-const MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const MESI_IT = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 function apriCalendario() {
   const body = document.getElementById('calBody');
@@ -424,13 +424,13 @@ function renderCalendario() {
   if (infoEl) {
     if (dataConsegnaSelezionata) {
       const dSel = new Date(dataConsegnaSelezionata + 'T00:00:00');
-      setTxt('dataSelezionataLabel', `📅 ${dSel.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}`);
+      setTxt('dataSelezionataLabel', `📅 ${dSel.toLocaleDateString(localeDate(), { weekday:'long', day:'numeric', month:'long', year:'numeric' })}`);
       const suppEl = document.getElementById('supplementoLabel');
       if (supplementoExpressCorrente > 0) {
         suppEl.textContent = ` · +€${supplementoExpressCorrente.toFixed(2)} express`;
         suppEl.style.color = 'var(--accent)';
       } else {
-        suppEl.textContent = ' · consegna standard';
+        suppEl.textContent = ' · entrega estándar';
         suppEl.style.color = 'var(--muted)';
       }
       infoEl.style.display = '';
@@ -480,7 +480,7 @@ function aggiungiAlCarrelloDettaglio() {
   // Verifica foto obbligatoria
   if (prodottoCorrente.richiede_foto && !fotoClienteUrl) {
     const msgEl = document.getElementById('fotoUploadMsg');
-    if (msgEl) { msgEl.textContent = '⚠ Carica la tua foto prima di aggiungere al carrello'; msgEl.style.color = 'var(--accent)'; }
+    if (msgEl) { msgEl.textContent = '⚠ Sube tu foto antes de añadir al carrito'; msgEl.style.color = 'var(--accent)'; }
     document.getElementById('fotoUploadArea')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }

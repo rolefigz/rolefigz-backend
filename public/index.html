@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RoleFigz — Stampa 3D &amp; Personalizzazione</title>
+  <title>RoleFigz — Impresión 3D &amp; Personalización</title>
   <link rel="icon" type="image/png" href="/assets/logo.png"/>
   <link rel="apple-touch-icon" href="/assets/logo.png"/>
-  <meta name="description" content="Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione."/>
-  <meta property="og:title" content="RoleFigz — Stampa 3D"/>
-  <meta property="og:description" content="Figure e oggetti personalizzati stampati in 3D. Qualità artigianale, made in Italy."/>
+  <meta name="description" content="Impresión 3D artesanal de precisión. Figuras, merchandising empresarial y objetos personalizados realizados con pasión."/>
+  <meta property="og:title" content="RoleFigz — Impresión 3D"/>
+  <meta property="og:description" content="Figuras y objetos personalizados impresos en 3D. Calidad artesanal, made in Italy."/>
   <meta property="og:image" content="/assets/logo.png"/>
   <meta property="og:type" content="website"/>
   <meta property="og:site_name" content="RoleFigz"/>
@@ -21,7 +21,7 @@
 <!-- ══ BANNER MANUTENZIONE ══ -->
 <div style="background:#1a1a1a;color:#f0ece4;text-align:center;padding:10px 20px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;border-bottom:2px solid #C17F3A;position:relative;z-index:300">
   <span style="color:#C17F3A;margin-right:8px">⚙</span>
-  SITO IN COSTRUZIONE — Sto sviluppando nuove funzionalità. Alcune sezioni potrebbero non essere disponibili.
+  SITIO EN CONSTRUCCIÓN — Estoy desarrollando nuevas funcionalidades. Algunas secciones pueden no estar disponibles.
   <span style="color:#C17F3A;margin-left:8px">⚙</span>
 </div>
 
@@ -43,7 +43,7 @@
       <button class="lang-btn" onclick="impostaLingua('es',true)">ES</button>
       <button class="lang-btn" onclick="impostaLingua('en',true)">EN</button>
     </div>
-    <button class="hn-icon" onclick="apriCarrello()" aria-label="Carrello" style="position:relative">
+    <button class="hn-icon" onclick="apriCarrello()" aria-label="Carrito" style="position:relative">
       <iconify-icon icon="mdi:cart-outline" width="20"></iconify-icon>
       <span class="cart-badge" id="cartBadge"></span>
     </button>
@@ -51,7 +51,7 @@
 
     <!-- Avatar dropdown -->
     <div class="avatar-wrap" id="avatarWrap" style="display:none">
-      <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdownProfilo(event)" aria-label="Profilo">
+      <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdownProfilo(event)" aria-label="Perfil">
         <img id="avatarFoto" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
         <span id="avatarIniziale">?</span>
       </button>
@@ -62,14 +62,14 @@
         </div>
         <div class="avatar-dd-sep"></div>
         <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('ordenes',null)">
-          <iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> I miei ordini
+          <iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> Mis pedidos
         </button>
         <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('datos',null)">
-          <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> I miei dati
+          <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> Mis datos
         </button>
         <div class="avatar-dd-sep"></div>
         <button class="avatar-dd-item danger" onclick="chiudiDropdownProfilo();disconnetti()">
-          <iconify-icon icon="mdi:logout" width="15"></iconify-icon> Esci
+          <iconify-icon icon="mdi:logout" width="15"></iconify-icon> Salir
         </button>
       </div>
     </div>
@@ -134,10 +134,10 @@
 
 <!-- ══ BARRA DI STATO ══ -->
 <div class="status-bar" id="statusBar" style="display:none">
-  <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONNESSIONE...</span></div>
-  <div class="si"><div class="sd" id="authDot"></div><span id="authStatus">NESSUNA SESSIONE</span></div>
-  <div class="si"><span id="productCount">— PRODOTTI</span></div>
-  <div class="si"><span id="cartCount">CARRELLO VUOTO</span></div>
+  <div class="si"><div class="sd" id="apiDot"></div><span id="apiStatus">CONECTANDO...</span></div>
+  <div class="si"><div class="sd" id="authDot"></div><span id="authStatus">SIN SESIÓN</span></div>
+  <div class="si"><span id="productCount">— PRODUCTOS</span></div>
+  <div class="si"><span id="cartCount">CARRITO VACÍO</span></div>
 </div>
 
 <!-- ══ VISTA: NEGOZIO ══ -->
@@ -147,13 +147,13 @@
   <div class="hero">
     <div class="hero-left">
       <div class="hero-eyebrow" data-i18n="hero_eyebrow">Stampa 3D professionale</div>
-      <h1 class="hero-h1" id="heroTitle">OGGETTI<br><em>UNICI</em><br>PER TE</h1>
-      <p class="hero-p" id="heroDesc">Figure, merchandising aziendale, segnaposto personalizzati, lightbox e molto altro. Qualità artigianale con tecnologia di precisione.</p>
+      <h1 class="hero-h1" id="heroTitle">OBJETOS<br><em>ÚNICOS</em><br>PARA TI</h1>
+      <p class="hero-p" id="heroDesc">Figuras, merchandising empresarial, marcasitios personalizados, lightbox y mucho más. Calidad artesanal con tecnología de precisión.</p>
       <div class="hero-ctas">
         <button class="cta-dark" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})" data-i18n="cta_catalogue">VEDI CATALOGO</button>
         <button class="cta-outline" onclick="apriAuth('register')" data-i18n="cta_account">CREA ACCOUNT</button>
       </div>
-      <div class="hero-fatto">fatto a mano · stampato in 3D · made in Italy</div>
+      <div class="hero-fatto">hecho a mano · impreso en 3D · made in Italy</div>
     </div>
     <div class="hero-right">
       <img class="hero-bg-img" src="/assets/impresoras.jpeg" alt="Hero Background">
@@ -238,8 +238,8 @@
 
   <!-- RECENSIONI IN EVIDENZA -->
   <div class="resenas-dest-section" id="resenasDestacadas">
-    <div class="section-eyebrow">// Clienti soddisfatti</div>
-    <div class="section-title" style="color:#fff">COSA DICONO<br><em>I NOSTRI CLIENTI</em></div>
+    <div class="section-eyebrow">// Clientes satisfechos</div>
+    <div class="section-title" style="color:#fff">QUÉ DICEN<br><em>NUESTROS CLIENTES</em></div>
     <div class="resenas-dest-grid"></div>
   </div>
 
@@ -248,7 +248,7 @@
     <div class="footer-grid">
       <div>
         <img class="footer-logo" src="/assets/logo.png" alt="Rolefigz">
-        <p class="footer-tagline">Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.</p>
+        <p class="footer-tagline">Impresión 3D artesanal de precisión. Figuras, merchandising empresarial y objetos personalizados realizados con pasión.</p>
       </div>
       <div>
         <div class="footer-col-title" data-i18n="footer_nav">Navigazione</div>
@@ -261,13 +261,13 @@
         <div class="footer-col-title" data-i18n="footer_contact">Contatti</div>
         <a class="footer-link"><iconify-icon icon="mdi:email-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>rolefigz@gmail.com</a>
         <a class="footer-link"><iconify-icon icon="mdi:map-marker-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Italia, Piacenza</a>
-        <a class="footer-link"><iconify-icon icon="mdi:printer-3d" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Stampa 3D Premium</a>
-        <a class="footer-link"><iconify-icon icon="mdi:truck-delivery-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Spedizione in tutta Italia e Europa</a>
+        <a class="footer-link"><iconify-icon icon="mdi:printer-3d" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Impresión 3D Premium</a>
+        <a class="footer-link"><iconify-icon icon="mdi:truck-delivery-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Envío a toda Italia y Europa</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <div class="footer-copy">© 2025 ROLEFIGZ — TUTTI I DIRITTI RISERVATI</div>
-      <div class="footer-fatto">fatto a mano · stampato in 3D</div>
+      <div class="footer-copy">© 2025 ROLEFIGZ — TODOS LOS DERECHOS RESERVADOS</div>
+      <div class="footer-fatto">hecho a mano · impreso en 3D</div>
     </div>
   </footer>
 </div>
@@ -275,7 +275,7 @@
 <!-- ══ VISTA: BLOG ══ -->
 <div class="view" id="view-blog">
   <div style="padding:72px 48px">
-    <div class="section-eyebrow">// Idee e Ispirazione</div>
+    <div class="section-eyebrow">// Ideas e Inspiración</div>
     <div class="section-title" style="color:var(--dark);margin-bottom:40px" id="blogTitle">ARTICOLI</div>
     <div id="articoliGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border)"></div>
   </div>
@@ -302,7 +302,7 @@
         <div class="perfil-menu-item active" onclick="tabProfilo('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> <span data-i18n="perfil_orders">I miei ordini</span></div>
         <div class="perfil-menu-item" onclick="tabProfilo('datos',this)"><iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> <span data-i18n="perfil_data">I miei dati</span></div>
       </div>
-      <div class="perfil-content" id="perfilContent"><div class="loading">CARICAMENTO</div></div>
+      <div class="perfil-content" id="perfilContent"><div class="loading">CARGANDO</div></div>
     </div>
   </div>
 </div>
@@ -351,7 +351,7 @@
         </div>
         <button class="btn-full" onclick="accedi()" id="loginSubmit" data-i18n="auth_login">ACCEDI</button>
         <div id="loginMsg"></div>
-        <button type="button" class="forgot-link" onclick="mostraRecupera()">Password dimenticata?</button>
+        <button type="button" class="forgot-link" onclick="mostraRecupera()">¿Contraseña olvidada?</button>
       </div>
 
       <!-- REGISTRAZIONE -->
@@ -361,16 +361,16 @@
         <div class="field">
           <label data-i18n="field_password">Password</label>
           <div class="pass-wrap">
-            <input type="password" id="regPass" placeholder="Minimo 6 caratteri"/>
+            <input type="password" id="regPass" placeholder="Mínimo 6 caracteres"/>
             <button type="button" class="pass-toggle" onclick="alternaMostraPassword('regPass','eyeReg')" tabindex="-1">
               <iconify-icon id="eyeReg" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
         </div>
         <div class="field">
-          <label>Conferma password</label>
+          <label>Confirmar contraseña</label>
           <div class="pass-wrap">
-            <input type="password" id="regPassConfirm" placeholder="Ripeti la password"/>
+            <input type="password" id="regPassConfirm" placeholder="Repite la contraseña"/>
             <button type="button" class="pass-toggle" onclick="alternaMostraPassword('regPassConfirm','eyeRegC')" tabindex="-1">
               <iconify-icon id="eyeRegC" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
@@ -383,46 +383,46 @@
       <!-- VERIFICA CODICE -->
       <div class="auth-panel" id="panelVerifica">
         <div class="auth-info-box">
-          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CODICE INVIATO A</div>
+          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CÓDIGO ENVIADO A</div>
           <div class="auth-info-value" id="emailVerifica"></div>
-          <div class="auth-info-sub">Controlla la casella email e inserisci il codice qui sotto</div>
+          <div class="auth-info-sub">Revisa tu bandeja de entrada e introduce el código abajo</div>
         </div>
         <div class="field">
-          <label style="letter-spacing:2px">CODICE A 6 CIFRE</label>
+          <label style="letter-spacing:2px">CÓDIGO DE 6 DÍGITOS</label>
           <input type="text" id="codigoInput" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input" onkeydown="if(event.key==='Enter')verificaCodice()"/>
         </div>
-        <button class="btn-full" onclick="verificaCodice()" id="verificarBtn" style="margin-top:8px">VERIFICA E ACCEDI</button>
+        <button class="btn-full" onclick="verificaCodice()" id="verificarBtn" style="margin-top:8px">VERIFICAR Y ACCEDER</button>
         <div id="verificaMsg"></div>
       </div>
 
       <!-- RECUPERO PASSWORD — passo 1: inserisci email -->
       <div class="auth-panel" id="panelRecupera">
-        <div class="field"><label>Email del tuo account</label><input type="email" id="recuperaEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')inviaRecupera()"/></div>
-        <button class="btn-full" onclick="inviaRecupera()" id="recuperaBtn">INVIA CODICE</button>
+        <div class="field"><label>Email de tu cuenta</label><input type="email" id="recuperaEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')inviaRecupera()"/></div>
+        <button class="btn-full" onclick="inviaRecupera()" id="recuperaBtn">ENVIAR CÓDIGO</button>
         <div id="recuperaMsg"></div>
-        <button type="button" class="forgot-link" onclick="cambiaTabAuth('login')">← Torna al login</button>
+        <button type="button" class="forgot-link" onclick="cambiaTabAuth('login')">← Volver al login</button>
       </div>
 
       <!-- RECUPERO PASSWORD — passo 2: inserisci codice + nuova password -->
       <div class="auth-panel" id="panelResetPass">
         <div class="auth-info-box">
-          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CODICE INVIATO A</div>
+          <div class="auth-info-label"><iconify-icon icon="mdi:email-outline" width="13"></iconify-icon> CÓDIGO ENVIADO A</div>
           <div class="auth-info-value" id="emailReset"></div>
         </div>
         <div class="field">
-          <label>CODICE A 6 CIFRE</label>
+          <label>CÓDIGO DE 6 DÍGITOS</label>
           <input type="text" id="resetCodigo" placeholder="000000" maxlength="6" inputmode="numeric" class="code-input"/>
         </div>
         <div class="field">
-          <label>Nuova password</label>
+          <label>Nueva contraseña</label>
           <div class="pass-wrap">
-            <input type="password" id="resetPass" placeholder="Minimo 6 caratteri"/>
+            <input type="password" id="resetPass" placeholder="Mínimo 6 caracteres"/>
             <button type="button" class="pass-toggle" onclick="alternaMostraPassword('resetPass','eyeReset')" tabindex="-1">
               <iconify-icon id="eyeReset" icon="mdi:eye-off" width="18"></iconify-icon>
             </button>
           </div>
         </div>
-        <button class="btn-full" onclick="reimpostaPassword()" id="resetBtn">REIMPOSTA PASSWORD</button>
+        <button class="btn-full" onclick="reimpostaPassword()" id="resetBtn">RESTABLECER CONTRASEÑA</button>
         <div id="resetMsg"></div>
       </div>
 
@@ -465,29 +465,29 @@
           <input type="tel" id="chkTelNumero" class="phone-number" placeholder="333 1234567"/>
         </div>
       </div>
-      <div class="field"><label>Via / Indirizzo *</label><input type="text" id="chkVia" placeholder="Via Roma 1"/></div>
+      <div class="field"><label>Calle / Dirección *</label><input type="text" id="chkVia" placeholder="Calle Mayor 1"/></div>
       <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:8px">
-        <div class="field"><label>Città *</label><input type="text" id="chkCitta" placeholder="Milano"/></div>
-        <div class="field"><label>CAP *</label><input type="text" id="chkCap" placeholder="20100" maxlength="10"/></div>
-        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="MI" maxlength="3"/></div>
+        <div class="field"><label>Ciudad *</label><input type="text" id="chkCitta" placeholder="Madrid"/></div>
+        <div class="field"><label>CP *</label><input type="text" id="chkCap" placeholder="28001" maxlength="10"/></div>
+        <div class="field"><label>Prov.</label><input type="text" id="chkProv" placeholder="MA" maxlength="3"/></div>
       </div>
-      <div class="field"><label>Paese</label>
+      <div class="field"><label>País</label>
         <select id="chkNazione" onchange="calcolaSpedizioneAuto()">
           <option value="IT">🇮🇹 Italia</option>
-          <option value="ES">🇪🇸 Spagna</option>
-          <option value="DE">🇩🇪 Germania</option>
+          <option value="ES">🇪🇸 España</option>
+          <option value="DE">🇩🇪 Alemania</option>
           <option value="FR">🇫🇷 Francia</option>
-          <option value="CH">🇨🇭 Svizzera</option>
-          <option value="GB">🇬🇧 Regno Unito</option>
-          <option value="NL">🇳🇱 Paesi Bassi</option>
-          <option value="BE">🇧🇪 Belgio</option>
+          <option value="CH">🇨🇭 Suiza</option>
+          <option value="GB">🇬🇧 Reino Unido</option>
+          <option value="NL">🇳🇱 Países Bajos</option>
+          <option value="BE">🇧🇪 Bélgica</option>
           <option value="AT">🇦🇹 Austria</option>
-          <option value="PT">🇵🇹 Portogallo</option>
+          <option value="PT">🇵🇹 Portugal</option>
           <option value="US">🇺🇸 USA</option>
         </select>
       </div>
       <div id="spedizioneOpzioni"></div>
-      <div class="field" style="margin-top:12px"><label data-i18n="field_notes">Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="field_notes">Notas</label><textarea id="chkNotas" placeholder="Instrucciones especiales..."></textarea></div>
       <div id="checkoutMsg"></div>
       <button class="btn-full" onclick="confermaOrdine()" id="confirmarBtn" data-i18n="checkout_confirm">CONFERMA ORDINE</button>
       <button class="btn-ghost" onclick="chiudiCheckout()" data-i18n="cancel">ANNULLA</button>
@@ -514,25 +514,25 @@
   <!-- Lista ticket -->
   <div class="chat-list-view" id="chatListView">
     <button class="chat-new-btn" onclick="chatMostraNuovoForm()">
-      <iconify-icon icon="mdi:plus" width="14" style="margin-right:6px;vertical-align:middle"></iconify-icon>NUOVO TICKET
+      <iconify-icon icon="mdi:plus" width="14" style="margin-right:6px;vertical-align:middle"></iconify-icon>NUEVO TICKET
     </button>
     <div class="chat-tickets-list" id="chatTicketsList">
-      <div class="chat-empty">CARICAMENTO...</div>
+      <div class="chat-empty">CARGANDO...</div>
     </div>
   </div>
 
   <!-- Nuovo ticket -->
   <div class="chat-new-form" id="chatNewForm">
     <div class="field" style="margin-bottom:10px">
-      <label>OGGETTO</label>
-      <input type="text" id="chatAsunto" placeholder="Come possiamo aiutarti?" onkeydown="if(event.key==='Enter')document.getElementById('chatPrimerMsg').focus()"/>
+      <label>ASUNTO</label>
+      <input type="text" id="chatAsunto" placeholder="¿Cómo podemos ayudarte?" onkeydown="if(event.key==='Enter')document.getElementById('chatPrimerMsg').focus()"/>
     </div>
     <div class="field" style="margin-bottom:10px;flex:1;display:flex;flex-direction:column">
-      <label>MESSAGGIO</label>
-      <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')creaTicket()"></textarea>
+      <label>MENSAJE</label>
+      <textarea id="chatPrimerMsg" placeholder="Describe tu problema o pregunta..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')creaTicket()"></textarea>
     </div>
-    <button class="chat-new-btn" id="chatCreateBtn" onclick="creaTicket()">INVIA</button>
-    <button class="chat-back-btn" style="margin:6px 0" onclick="chatMostraLista()">← Indietro</button>
+    <button class="chat-new-btn" id="chatCreateBtn" onclick="creaTicket()">ENVIAR</button>
+    <button class="chat-back-btn" style="margin:6px 0" onclick="chatMostraLista()">← Atrás</button>
   </div>
 
   <!-- Conversazione -->
@@ -542,11 +542,11 @@
       <span class="chat-conv-title" id="chatConvTitle"></span>
     </div>
     <div class="chat-closed-notice" id="chatClosedNotice" style="display:none">
-      <iconify-icon icon="mdi:lock-outline" width="11" style="margin-right:4px;vertical-align:middle"></iconify-icon>TICKET CHIUSO
+      <iconify-icon icon="mdi:lock-outline" width="11" style="margin-right:4px;vertical-align:middle"></iconify-icon>TICKET CERRADO
     </div>
     <div class="chat-messages" id="chatMensajes"></div>
     <div class="chat-input-area" id="chatConvInput">
-      <textarea id="chatMsgInput" placeholder="Scrivi un messaggio... (Invio per a capo)" onkeydown="if(event.ctrlKey&&event.key==='Enter')inviaMessaggio()"></textarea>
+      <textarea id="chatMsgInput" placeholder="Escribe un mensaje... (Ctrl+Intro para enviar)" onkeydown="if(event.ctrlKey&&event.key==='Enter')inviaMessaggio()"></textarea>
       <button class="chat-send-btn" id="chatSendBtn" onclick="inviaMessaggio()">
         <iconify-icon icon="mdi:send" width="16"></iconify-icon>
       </button>

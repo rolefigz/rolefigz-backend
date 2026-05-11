@@ -1,22 +1,22 @@
 async function loadArticoli() {
   const grid = document.getElementById('articoliGrid');
   if (!grid) return;
-  grid.innerHTML = '<div class="loading" style="background:var(--surface)">CARICAMENTO</div>';
+  grid.innerHTML = '<div class="loading" style="background:var(--surface)">CARGANDO</div>';
   try {
     const r = await fetch(`${API}/articoli`);
     const lista = await r.json();
     if (!lista.length) {
-      grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>NESSUN ARTICOLO</h3><p>Nessun articolo pubblicato.</p></div>';
+      grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>SIN ARTÍCULOS</h3><p>Ningún artículo publicado.</p></div>';
       return;
     }
     grid.innerHTML = lista.map(a => renderArticoloCard(a)).join('');
   } catch {
-    grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>ERRORE</h3><p>Impossibile caricare gli articoli.</p></div>';
+    grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>ERROR</h3><p>No se pudieron cargar los artículos.</p></div>';
   }
 }
 
 function renderArticoloCard(a) {
-  const data = new Date(a.createdAt).toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' });
+  const data = new Date(a.createdAt).toLocaleDateString(localeDate(), { day:'numeric', month:'long', year:'numeric' });
   const tagList = a.tags ? a.tags.split(',').map(t => `<span class="pill">${t.trim()}</span>`).join(' ') : '';
   return `
     <div style="background:var(--surface);cursor:pointer;transition:background .2s" onclick="vediArticolo('${a.slug}')"
@@ -36,10 +36,10 @@ function renderArticoloCard(a) {
 async function vediArticolo(slug) {
   mostraVista('articolo');
   const wrap = document.getElementById('articoloContent');
-  wrap.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  wrap.innerHTML = '<div class="loading">CARGANDO</div>';
   try {
     const r = await fetch(`${API}/articoli/${slug}`);
-    if (!r.ok) throw new Error('Articolo non trovato');
+    if (!r.ok) throw new Error('Artículo no encontrado');
     const a = await r.json();
 
     // Aggiorna URL del browser
@@ -48,13 +48,13 @@ async function vediArticolo(slug) {
 
     renderDettaglioArticolo(a);
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><div class="ei">⚠</div><h3>ERRORE</h3><p>${e.message}</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="ei">⚠</div><h3>ERROR</h3><p>${e.message}</p></div>`;
   }
 }
 
 function renderDettaglioArticolo(a) {
   const wrap = document.getElementById('articoloContent');
-  const data = new Date(a.createdAt).toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' });
+  const data = new Date(a.createdAt).toLocaleDateString(localeDate(), { day:'numeric', month:'long', year:'numeric' });
   const tagList = a.tags ? a.tags.split(',').map(t => `<span class="pill">${t.trim()}</span>`).join(' ') : '';
 
   document.title = a.titolo + ' — RoleFigz';
@@ -66,7 +66,7 @@ function renderDettaglioArticolo(a) {
 
   const langPrefix = _urlLang ? `/${_urlLang}` : '';
   wrap.innerHTML = `
-    <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))" style="margin-bottom:32px">← TORNA AL BLOG</button>
+    <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))" style="margin-bottom:32px">← VOLVER AL BLOG</button>
     <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">${data}</div>
     <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.9;margin-bottom:24px;color:var(--dark)">${a.titolo}</h1>
     ${a.estratto ? `<p style="font-size:18px;color:var(--muted);line-height:1.7;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border)">${a.estratto}</p>` : ''}
@@ -74,6 +74,6 @@ function renderDettaglioArticolo(a) {
     ${a.immagine ? `<img src="${a.immagine}" alt="${a.titolo}" style="width:100%;max-height:480px;object-fit:cover;margin-bottom:40px;display:block">` : ''}
     <div class="ql-snow"><div class="ql-editor" style="padding:0;font-size:16px;line-height:1.9;color:var(--text)">${a.contenuto}</div></div>
     <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
-      <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))">← TORNA AL BLOG</button>
+      <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))">← VOLVER AL BLOG</button>
     </div>`;
 }

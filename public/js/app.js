@@ -42,12 +42,12 @@ function renderCategorie() {
     <button class="cat-card" onclick="filtraPerCategoria(${c.id})">
       <div class="cat-icon"><iconify-icon icon="${icone[i % icone.length]}" width="28"></iconify-icon></div>
       <div class="cat-name">${c.nombre}</div>
-      <div class="cat-count">${c.descripcion || '— prodotti'}</div>
+      <div class="cat-count">${c.descripcion || '— productos'}</div>
     </button>`).join('') +
     `<button class="cat-card" onclick="filtraPerCategoria(null)">
       <div class="cat-icon">🗂️</div>
       <div class="cat-name" data-i18n="catalogue_title">${t('catalogue_title')}</div>
-      <div class="cat-count">tutti i prodotti</div>
+      <div class="cat-count">todos los productos</div>
     </button>`;
 }
 
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       vediProdotto(e.state.slug);
     } else {
       mostraVista('tienda');
-      document.title = 'RoleFigz — Stampa 3D & Personalizzazione';
+      document.title = 'RoleFigz — Impresión 3D & Personalización';
     }
   });
 });
@@ -133,8 +133,8 @@ function mostraBannerPagamento(successo, ordineId) {
   const banner = document.createElement('div');
   banner.className = 'stripe-banner ' + (successo ? 'ok' : 'err');
   banner.innerHTML = successo
-    ? `✅ Pagamento confermato! Ordine <strong>#${ordineId}</strong> — controlla la tua email.`
-    : `❌ Pagamento annullato. Il tuo carrello è stato svuotato.`;
+    ? `✅ ¡Pago confirmado! Pedido <strong>#${ordineId}</strong> — revisa tu email.`
+    : `❌ Pago cancelado. Tu carrito ha sido vaciado.`;
   document.body.prepend(banner);
   setTimeout(() => banner.remove(), 7000);
 }
@@ -143,7 +143,7 @@ function mostraBannerTracking(ordineId, trackingNumber) {
   const banner = document.createElement('div');
   banner.className = 'stripe-banner ok';
   banner.style.cssText = 'top:70px;font-size:13px';
-  banner.innerHTML = `📦 Ordine <strong>#${ordineId}</strong> spedito! Tracking: <strong style="letter-spacing:1px;font-family:monospace">${trackingNumber}</strong>`;
+  banner.innerHTML = `📦 Pedido <strong>#${ordineId}</strong> enviado. Tracking: <strong style="letter-spacing:1px;font-family:monospace">${trackingNumber}</strong>`;
   document.body.prepend(banner);
   setTimeout(() => banner.remove(), 12000);
 }

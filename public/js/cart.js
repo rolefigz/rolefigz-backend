@@ -39,7 +39,7 @@ function aggiornaUICarrello() {
   badge.textContent = n;
   badge.className = n > 0 ? 'cart-badge on' : 'cart-badge';
   setTxt('cartTotal', `€${totaleCarrello().toFixed(2)}`);
-  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTICOLO' : 'ARTICOLI'}` : t('cart_empty').replace('// ', ''));
+  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTÍCULO' : 'ARTÍCULOS'}` : t('cart_empty').replace('// ', ''));
   document.getElementById('checkoutBtn').disabled = n === 0;
 }
 
@@ -58,7 +58,7 @@ function renderArticoliCarrello() {
         <div class="ci-name">${i.prodotto.nombre}</div>
         ${i.variante ? `<div class="ci-variant">${i.variante}</div>` : ''}
         ${i.fotoCliente ? `<div style="margin-top:5px"><img src="${i.fotoCliente}" style="width:36px;height:36px;object-fit:cover;border:1px solid var(--border);border-radius:2px" title="Foto cliente"/><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-left:5px;letter-spacing:1px;vertical-align:super">FOTO</span></div>` : ''}
-        ${i.dataConsegna ? `<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:1px">📅 ${new Date(i.dataConsegna + 'T00:00:00').toLocaleDateString('it-IT')}${i.supplementoExpress > 0 ? ` <span style="color:var(--accent)">+€${i.supplementoExpress.toFixed(2)} express</span>` : ''}</div>` : ''}
+        ${i.dataConsegna ? `<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:1px">📅 ${new Date(i.dataConsegna + 'T00:00:00').toLocaleDateString(localeDate())}${i.supplementoExpress > 0 ? ` <span style="color:var(--accent)">+€${i.supplementoExpress.toFixed(2)} express</span>` : ''}</div>` : ''}
         <div class="ci-price">€${i.prezzo.toFixed(2)} / ud</div>
         <div class="ci-qty">
           <button class="q-btn" onclick="cambiaQuantita('${i.key}', -1)">−</button>

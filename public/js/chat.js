@@ -56,7 +56,7 @@ async function caricaMieiTicket() {
     const lista = await r.json();
 
     if (!lista.length) {
-      el.innerHTML = '<div class="chat-empty">NESSUN TICKET<br><small style="font-size:8px;letter-spacing:1px;margin-top:6px;display:block">Crea il tuo primo ticket</small></div>';
+      el.innerHTML = '<div class="chat-empty">SIN TICKETS<br><small style="font-size:8px;letter-spacing:1px;margin-top:6px;display:block">Crea tu primer ticket</small></div>';
       return;
     }
 
@@ -111,13 +111,13 @@ function renderMessaggi(messaggi, ticket) {
 
   const el = document.getElementById('chatMensajes');
   if (!messaggi.length) {
-    el.innerHTML = '<div class="chat-empty">Nessun messaggio</div>';
+    el.innerHTML = '<div class="chat-empty">Sin mensajes</div>';
     return;
   }
 
   el.innerHTML = messaggi.map(m => `
     <div class="chat-msg ${m.remitente === 'cliente' ? 'mine' : 'theirs'}">
-      ${m.remitente === 'admin' ? `<div class="chat-msg-sender">SUPPORTO ROLEFIGZ</div>` : ''}
+      ${m.remitente === 'admin' ? `<div class="chat-msg-sender">SOPORTE ROLEFIGZ</div>` : ''}
       <div class="chat-msg-bubble">${escapeHtml(m.texto)}</div>
       <div class="chat-msg-time">${formattaOrarioChat(m.createdAt)}</div>
     </div>`).join('');
@@ -164,7 +164,7 @@ async function creaTicket() {
     if (!r.ok) throw new Error(data.error);
     apriTicket(data.ticket.id);
   } catch {}
-  btn.disabled = false; btn.textContent = 'INVIA';
+  btn.disabled = false; btn.textContent = 'ENVIAR';
 }
 
 // ── Polling & badge ───────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ function formattaOrarioChat(iso) {
   const d = new Date(iso);
   const oggi = new Date();
   const eOggi = d.toDateString() === oggi.toDateString();
-  if (eOggi) return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-  return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' +
-         d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  if (eOggi) return d.toLocaleTimeString(localeDate(), { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(localeDate(), { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString(localeDate(), { hour: '2-digit', minute: '2-digit' });
 }

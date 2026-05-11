@@ -11,16 +11,16 @@ async function caricaRecensioni(prodottoId) {
 
   try {
     const r = await fetch(`${API}/resenas/${prodottoId}`);
-    if (!r.ok) throw new Error('Errore caricamento recensioni');
+    if (!r.ok) throw new Error('Error al cargar reseñas');
     const data = await r.json();
     renderRecensioni(data, listaEl);
   } catch(e) {
-    listaEl.innerHTML = `<div class="resenas-empty">Impossibile caricare le recensioni.</div>`;
+    listaEl.innerHTML = `<div class="resenas-empty">No se pudieron cargar las reseñas.</div>`;
   }
 
   if (!formEl) return;
   if (!token) {
-    formEl.innerHTML = '<div class="resena-aviso">Accedi per lasciare una recensione.</div>';
+    formEl.innerHTML = '<div class="resena-aviso">Accede para dejar una reseña.</div>';
     return;
   }
   try {
@@ -37,7 +37,7 @@ async function caricaRecensioni(prodottoId) {
 
 function renderRecensioni({ resenas, promedio, total }, listaEl) {
   if (!total) {
-    listaEl.innerHTML = '<div class="resenas-empty">Nessuna recensione ancora. Acquista e sii il primo a recensire!</div>';
+    listaEl.innerHTML = '<div class="resenas-empty">Ninguna reseña todavía. ¡Compra y sé el primero en reseñar!</div>';
     return;
   }
 
@@ -47,7 +47,7 @@ function renderRecensioni({ resenas, promedio, total }, listaEl) {
       <div class="resenas-avg">${promedio}</div>
       <div>
         <div>${stelline(filled, 20)}</div>
-        <div class="resenas-count">${total} RECENSION${total === 1 ? 'E' : 'I'} VERIFICAT${total === 1 ? 'A' : 'E'}</div>
+        <div class="resenas-count">${total} RESEÑA${total === 1 ? '' : 'S'} VERIFICADA${total === 1 ? '' : 'S'}</div>
       </div>
     </div>`;
 
@@ -55,12 +55,12 @@ function renderRecensioni({ resenas, promedio, total }, listaEl) {
     <div class="resena-card">
       <div class="resena-header">
         <div>${stelline(r.puntuacion, 15)}</div>
-        ${r.compra_verificada ? '<div class="resena-badge">✓ ACQUISTO VERIFICATO</div>' : ''}
+        ${r.compra_verificada ? '<div class="resena-badge">✓ COMPRA VERIFICADA</div>' : ''}
       </div>
       ${r.comentario ? `<div class="resena-texto">"${r.comentario}"</div>` : ''}
       <div class="resena-autor">
         <strong>${r.nombre_autor || (r.Utente ? r.Utente.nombre : 'Cliente')}</strong>
-        <span>${new Date(r.createdAt).toLocaleDateString('it-IT')}</span>
+        <span>${new Date(r.createdAt).toLocaleDateString(localeDate())}</span>
       </div>
     </div>`).join('');
 
@@ -70,15 +70,15 @@ function renderRecensioni({ resenas, promedio, total }, listaEl) {
 function renderFormRecensione(prodottoId, puo, formEl) {
   if (!puo.puedeResenar) {
     const messaggi = {
-      ya_reseno:   'Hai già lasciato una recensione per questo prodotto.',
-      no_comprado: 'Solo chi ha acquistato questo prodotto può lasciare una recensione.'
+      ya_reseno:   'Ya has dejado una reseña para este producto.',
+      no_comprado: 'Solo quien ha comprado este producto puede dejar una reseña.'
     };
     formEl.innerHTML = `<div class="resena-aviso">${messaggi[puo.motivo] || ''}</div>`;
     return;
   }
 
   formEl.innerHTML = `
-    <div class="resena-form-title">LASCIA UNA RECENSIONE</div>
+    <div class="resena-form-title">DEJA UNA RESEÑA</div>
     <div class="star-input" id="starInput">
       <span class="star-pick" onclick="selezionaStella(1)">★</span>
       <span class="star-pick" onclick="selezionaStella(2)">★</span>
@@ -88,10 +88,10 @@ function renderFormRecensione(prodottoId, puo, formEl) {
     </div>
     <input type="hidden" id="resenaPuntuacion" value="0"/>
     <div class="field" style="margin-top:16px">
-      <label>Commento</label>
-      <textarea id="resenaComentario" placeholder="Descrivi la tua esperienza con questo prodotto..." rows="3"></textarea>
+      <label>Comentario</label>
+      <textarea id="resenaComentario" placeholder="Describe tu experiencia con este producto..." rows="3"></textarea>
     </div>
-    <button class="add-cart-btn" style="width:100%;margin-top:8px;height:48px" onclick="inviaRecensione(${prodottoId})">INVIA RECENSIONE</button>
+    <button class="add-cart-btn" style="width:100%;margin-top:8px;height:48px" onclick="inviaRecensione(${prodottoId})">ENVIAR RESEÑA</button>
     <div id="resenaMsg"></div>`;
 }
 
@@ -105,7 +105,7 @@ function selezionaStella(n) {
 async function inviaRecensione(prodottoId) {
   const voto      = parseInt(document.getElementById('resenaPuntuacion').value);
   const commento  = document.getElementById('resenaComentario').value.trim();
-  if (!voto) { showMsg('resenaMsg', 'Seleziona un punteggio', 'err'); return; }
+  if (!voto) { showMsg('resenaMsg', 'Selecciona una puntuación', 'err'); return; }
 
   try {
     const r = await fetch(`${API}/resenas`, {
@@ -116,7 +116,7 @@ async function inviaRecensione(prodottoId) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     const formEl = document.getElementById('resenas-form-wrap');
-    if (formEl) formEl.innerHTML = '<div class="resena-aviso">✅ Grazie! La tua recensione è in attesa di approvazione.</div>';
+    if (formEl) formEl.innerHTML = '<div class="resena-aviso">✅ ¡Gracias! Tu reseña está en espera de aprobación.</div>';
   } catch(e) { showMsg('resenaMsg', e.message, 'err'); }
 }
 

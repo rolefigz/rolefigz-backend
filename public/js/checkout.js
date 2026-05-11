@@ -27,7 +27,7 @@ function calcolaSpedizioneAuto() {
 
   if (naz !== 'IT') {
     spedizioneSelezionata = null;
-    wrap.innerHTML = '<div class="msg err" style="margin:10px 0">Spediamo solo in Italia. Per spedizioni internazionali contattaci.</div>';
+    wrap.innerHTML = '<div class="msg err" style="margin:10px 0">Solo enviamos a Italia. Para envíos internacionales contáctanos.</div>';
     aggiornaRiepilogoOrdine();
     return;
   }
@@ -36,7 +36,7 @@ function calcolaSpedizioneAuto() {
   spedizioneSelezionata = {
     id:       'it-fisso',
     corriere: 'Standard',
-    servizio: gratuita ? 'Spedizione gratuita' : 'Spedizione standard',
+    servizio: gratuita ? 'Envío gratuito' : 'Envío estándar',
     prezzo:   gratuita ? 0 : 10,
   };
 
@@ -47,11 +47,11 @@ function calcolaSpedizioneAuto() {
           <iconify-icon icon="mdi:truck-fast-outline" width="14" style="vertical-align:middle;margin-right:5px"></iconify-icon>
           ${spedizioneSelezionata.servizio}
         </div>
-        ${gratuita ? '' : '<div class="spediz-servizio">Consegna stimata 3–7 giorni lavorativi</div>'}
+        ${gratuita ? '' : '<div class="spediz-servizio">Entrega estimada 3–7 días laborables</div>'}
       </div>
       <div class="spediz-prezzo">${gratuita ? 'GRATIS' : '€10.00'}</div>
     </div>
-    ${!gratuita ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px">Spedizione gratuita per ordini ≥ €100</div>` : ''}`;
+    ${!gratuita ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px">Envío gratuito para pedidos ≥ €100</div>` : ''}`;
 
   aggiornaRiepilogoOrdine();
 }
@@ -61,7 +61,7 @@ function aggiornaRiepilogoOrdine() {
   const spedCosto  = spedizioneSelezionata ? spedizioneSelezionata.prezzo : 0;
 
   document.getElementById('orderSummary').innerHTML = `
-    <div class="osummary-title">// RIEPILOGO</div>
+    <div class="osummary-title">// RESUMEN</div>
     ${carrello.map(i => `
       <div class="oline">
         <span>${i.prodotto.nombre}${i.variante ? ` (${i.variante})` : ''} × ${i.quantita}</span>
@@ -69,14 +69,14 @@ function aggiornaRiepilogoOrdine() {
       </div>`).join('')}
     <div class="oline" style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
       <span>${spedizioneSelezionata
-        ? spedizioneSelezionata.prezzo === 0 ? 'Spedizione gratuita' : 'Spedizione standard'
-        : 'Spedizione'}</span>
+        ? spedizioneSelezionata.prezzo === 0 ? 'Envío gratuito' : 'Envío estándar'
+        : 'Envío'}</span>
       <span>${spedizioneSelezionata
         ? spedizioneSelezionata.prezzo === 0 ? 'GRATIS' : '€10.00'
-        : 'da calcolare'}</span>
+        : 'a calcular'}</span>
     </div>
     <div class="ototal">
-      <span>TOTALE</span>
+      <span>TOTAL</span>
       <span>€${(prodTotale + spedCosto).toFixed(2)}</span>
     </div>`;
 }
@@ -88,9 +88,9 @@ async function confermaOrdine() {
   const citta = document.getElementById('chkCitta').value.trim();
   const cap   = document.getElementById('chkCap').value.trim();
 
-  if (!nome || !email) { showMsg('checkoutMsg', 'Nome e email obbligatori', 'err'); return; }
-  if (!via || !citta || !cap) { showMsg('checkoutMsg', 'Completa i dati di spedizione: via, città e CAP', 'err'); return; }
-  if (!spedizioneSelezionata) { showMsg('checkoutMsg', 'Seleziona un paese valido per la spedizione', 'err'); return; }
+  if (!nome || !email) { showMsg('checkoutMsg', 'Nombre y email obligatorios', 'err'); return; }
+  if (!via || !citta || !cap) { showMsg('checkoutMsg', 'Completa los datos de envío: calle, ciudad y código postal', 'err'); return; }
+  if (!spedizioneSelezionata) { showMsg('checkoutMsg', 'Selecciona un país válido para el envío', 'err'); return; }
 
   const btn = document.getElementById('confirmarBtn');
   btn.disabled = true;
@@ -99,7 +99,7 @@ async function confermaOrdine() {
   const naz       = document.getElementById('chkNazione').value || 'IT';
   const direccion = [via, cap, citta, prov, naz].filter(Boolean).join(', ');
 
-  btn.textContent = 'PAGAMENTO...';
+  btn.textContent = 'PAGANDO...';
   try {
     const r = await fetch(`${API}/pagos/crear-sesion`, {
       method: 'POST',
