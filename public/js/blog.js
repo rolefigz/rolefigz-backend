@@ -1,17 +1,17 @@
 async function loadArticoli() {
   const grid = document.getElementById('articoliGrid');
   if (!grid) return;
-  grid.innerHTML = '<div class="loading" style="background:var(--surface)">CARGANDO</div>';
+  grid.innerHTML = '<div class="loading" style="background:var(--surface)">...</div>';
   try {
     const r = await fetch(`${API}/articoli`);
     const lista = await r.json();
     if (!lista.length) {
-      grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>SIN ARTÍCULOS</h3><p>Ningún artículo publicado.</p></div>';
+      grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>${t('blog_no_articles')}</h3><p>${t('blog_no_articles_desc')}</p></div>`;
       return;
     }
     grid.innerHTML = lista.map(a => renderArticoloCard(a)).join('');
   } catch {
-    grid.innerHTML = '<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>ERROR</h3><p>No se pudieron cargar los artículos.</p></div>';
+    grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>${t('blog_error')}</h3><p>${t('blog_error_desc')}</p></div>`;
   }
 }
 

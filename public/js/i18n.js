@@ -34,6 +34,11 @@ const i18n = {
     status_api:'API CONNESSA', status_no_session:'NESSUNA SESSIONE',
     status_admin:'ADMIN', status_client:'CLIENTE',
     nav_blog:'BLOG', blog_title:'ARTICOLI',
+    hero_title_html:'OGGETTI<br><em>UNICI</em><br>PER TE',
+    blog_eyebrow:'// Idee e Ispirazione',
+    blog_no_articles:'NESSUN ARTICOLO', blog_no_articles_desc:'Nessun articolo pubblicato.',
+    blog_error:'ERRORE', blog_error_desc:'Impossibile caricare gli articoli.',
+    maintenance:'SITO IN COSTRUZIONE — Sto sviluppando nuove funzionalità. Alcune sezioni potrebbero non essere disponibili.',
   },
   es: {
     nav_shop:'TIENDA', nav_cart:'CARRITO', nav_account:'MI CUENTA',
@@ -70,6 +75,11 @@ const i18n = {
     status_api:'API CONECTADA', status_no_session:'SIN SESIÓN',
     status_admin:'ADMIN', status_client:'CLIENTE',
     nav_blog:'BLOG', blog_title:'ARTÍCULOS',
+    hero_title_html:'OBJETOS<br><em>ÚNICOS</em><br>PARA TI',
+    blog_eyebrow:'// Ideas e Inspiración',
+    blog_no_articles:'SIN ARTÍCULOS', blog_no_articles_desc:'Ningún artículo publicado.',
+    blog_error:'ERROR', blog_error_desc:'No se pudieron cargar los artículos.',
+    maintenance:'SITIO EN CONSTRUCCIÓN — Estoy desarrollando nuevas funcionalidades. Algunas secciones pueden no estar disponibles.',
   },
   en: {
     nav_shop:'SHOP', nav_cart:'CART', nav_account:'MY ACCOUNT',
@@ -106,6 +116,11 @@ const i18n = {
     status_api:'API CONNECTED', status_no_session:'NO SESSION',
     status_admin:'ADMIN', status_client:'CLIENT',
     nav_blog:'BLOG', blog_title:'ARTICLES',
+    hero_title_html:'UNIQUE<br><em>OBJECTS</em><br>FOR YOU',
+    blog_eyebrow:'// Ideas and Inspiration',
+    blog_no_articles:'NO ARTICLES', blog_no_articles_desc:'No articles published yet.',
+    blog_error:'ERROR', blog_error_desc:'Could not load articles.',
+    maintenance:'SITE UNDER CONSTRUCTION — Developing new features. Some sections may not be available.',
   }
 };
 
@@ -129,5 +144,13 @@ function impostaLingua(lang, naviga = false) {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
   });
+  const heroTitleEl = document.getElementById('heroTitle');
+  if (heroTitleEl) heroTitleEl.innerHTML = t('hero_title_html');
+  const heroDescEl = document.getElementById('heroDesc');
+  if (heroDescEl) heroDescEl.textContent = t('hero_desc');
+  const blogEyebrowEl = document.getElementById('blogEyebrow');
+  if (blogEyebrowEl) blogEyebrowEl.textContent = t('blog_eyebrow');
+  const bannerEl = document.getElementById('maintenanceBanner');
+  if (bannerEl) bannerEl.textContent = t('maintenance');
   renderProdotti();
 }
