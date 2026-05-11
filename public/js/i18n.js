@@ -152,5 +152,9 @@ function impostaLingua(lang, naviga = false) {
   if (blogEyebrowEl) blogEyebrowEl.textContent = t('blog_eyebrow');
   const bannerEl = document.getElementById('maintenanceBanner');
   if (bannerEl) bannerEl.textContent = t('maintenance');
+  [['howTitle','how_title'],['whyTitle','why_title'],['catsTitle','cats_title'],['blogTitle','blog_title']].forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = t(key).replace(/\n/g, '<br>');
+  });
   renderProdotti();
 }
