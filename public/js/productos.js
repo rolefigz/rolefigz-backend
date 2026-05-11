@@ -30,8 +30,8 @@ async function caricaProdotti() {
     setTxt('productCount', `${prodotti.length} PRODOTTI`);
     setTxt('heroCounter', prodotti.length);
     renderProdotti();
-  } catch {
-    el.innerHTML = '<div class="empty-state"><div class="ei">⚠</div><h3>NESSUNA CONNESSIONE</h3><p>Verifica che il server sia attivo</p></div>';
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="ei">⚠</div><h3>NESSUNA CONNESSIONE</h3><p>${e.message}</p></div>`;
   }
 }
 
