@@ -38,15 +38,10 @@ header {
 
 .cart-badge { position: absolute; top: -2px; right: -2px; background: var(--accent); color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 8px; font-family: 'DM Mono', monospace; display: none; align-items: center; justify-content: center; }
 .cart-badge.on { display: flex; }
-.lang-btns { display: flex; gap: 2px; }
-.lang-btn { background: none; border: none; color: var(--muted); padding: 2px 4px; font-family: 'DM Mono', monospace; font-size: 9px; cursor: pointer; transition: color .15s; letter-spacing: 1px; }
-.lang-btn:hover, .lang-btn.active { color: var(--accent); }
-
-/* Mobile: nascondi nav e lang */
+/* Mobile */
 @media (max-width: 768px) {
   header { grid-template-columns: 1fr auto; padding: 0 16px; }
   .header-nav { display: none; }
-  .lang-btns { display: none; }
   .hn-login { display: none; }
 }
 

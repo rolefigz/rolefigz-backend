@@ -39,7 +39,7 @@ function aggiornaUICarrello() {
   badge.textContent = n;
   badge.className = n > 0 ? 'cart-badge on' : 'cart-badge';
   setTxt('cartTotal', `€${totaleCarrello().toFixed(2)}`);
-  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTÍCULO' : 'ARTÍCULOS'}` : t('cart_empty').replace('// ', ''));
+  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTICOLO' : 'ARTICOLI'}` : t('cart_empty').replace('// ', ''));
   document.getElementById('checkoutBtn').disabled = n === 0;
 }
 

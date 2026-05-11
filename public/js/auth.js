@@ -49,7 +49,7 @@ async function accedi() {
   const email = document.getElementById('loginEmail').value;
   const pass  = document.getElementById('loginPass').value;
   const btn   = document.getElementById('loginSubmit');
-  if (!email || !pass) { showMsg('loginMsg', 'Email y contraseña obligatorias', 'err'); return; }
+  if (!email || !pass) { showMsg('loginMsg', 'Email e password obbligatorie', 'err'); return; }
   btn.disabled = true; btn.textContent = '...';
   try {
     const r = await fetch(`${API}/auth/login`, {
@@ -62,7 +62,7 @@ async function accedi() {
       if (data.verificacion_pendiente) {
         emailAttesaVerifica = data.email;
         mostraPannelloVerifica(data.email);
-        showMsg('verificaMsg', '✅ ¡Código enviado! Revisa tu email.', 'ok');
+        showMsg('verificaMsg', '✅ Codice inviato! Controlla la tua email.', 'ok');
         return;
       }
       throw new Error(data.error || 'Error');
@@ -89,13 +89,13 @@ async function registrati() {
   const pass2 = document.getElementById('regPassConfirm').value;
   const btn   = document.getElementById('registerSubmit');
   if (!nome || !email || !pass || !pass2) {
-    showMsg('registerMsg', 'Todos los campos son obligatorios', 'err'); return;
+    showMsg('registerMsg', 'Tutti i campi sono obbligatori', 'err'); return;
   }
   if (pass !== pass2) {
-    showMsg('registerMsg', 'Las contraseñas no coinciden', 'err'); return;
+    showMsg('registerMsg', 'Le password non coincidono', 'err'); return;
   }
   if (pass.length < 6) {
-    showMsg('registerMsg', 'La contraseña debe tener al menos 6 caracteres', 'err'); return;
+    showMsg('registerMsg', 'La password deve avere almeno 6 caratteri', 'err'); return;
   }
   btn.disabled = true; btn.textContent = '...';
   try {
@@ -117,7 +117,7 @@ async function registrati() {
 }
 
 function mostraPannelloVerifica(email) {
-  _impostaPannelloModale('panelVerifica', 'VERIFICAR EMAIL');
+  _impostaPannelloModale('panelVerifica', 'VERIFICA EMAIL');
   const el = document.getElementById('emailVerifica');
   if (el) el.textContent = email;
   const input = document.getElementById('codigoInput');
@@ -128,7 +128,7 @@ async function verificaCodice() {
   const codice = document.getElementById('codigoInput').value.trim();
   const email  = emailAttesaVerifica;
   if (!codice || codice.length !== 6) {
-    showMsg('verificaMsg', 'Introduce el código de 6 dígitos', 'err'); return;
+    showMsg('verificaMsg', 'Inserisci il codice a 6 cifre', 'err'); return;
   }
   const btn = document.getElementById('verificarBtn');
   btn.disabled = true; btn.textContent = '...';
@@ -147,21 +147,21 @@ async function verificaCodice() {
     chiudiModalAuth();
   } catch(e) {
     showMsg('verificaMsg', e.message, 'err');
-    btn.disabled = false; btn.textContent = 'VERIFICAR Y ACCEDER';
+    btn.disabled = false; btn.textContent = 'VERIFICA E ACCEDI';
   }
 }
 
 // ── RECUPERO PASSWORD ────────────────────────────────────────────────────────
 
 function mostraRecupera() {
-  _impostaPannelloModale('panelRecupera', 'RECUPERAR CONTRASEÑA');
+  _impostaPannelloModale('panelRecupera', 'RECUPERA PASSWORD');
   const el = document.getElementById('recuperaEmail');
   if (el) { el.value = ''; setTimeout(() => el.focus(), 100); }
 }
 
 async function inviaRecupera() {
   const email = document.getElementById('recuperaEmail').value.trim();
-  if (!email) { showMsg('recuperaMsg', 'Introduce tu email', 'err'); return; }
+  if (!email) { showMsg('recuperaMsg', 'Inserisci la tua email', 'err'); return; }
   const btn = document.getElementById('recuperaBtn');
   btn.disabled = true; btn.textContent = '...';
   try {
@@ -173,22 +173,22 @@ async function inviaRecupera() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     emailAttesaRecupero = email;
-    _impostaPannelloModale('panelResetPass', 'NUEVA CONTRASEÑA');
+    _impostaPannelloModale('panelResetPass', 'NUOVA PASSWORD');
     const el = document.getElementById('emailReset');
     if (el) el.textContent = email;
     const input = document.getElementById('resetCodigo');
     if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
   } catch(e) {
     showMsg('recuperaMsg', e.message, 'err');
-    btn.disabled = false; btn.textContent = 'ENVIAR CÓDIGO';
+    btn.disabled = false; btn.textContent = 'INVIA CODICE';
   }
 }
 
 async function reimpostaPassword() {
   const codice    = document.getElementById('resetCodigo').value.trim();
   const nuovaPass = document.getElementById('resetPass').value;
-  if (!codice || codice.length !== 6) { showMsg('resetMsg', 'Introduce el código de 6 dígitos', 'err'); return; }
-  if (!nuovaPass || nuovaPass.length < 6) { showMsg('resetMsg', 'La contraseña debe tener al menos 6 caracteres', 'err'); return; }
+  if (!codice || codice.length !== 6) { showMsg('resetMsg', 'Inserisci il codice a 6 cifre', 'err'); return; }
+  if (!nuovaPass || nuovaPass.length < 6) { showMsg('resetMsg', 'La password deve avere almeno 6 caratteri', 'err'); return; }
   const btn = document.getElementById('resetBtn');
   btn.disabled = true; btn.textContent = '...';
   try {
@@ -199,11 +199,11 @@ async function reimpostaPassword() {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    showMsg('resetMsg', '✅ Contraseña actualizada. Ya puedes acceder.', 'ok');
+    showMsg('resetMsg', '✅ Password aggiornata. Ora puoi accedere.', 'ok');
     setTimeout(() => cambiaTabAuth('login'), 1800);
   } catch(e) {
     showMsg('resetMsg', e.message, 'err');
-    btn.disabled = false; btn.textContent = 'RESTABLECER CONTRASEÑA';
+    btn.disabled = false; btn.textContent = 'REIMPOSTA PASSWORD';
   }
 }
 

@@ -34,7 +34,7 @@ function renderOrdineProfilo(o) {
           <div class="ocv2-item-info">
             <div class="ocv2-item-name">${d.Prodotto?.nombre || 'Producto'}</div>
             ${d.variante ? `<div class="ocv2-item-meta">${d.variante}</div>` : ''}
-            ${d.data_consegna ? `<div class="ocv2-item-meta">📅 Producción: ${new Date(d.data_consegna).toLocaleDateString(localeDate())}${parseFloat(d.supplemento_express||0)>0?` · +€${parseFloat(d.supplemento_express).toFixed(2)} express`:''}</div>` : ''}
+            ${d.data_consegna ? `<div class="ocv2-item-meta">📅 Produzione: ${new Date(d.data_consegna).toLocaleDateString(localeDate())}${parseFloat(d.supplemento_express||0)>0?` · +€${parseFloat(d.supplemento_express).toFixed(2)} express`:''}</div>` : ''}
             <div class="ocv2-item-qty">Cant.: ${d.cantidad}</div>
           </div>
           <div class="ocv2-item-price">€${parseFloat(d.subtotal).toFixed(2)}</div>
@@ -49,28 +49,28 @@ function renderOrdineProfilo(o) {
           ${o.tracking_number && o.carrier ? o.carrier + ' · ' : ''}Tracking No.
         </div>
         <div class="ocv2-tracking-num" style="${o.tracking_number ? '' : 'color:var(--muted);font-size:10px;font-weight:400;letter-spacing:0'}">
-          ${o.tracking_number || 'En espera de envío'}
+          ${o.tracking_number || 'In attesa di spedizione'}
         </div>
       </div>
     </div>`;
 
   const prodTotale = parseFloat(o.total) - parseFloat(o.costo_spedizione || 0);
   const sideHtml = `
-    <div class="ocv2-summary-title">Detalles del pago</div>
+    <div class="ocv2-summary-title">Dettagli del pagamento</div>
     <div class="ocv2-summary-row"><span>Subtotal</span><span>€${prodTotale.toFixed(2)}</span></div>
-    ${parseFloat(o.costo_spedizione||0) > 0 ? `<div class="ocv2-summary-row"><span>Envío${o.carrier ? ` (${o.carrier})` : ''}</span><span>€${parseFloat(o.costo_spedizione).toFixed(2)}</span></div>` : ''}
+    ${parseFloat(o.costo_spedizione||0) > 0 ? `<div class="ocv2-summary-row"><span>Spedizione${o.carrier ? ` (${o.carrier})` : ''}</span><span>€${parseFloat(o.costo_spedizione).toFixed(2)}</span></div>` : ''}
     <div class="ocv2-summary-total">
-      <span>Total</span>
+      <span>Totale</span>
       <span>€${parseFloat(o.total).toFixed(2)}</span>
     </div>
     ${o.direccion ? `
     <div class="ocv2-address">
-      <div class="ocv2-address-title">Dirección de envío</div>
+      <div class="ocv2-address-title">Indirizzo di spedizione</div>
       ${o.direccion.split(',').map(r => `<div class="ocv2-address-line">${r.trim()}</div>`).join('')}
     </div>` : ''}
     ${o.notas ? `
     <div class="ocv2-address" style="margin-top:14px">
-      <div class="ocv2-address-title">Notas</div>
+      <div class="ocv2-address-title">Note</div>
       <div class="ocv2-address-line" style="color:var(--muted)">${o.notas}</div>
     </div>` : ''}`;
 
@@ -78,7 +78,7 @@ function renderOrdineProfilo(o) {
     <div class="ocv2">
       <div class="ocv2-header">
         <div class="ocv2-header-left">
-          <div class="ocv2-id">Pedido #${o.id}</div>
+          <div class="ocv2-id">Ordine #${o.id}</div>
           <div class="ocv2-date">${new Date(o.createdAt).toLocaleDateString(localeDate(), { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
         </div>
         <span class="pill ${pillStato(o.estado)}">${o.estado.toUpperCase()}</span>
@@ -86,7 +86,7 @@ function renderOrdineProfilo(o) {
       <div class="ocv2-body">
         <div class="ocv2-main">
           ${stepperHtml}
-          <div class="ocv2-items-title">Artículos pedidos y detalles de envío</div>
+          <div class="ocv2-items-title">Articoli ordinati e dettagli di spedizione</div>
           ${itemsHtml}
           ${trackingHtml}
         </div>

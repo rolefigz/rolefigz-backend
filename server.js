@@ -49,15 +49,8 @@ app.use("/api/tickets",    limitAPI,  ticketsRoutes);
 app.use("/api/spedizione", limitAPI,  spedizioneRoutes);
 app.use("/api",           limitAPI,  gadget3dRoutes);
 
-// ── Route lingua — /it /it/ /es /es/ /en /en/ e blog ────────────────────
-const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
-["it", "es", "en"].forEach(lang => {
-  app.get(`/${lang}`,               serveApp);
-  app.get(`/${lang}/`,              serveApp);
-  app.get(`/${lang}/producto/:slug`, serveApp);
-  app.get(`/${lang}/blog/:slug`,     serveApp);
-});
-app.get("/blog/:slug", serveApp);
+// ── Route SPA — blog e prodotti ──────────────────────────────────────────
+app.get("/blog/:slug", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
 // ── SPA catch-all — serve index.html per le route prodotto ───────────────
 app.get("/producto/:slug", (req, res) => {

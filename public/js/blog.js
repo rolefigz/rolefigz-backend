@@ -36,19 +36,18 @@ function renderArticoloCard(a) {
 async function vediArticolo(slug) {
   mostraVista('articolo');
   const wrap = document.getElementById('articoloContent');
-  wrap.innerHTML = '<div class="loading">CARGANDO</div>';
+  wrap.innerHTML = '<div class="loading">CARICAMENTO</div>';
   try {
     const r = await fetch(`${API}/articoli/${slug}`);
-    if (!r.ok) throw new Error('Artículo no encontrado');
+    if (!r.ok) throw new Error('Articolo non trovato');
     const a = await r.json();
 
     // Aggiorna URL del browser
-    const langPrefix = _urlLang ? `/${_urlLang}` : '';
-    history.pushState({ tipo: 'articolo', slug: a.slug }, a.titolo, `${langPrefix}/blog/${a.slug}`);
+    history.pushState({ tipo: 'articolo', slug: a.slug }, a.titolo, `/blog/${a.slug}`);
 
     renderDettaglioArticolo(a);
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><div class="ei">⚠</div><h3>ERROR</h3><p>${e.message}</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="ei">⚠</div><h3>ERRORE</h3><p>${e.message}</p></div>`;
   }
 }
 
@@ -64,9 +63,8 @@ function renderDettaglioArticolo(a) {
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', a.titolo + ' — RoleFigz');
   if (a.immagine) document.querySelector('meta[property="og:image"]')?.setAttribute('content', a.immagine);
 
-  const langPrefix = _urlLang ? `/${_urlLang}` : '';
   wrap.innerHTML = `
-    <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))" style="margin-bottom:32px">← VOLVER AL BLOG</button>
+    <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))" style="margin-bottom:32px">← TORNA AL BLOG</button>
     <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">${data}</div>
     <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.9;margin-bottom:24px;color:var(--dark)">${a.titolo}</h1>
     ${a.estratto ? `<p style="font-size:18px;color:var(--muted);line-height:1.7;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border)">${a.estratto}</p>` : ''}
@@ -74,6 +72,6 @@ function renderDettaglioArticolo(a) {
     ${a.immagine ? `<img src="${a.immagine}" alt="${a.titolo}" style="width:100%;max-height:480px;object-fit:cover;margin-bottom:40px;display:block">` : ''}
     <div class="ql-snow"><div class="ql-editor" style="padding:0;font-size:16px;line-height:1.9;color:var(--text)">${a.contenuto}</div></div>
     <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
-      <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))">← VOLVER AL BLOG</button>
+      <button class="action-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'',window.location.pathname.replace(/\\/blog\\/.*$/,''))">← TORNA AL BLOG</button>
     </div>`;
 }
