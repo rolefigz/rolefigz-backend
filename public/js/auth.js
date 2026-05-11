@@ -17,7 +17,7 @@ function cambiaTabAuth(tab) {
   document.getElementById(tab === 'login' ? 'tabLogin' : 'tabRegister').classList.add('active');
   document.getElementById(tab === 'login' ? 'panelLogin' : 'panelRegister').classList.add('active');
   const titleEl = document.querySelector('#authModal .modal-title');
-  if (titleEl) titleEl.textContent = 'ACCESO';
+  if (titleEl) titleEl.textContent = 'ACCESSO';
   const tabs = document.getElementById('authTabs');
   if (tabs) tabs.style.display = '';
 }
@@ -78,7 +78,7 @@ async function accedi() {
     showMsg('loginMsg', e.message, 'err');
   } finally {
     btn.disabled = false;
-    btn.textContent = t('auth_login');
+    btn.textContent = 'ACCEDI';
   }
 }
 
@@ -112,7 +112,7 @@ async function registrati() {
     showMsg('registerMsg', e.message, 'err');
   } finally {
     btn.disabled = false;
-    btn.textContent = t('auth_register_btn');
+    btn.textContent = 'CREA ACCOUNT';
   }
 }
 
@@ -235,7 +235,7 @@ function impostaSessione() {
   setTxt('ddEmail', utente.email  || '');
 
   setSd('authDot', 'ok');
-  setTxt('authStatus', `${t(utente.rol === 'admin' ? 'status_admin' : 'status_client')}: ${utente.nombre}`);
+  setTxt('authStatus', `${utente.rol === 'admin' ? 'ADMIN' : 'CLIENTE'}: ${utente.nombre}`);
   const el = document.getElementById('perfilAvatar');
   if (el) el.textContent = (utente.nombre || '?').charAt(0).toUpperCase();
   setTxt('perfilNombre', utente.nombre || '');
@@ -277,7 +277,7 @@ function disconnetti() {
     document.getElementById('perfilBtn').style.display = 'none';
     document.getElementById('adminBtn').style.display = 'none';
     setSd('authDot', '');
-    setTxt('authStatus', t('status_no_session'));
+    setTxt('authStatus', 'NESSUNA SESSIONE');
     document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = ''; });
     _impostaVisibilitaFabChat(false);
     const chatPanel = document.getElementById('chatPanel');

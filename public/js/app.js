@@ -31,7 +31,7 @@ function mostraVista(nome) {
 }
 
 async function verificaAPI() {
-  setSd('apiDot', 'ok'); setTxt('apiStatus', t('status_api'));
+  setSd('apiDot', 'ok'); setTxt('apiStatus', 'API CONNESSA');
 }
 
 function renderCategorie() {
