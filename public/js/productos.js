@@ -47,7 +47,7 @@ function renderProdotti(lista) {
     return `
       <div class="card" onclick="vediProdotto(${p.id})">
         ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">ULTIMI</div>` : ''}
-        ${p.stock === 0 ? `<div class="card-badge" style="background:var(--muted)">${t('sold_out')}</div>` : ''}
+        ${p.stock === 0 ? `<div class="card-badge" style="background:var(--muted)">${'ESAURITO'}</div>` : ''}
         ${img ? `<img class="card-img" src="${img}" alt="${p.nombre}" onerror="this.outerHTML='<div class=card-ph>3D</div>'">` : '<div class="card-ph">3D</div>'}
         <div class="card-body">
           <div class="card-cat">${p.Categoria ? p.Categoria.nombre : ''}</div>
@@ -55,10 +55,10 @@ function renderProdotti(lista) {
           <div class="card-desc">${p.descripcion || ''}</div>
           <div class="card-footer">
             <div class="card-price">€${parseFloat(p.precio).toFixed(2)}</div>
-            <div class="card-stock">${p.stock > 0 ? `STOCK: ${p.stock}` : t('sold_out')}</div>
+            <div class="card-stock">${p.stock > 0 ? `STOCK: ${p.stock}` : 'ESAURITO'}</div>
           </div>
           <button class="add-btn" onclick="event.stopPropagation();aggiungiAlCarrello(${p.id})" ${p.stock === 0 ? 'disabled' : ''}>
-            ${p.stock === 0 ? t('sold_out') : t('add_to_cart')}
+            ${p.stock === 0 ? 'ESAURITO' : '+ AGGIUNGI AL CARRELLO'}
           </button>
         </div>
       </div>`;
@@ -149,7 +149,7 @@ function renderDettaglioProdotto(p) {
     <div class="producto-info">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
         <div class="producto-breadcrumb" onclick="tornaAlNegozio()" style="margin:0;flex:1">
-          ${t('nav_shop')} / <span>${p.Categoria ? p.Categoria.nombre.toUpperCase() : 'PRODOTTI'}</span> / ${p.nombre.toUpperCase()}
+          NEGOZIO / <span>${p.Categoria ? p.Categoria.nombre.toUpperCase() : 'PRODOTTI'}</span> / ${p.nombre.toUpperCase()}
         </div>
         ${p.slug ? `<button onclick="copiaLink('${p.slug}',this)" class="share-btn">🔗 COPIA LINK</button>` : ''}
       </div>
@@ -167,7 +167,7 @@ function renderDettaglioProdotto(p) {
               <button class="variante-btn ${v.stock === 0 ? 'out' : ''}"
                 onclick="${v.stock > 0 ? `selezionaVariante('${tipo}','${v.valor}',${v.precio_extra},this)` : ''}"
                 ${v.stock === 0 ? 'disabled' : ''}
-                title="${v.stock === 0 ? t('sold_out') : 'Stock: ' + v.stock}">
+                title="${v.stock === 0 ? 'ESAURITO' : 'Stock: ' + v.stock}">
                 ${v.valor}${v.precio_extra > 0 ? ` +€${parseFloat(v.precio_extra).toFixed(2)}` : ''}
               </button>`).join('')}
           </div>
@@ -175,7 +175,7 @@ function renderDettaglioProdotto(p) {
       <div class="producto-desc">${p.descripcion || ''}</div>
       <div class="producto-stock">
         <div class="stock-dot ${p.stock > 5 ? 'ok' : p.stock > 0 ? 'low' : 'out'}"></div>
-        <span>${p.stock > 5 ? 'DISPONIBILE' : p.stock > 0 ? `ULTIMI ${p.stock} PEZZI` : t('sold_out')}</span>
+        <span>${p.stock > 5 ? 'DISPONIBILE' : p.stock > 0 ? `ULTIMI ${p.stock} PEZZI` : 'ESAURITO'}</span>
       </div>
       ${p.selettore_data ? `
       <div class="data-consegna-wrap" id="dataConsegnaWrap">
@@ -235,7 +235,7 @@ function renderDettaglioProdotto(p) {
           <button onclick="cambiaQuantitaDettaglio(1)">+</button>
         </div>
         <button class="add-cart-btn" onclick="aggiungiAlCarrelloDettaglio()" id="addCartBtn" ${p.stock === 0 ? 'disabled' : ''}>
-          ${p.stock === 0 ? t('sold_out') : t('add_to_cart')}
+          ${p.stock === 0 ? 'ESAURITO' : '+ AGGIUNGI AL CARRELLO'}
         </button>
       </div>
       <div class="producto-meta">

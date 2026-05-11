@@ -110,7 +110,7 @@ async function tabProfilo(tab, el) {
         return;
       }
       content.innerHTML = `
-        <div class="perfil-section-title">${t('perfil_orders').toUpperCase()} (${lista.length})</div>
+        <div class="perfil-section-title">I MIEI ORDINI (${lista.length})</div>
         ${lista.map(o => renderOrdineProfilo(o)).join('')}`;
     } catch { content.innerHTML = '<div class="msg err">Error</div>'; }
   }
@@ -121,12 +121,12 @@ async function tabProfilo(tab, el) {
       const r = await fetch(`${API}/auth/perfil`, { headers: { Authorization: `Bearer ${token}` } });
       const u = await r.json();
       content.innerHTML = `
-        <div class="perfil-section-title">${t('perfil_data').toUpperCase()}</div>
-        <div class="field"><label>${t('field_name')}</label><input type="text" id="editNombre" value="${u.nombre || ''}"/></div>
-        <div class="field"><label>${t('field_email')}</label><input type="email" value="${u.email}" disabled style="opacity:.5"/></div>
-        <div class="field"><label>${t('field_phone')}</label><input type="tel" id="editTelefono" value="${u.telefono || ''}"/></div>
-        <div class="field"><label>${t('field_address')}</label><textarea id="editDireccion">${u.direccion || ''}</textarea></div>
-        <button class="btn-submit" onclick="salvaProfilo()">${t('save')}</button>
+        <div class="perfil-section-title">I MIEI DATI</div>
+        <div class="field"><label>Nome completo</label><input type="text" id="editNombre" value="${u.nombre || ''}"/></div>
+        <div class="field"><label>Email</label><input type="email" value="${u.email}" disabled style="opacity:.5"/></div>
+        <div class="field"><label>Telefono</label><input type="tel" id="editTelefono" value="${u.telefono || ''}"/></div>
+        <div class="field"><label>Indirizzo di spedizione</label><textarea id="editDireccion">${u.direccion || ''}</textarea></div>
+        <button class="btn-submit" onclick="salvaProfilo()">SALVA MODIFICHE</button>
         <div id="perfilMsg"></div>`;
     } catch { content.innerHTML = '<div class="msg err">Error</div>'; }
   }

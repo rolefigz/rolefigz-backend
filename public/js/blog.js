@@ -6,12 +6,12 @@ async function loadArticoli() {
     const r = await fetch(`${API}/articoli`);
     const lista = await r.json();
     if (!lista.length) {
-      grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>${t('blog_no_articles')}</h3><p>${t('blog_no_articles_desc')}</p></div>`;
+      grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">✍️</div><h3>NESSUN ARTICOLO</h3><p>Non ci sono ancora articoli pubblicati.</p></div>`;
       return;
     }
     grid.innerHTML = lista.map(a => renderArticoloCard(a)).join('');
   } catch {
-    grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>${t('blog_error')}</h3><p>${t('blog_error_desc')}</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="background:var(--surface)"><div class="ei">⚠</div><h3>ERRORE</h3><p>Impossibile caricare gli articoli.</p></div>`;
   }
 }
 

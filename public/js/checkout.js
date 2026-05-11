@@ -142,6 +142,6 @@ async function confermaOrdine() {
   } catch(e) {
     showMsg('checkoutMsg', e.message, 'err');
     btn.disabled    = false;
-    btn.textContent = t('checkout_confirm');
+    btn.textContent = 'CONFERMA ORDINE';
   }
 }

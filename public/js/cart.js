@@ -39,14 +39,14 @@ function aggiornaUICarrello() {
   badge.textContent = n;
   badge.className = n > 0 ? 'cart-badge on' : 'cart-badge';
   setTxt('cartTotal', `€${totaleCarrello().toFixed(2)}`);
-  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTICOLO' : 'ARTICOLI'}` : t('cart_empty').replace('// ', ''));
+  setTxt('cartCount', n > 0 ? `${n} ${n === 1 ? 'ARTICOLO' : 'ARTICOLI'}` : 'CARRELLO VUOTO');
   document.getElementById('checkoutBtn').disabled = n === 0;
 }
 
 function renderArticoliCarrello() {
   const el = document.getElementById('cartItems');
   if (!carrello.length) {
-    el.innerHTML = `<div class="drawer-empty">${t('cart_empty')}</div>`;
+    el.innerHTML = `<div class="drawer-empty">// CARRELLO VUOTO</div>`;
     return;
   }
   el.innerHTML = carrello.map(i => `

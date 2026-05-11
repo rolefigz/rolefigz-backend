@@ -46,7 +46,7 @@ function renderCategorie() {
     </button>`).join('') +
     `<button class="cat-card" onclick="filtraPerCategoria(null)">
       <div class="cat-icon">🗂️</div>
-      <div class="cat-name">${t('catalogue_title')}</div>
+      <div class="cat-name">CATALOGO</div>
       <div class="cat-count">tutti i prodotti</div>
     </button>`;
 }
