@@ -334,7 +334,7 @@ function apriCalendario() {
   const p = prodottoCorrente;
   const oggi = new Date(); oggi.setHours(0,0,0,0);
   const dataMinima = new Date(oggi);
-  dataMinima.setDate(dataMinima.getDate() + 1 + (p.giorni_spedizione || 3));
+  dataMinima.setDate(dataMinima.getDate() + 1 + (p.giorni_spedizione ?? 3));
   const ultimoMeseCorrente = new Date(calMeseCorrente.anno, calMeseCorrente.mese + 1, 0);
   if (ultimoMeseCorrente < dataMinima) {
     calMeseCorrente = { anno: dataMinima.getFullYear(), mese: dataMinima.getMonth() };
@@ -371,8 +371,8 @@ function renderCalendario() {
   const p = prodottoCorrente;
 
   const oggi = new Date(); oggi.setHours(0,0,0,0);
-  const giorniProd   = p.giorni_produzione || 7;
-  const giorniSpediz = p.giorni_spedizione || 3;
+  const giorniProd   = p.giorni_produzione ?? 7;
+  const giorniSpediz = p.giorni_spedizione ?? 3;
   const prezzoGiorno = parseFloat(p.prezzo_per_giorno_express || 0);
 
   // Prima data selezionabile = oggi + 1 giorno (minimo produzione) + spedizione
