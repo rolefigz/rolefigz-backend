@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function verificaAPI() {
-  return fetch('http://localhost:3000/')
+  return fetch(`${API}/productos?limit=1`)
     .then(r => { if (r.ok) { setSd('apiDot', 'ok'); setTxt('apiStatus', 'API CONNESSA'); } })
     .catch(() => { setSd('apiDot', 'err'); setTxt('apiStatus', 'API OFFLINE'); });
 }
