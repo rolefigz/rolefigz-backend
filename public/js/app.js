@@ -82,14 +82,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     caricaProdotti().then(() => aggiornaUICarrello());
 
   } else {
-    // Store normale: init completo
+    // Auth PRIMA — l'utente vede subito il suo stato senza aspettare il caricamento
+    initAuth();
+
+    // Poi carica il negozio
     if (percorso === '/checkout') mostraVista('checkout');
     await verificaAPI();
     await caricaCategorie();
     await caricaProdotti();
     aggiornaUICarrello();
-    impostaLingua(linguaCorrente);
-    initAuth();
     if (document.getElementById('resenasDestacadas')) caricaRecensioniInEvidenza();
     gestisciRitornoStripe();
     tracciVisita('home');
