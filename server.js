@@ -78,11 +78,11 @@ app.listen(PORT, () => {
     .then(() => console.log("✅ Database sincronizzato"))
     .catch(err => console.error("❌ Errore DB sync:", err.message));
 
-  // Crea tabelle nuove se non esistono (sicurezza extra)
-  PuntiTransazione.sync({ force: false })
+  // Sync esplicito per nuovi modelli (crea + aggiorna colonne)
+  PuntiTransazione.sync({ alter: true })
     .then(() => console.log("✅ punti_transazioni OK"))
     .catch(err => console.error("❌ punti_transazioni:", err.message));
-  CodicePromo.sync({ force: false })
+  CodicePromo.sync({ alter: true })
     .then(() => console.log("✅ codici_promo OK"))
     .catch(err => console.error("❌ codici_promo:", err.message));
 });
