@@ -4,10 +4,10 @@ const Utente    = require("./Utente");
 
 const PuntiTransazione = sequelize.define("PuntiTransazione", {
   utente_id:     { type: DataTypes.INTEGER, allowNull: false },
-  tipo:          { type: DataTypes.ENUM("acquisto","recensione","instagram_follow","registrazione","sconto","spedizione_gratuita"), allowNull: false },
-  punti:         { type: DataTypes.INTEGER, allowNull: false },         // positivo = guadagnati, negativo = spesi
+  tipo:          { type: DataTypes.STRING(30), allowNull: false },
+  punti:         { type: DataTypes.INTEGER, allowNull: false },
   descrizione:   { type: DataTypes.STRING },
-  stato:         { type: DataTypes.ENUM("approvato","in_attesa","rifiutato"), defaultValue: "approvato" },
+  stato:         { type: DataTypes.STRING(20), defaultValue: "approvato" },
   riferimento_id:{ type: DataTypes.INTEGER },                           // id ordine o recensione
 }, { tableName: "punti_transazioni" });
 

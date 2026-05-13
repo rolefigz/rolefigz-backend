@@ -1619,6 +1619,8 @@ async function adminTabPromo(content) {
     const r = await fetch(`${API}/promo`, { headers: { Authorization: `Bearer ${token}` } });
     const codici = await r.json();
 
+    if (!Array.isArray(codici)) throw new Error(codici?.error || 'Errore caricamento codici promo');
+
     const TIPO = { percentuale: '% Percentuale', fisso: '€ Fisso', spedizione_gratuita: '🚚 Spedizione' };
 
     const righe = codici.map(c => `

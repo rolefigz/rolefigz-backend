@@ -3,7 +3,7 @@ const sequelize = require("../config/db");
 
 const CodicePromo = sequelize.define("CodicePromo", {
   codice:              { type: DataTypes.STRING(30), allowNull: false, unique: true },
-  tipo:                { type: DataTypes.ENUM("percentuale","fisso","spedizione_gratuita"), allowNull: false },
+  tipo:                { type: DataTypes.STRING(20), allowNull: false },
   valore:              { type: DataTypes.DECIMAL(10,2), defaultValue: 0 },  // % o € fisso
   descrizione:         { type: DataTypes.STRING },
   attivo:              { type: DataTypes.BOOLEAN, defaultValue: true },
