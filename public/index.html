@@ -63,6 +63,9 @@
         <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('datos',null)">
           <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> I miei dati
         </button>
+        <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('benchys',document.getElementById('benchysMenuTab'))">
+          <img src="/assets/benchy.png" width="15" style="vertical-align:middle;opacity:.85"/> Benchys <span id="ddBenchySaldo" style="margin-left:auto;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700"></span>
+        </button>
         <div class="avatar-dd-sep"></div>
         <button class="avatar-dd-item danger" onclick="chiudiDropdownProfilo();disconnetti()">
           <iconify-icon icon="mdi:logout" width="15"></iconify-icon> Esci

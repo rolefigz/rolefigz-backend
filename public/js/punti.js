@@ -21,6 +21,10 @@ function aggiornaBannerBenchys() {
     banner.textContent = `🚢 ${benchySaldo} Benchys`;
     banner.style.display = '';
   }
+  const sidebar = document.getElementById('benchySaldoSidebar');
+  if (sidebar) sidebar.textContent = benchySaldo > 0 ? `${benchySaldo} 🚢` : '';
+  const dd = document.getElementById('ddBenchySaldo');
+  if (dd) dd.textContent = benchySaldo > 0 ? `${benchySaldo} 🚢` : '';
 }
 
 // ── TAB BENCHYS nel profilo ───────────────────────────────────────────────────
