@@ -35,6 +35,8 @@ const verificaCodice = async (req, res) => {
       return res.status(400).json({ error: "Codice scaduto" });
     if (promo.max_utilizzi !== null && promo.utilizzi_attuali >= promo.max_utilizzi)
       return res.status(400).json({ error: "Codice esaurito" });
+    if (promo.minimo_ordine > 0 && parseFloat(totale_carrello) < parseFloat(promo.minimo_ordine))
+      return res.status(400).json({ error: `Ordine minimo €${parseFloat(promo.minimo_ordine).toFixed(2)} per usare questo codice` });
 
     const sconto = calcolaSconto(promo, totale_carrello, costo_spedizione);
     res.json({ valido: true, promo, sconto });

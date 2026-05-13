@@ -1628,6 +1628,7 @@ async function adminTabPromo(content) {
         <td><strong style="letter-spacing:2px;font-family:'DM Mono',monospace">${c.codice}</strong></td>
         <td>${TIPO[c.tipo] || c.tipo}</td>
         <td>${c.tipo === 'spedizione_gratuita' ? '—' : c.tipo === 'percentuale' ? `${c.valore}%` : `€${parseFloat(c.valore).toFixed(2)}`}</td>
+        <td>${parseFloat(c.minimo_ordine||0) > 0 ? `€${parseFloat(c.minimo_ordine).toFixed(2)}` : '—'}</td>
         <td>${c.utilizzi_attuali}${c.max_utilizzi ? ` / ${c.max_utilizzi}` : ''}</td>
         <td style="color:var(--green);font-weight:700">€${parseFloat(c.fatturato_generato||0).toFixed(2)}</td>
         <td>${c.data_scadenza ? new Date(c.data_scadenza).toLocaleDateString('it-IT') : '∞'}</td>
@@ -1660,6 +1661,7 @@ async function adminTabPromo(content) {
         </div>
         <div class="form-row">
           <div class="field"><label>Descrizione</label><input id="pDesc" type="text" placeholder="Codice influencer estate 2026"/></div>
+          <div class="field"><label>Minimo ordine (€)</label><input id="pMinimo" type="number" step="0.01" placeholder="0 = nessun minimo"/></div>
           <div class="field"><label>Scadenza</label><input id="pScadenza" type="date"/></div>
           <div class="field"><label>Max utilizzi</label><input id="pMax" type="number" placeholder="illimitato"/></div>
         </div>
@@ -1689,7 +1691,7 @@ async function adminTabPromo(content) {
         ? '<div class="empty-state"><div class="ei">🎫</div><h3>NESSUN CODICE</h3></div>'
         : `<table>
             <thead><tr>
-              <th>Codice</th><th>Tipo</th><th>Valore</th><th>Utilizzi</th>
+              <th>Codice</th><th>Tipo</th><th>Valore</th><th>Min. ordine</th><th>Utilizzi</th>
               <th style="color:var(--green)">Fatturato</th><th>Scadenza</th><th>Popup</th><th>Stato</th><th>Azioni</th>
             </tr></thead>
             <tbody>${righe}</tbody>
@@ -1710,10 +1712,11 @@ async function salvaPromo() {
 
   const body = {
     codice, tipo,
-    valore:       document.getElementById('pValore')?.value || 0,
-    descrizione:  document.getElementById('pDesc')?.value,
-    data_scadenza:document.getElementById('pScadenza')?.value || null,
-    max_utilizzi: document.getElementById('pMax')?.value || null,
+    valore:        document.getElementById('pValore')?.value || 0,
+    descrizione:   document.getElementById('pDesc')?.value,
+    minimo_ordine: document.getElementById('pMinimo')?.value || 0,
+    data_scadenza: document.getElementById('pScadenza')?.value || null,
+    max_utilizzi:  document.getElementById('pMax')?.value || null,
     mostra_popup: document.getElementById('pMostraPopup')?.checked || false,
     popup_titolo: document.getElementById('pPopupTitolo')?.value,
     popup_testo:  document.getElementById('pPopupTesto')?.value,

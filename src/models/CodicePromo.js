@@ -8,6 +8,7 @@ const CodicePromo = sequelize.define("CodicePromo", {
   descrizione:         { type: DataTypes.STRING },
   attivo:              { type: DataTypes.BOOLEAN, defaultValue: true },
   data_scadenza:       { type: DataTypes.DATE },
+  minimo_ordine:       { type: DataTypes.DECIMAL(10,2), defaultValue: 0 }, // 0 = nessun minimo
   max_utilizzi:        { type: DataTypes.INTEGER },                         // null = illimitato
   utilizzi_attuali:    { type: DataTypes.INTEGER, defaultValue: 0 },
   fatturato_generato:  { type: DataTypes.DECIMAL(10,2), defaultValue: 0 }, // revenue tracciato
