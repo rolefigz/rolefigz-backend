@@ -18,7 +18,8 @@ const Ordine = sequelize.define("Ordine", {
   label_url:             { type: DataTypes.STRING },
   costo_spedizione:      { type: DataTypes.DECIMAL(10,2) },
   shippo_transaction_id: { type: DataTypes.STRING },
-  shippo_rate_id:        { type: DataTypes.STRING }
+  shippo_rate_id:        { type: DataTypes.STRING },
+  codice_promo:          { type: DataTypes.STRING(30) }
 }, { tableName: "ordenes" });
 
 Ordine.belongsTo(Utente, { foreignKey: "usuario_id", allowNull: true });

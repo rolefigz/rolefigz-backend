@@ -259,6 +259,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'promo') {
+    await adminTabPromo(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;
@@ -1603,6 +1608,145 @@ async function gestisciRichiestaBenchy(id, stato) {
     });
     if (!r.ok) throw new Error('Errore');
     adminTabBenchys(document.getElementById('adminContent'));
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+// ══ PROMO CODE ════════════════════════════════════════════════════════════════
+
+async function adminTabPromo(content) {
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API}/promo`, { headers: { Authorization: `Bearer ${token}` } });
+    const codici = await r.json();
+
+    const TIPO = { percentuale: '% Percentuale', fisso: '€ Fisso', spedizione_gratuita: '🚚 Spedizione' };
+
+    const righe = codici.map(c => `
+      <tr>
+        <td><strong style="letter-spacing:2px;font-family:'DM Mono',monospace">${c.codice}</strong></td>
+        <td>${TIPO[c.tipo] || c.tipo}</td>
+        <td>${c.tipo === 'spedizione_gratuita' ? '—' : c.tipo === 'percentuale' ? `${c.valore}%` : `€${parseFloat(c.valore).toFixed(2)}`}</td>
+        <td>${c.utilizzi_attuali}${c.max_utilizzi ? ` / ${c.max_utilizzi}` : ''}</td>
+        <td style="color:var(--green);font-weight:700">€${parseFloat(c.fatturato_generato||0).toFixed(2)}</td>
+        <td>${c.data_scadenza ? new Date(c.data_scadenza).toLocaleDateString('it-IT') : '∞'}</td>
+        <td>${c.mostra_popup ? '<span class="pill" style="background:var(--accent);color:#fff">POPUP</span>' : '—'}</td>
+        <td>
+          <span class="pill ${c.attivo ? '' : ''}" style="background:${c.attivo ? 'var(--green)' : 'var(--muted)'};color:#fff">${c.attivo ? 'ATTIVO' : 'OFF'}</span>
+        </td>
+        <td>
+          <button class="action-btn" onclick="togglePromo(${c.id},${!c.attivo})" style="margin-right:4px">${c.attivo ? 'DISATTIVA' : 'ATTIVA'}</button>
+          <button class="action-btn danger" onclick="eliminaPromo(${c.id})">✕</button>
+        </td>
+      </tr>`).join('');
+
+    content.innerHTML = `
+      <div class="admin-form-title">🎫 PROMO CODE</div>
+
+      <!-- Form crea codice -->
+      <div style="background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:24px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">NUOVO CODICE</div>
+        <div class="form-row">
+          <div class="field"><label>Codice *</label><input id="pCodice" type="text" placeholder="SUMMER10" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
+          <div class="field"><label>Tipo *</label>
+            <select id="pTipo" onchange="togglePromoValore()">
+              <option value="percentuale">% Percentuale (es. 10%)</option>
+              <option value="fisso">€ Fisso (es. €5)</option>
+              <option value="spedizione_gratuita">🚚 Spedizione gratuita</option>
+            </select>
+          </div>
+          <div class="field" id="pValoreWrap"><label>Valore *</label><input id="pValore" type="number" step="0.01" placeholder="10"/></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Descrizione</label><input id="pDesc" type="text" placeholder="Codice influencer estate 2026"/></div>
+          <div class="field"><label>Scadenza</label><input id="pScadenza" type="date"/></div>
+          <div class="field"><label>Max utilizzi</label><input id="pMax" type="number" placeholder="illimitato"/></div>
+        </div>
+
+        <!-- Popup -->
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">POPUP PROMOZIONALE (opzionale)</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <input type="checkbox" id="pMostraPopup" style="width:auto;margin:0" onchange="document.getElementById('pPopupFields').style.display=this.checked?'':'none'"/>
+            <label for="pMostraPopup" style="margin:0;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer">Mostra popup sul sito</label>
+          </div>
+          <div id="pPopupFields" style="display:none">
+            <div class="form-row">
+              <div class="field"><label>Titolo popup</label><input id="pPopupTitolo" type="text" placeholder="🎉 OFFERTA ESCLUSIVA"/></div>
+              <div class="field"><label>Testo popup</label><input id="pPopupTesto" type="text" placeholder="Solo per i nostri follower!"/></div>
+              <div class="field"><label>Colore sfondo</label><input id="pPopupColore" type="color" value="#1a1a1a" style="height:42px;padding:4px"/></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="salvaPromo()" style="margin-top:8px">+ CREA CODICE</button>
+        <div id="promoAdminMsg"></div>
+      </div>
+
+      <!-- Tabella codici -->
+      ${!codici.length
+        ? '<div class="empty-state"><div class="ei">🎫</div><h3>NESSUN CODICE</h3></div>'
+        : `<table>
+            <thead><tr>
+              <th>Codice</th><th>Tipo</th><th>Valore</th><th>Utilizzi</th>
+              <th style="color:var(--green)">Fatturato</th><th>Scadenza</th><th>Popup</th><th>Stato</th><th>Azioni</th>
+            </tr></thead>
+            <tbody>${righe}</tbody>
+          </table>`}`;
+  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+function togglePromoValore() {
+  const tipo = document.getElementById('pTipo')?.value;
+  const wrap = document.getElementById('pValoreWrap');
+  if (wrap) wrap.style.display = tipo === 'spedizione_gratuita' ? 'none' : '';
+}
+
+async function salvaPromo() {
+  const codice = document.getElementById('pCodice')?.value.trim().toUpperCase();
+  const tipo   = document.getElementById('pTipo')?.value;
+  if (!codice || !tipo) { showMsg('promoAdminMsg', 'Codice e tipo obbligatori', 'err'); return; }
+
+  const body = {
+    codice, tipo,
+    valore:       document.getElementById('pValore')?.value || 0,
+    descrizione:  document.getElementById('pDesc')?.value,
+    data_scadenza:document.getElementById('pScadenza')?.value || null,
+    max_utilizzi: document.getElementById('pMax')?.value || null,
+    mostra_popup: document.getElementById('pMostraPopup')?.checked || false,
+    popup_titolo: document.getElementById('pPopupTitolo')?.value,
+    popup_testo:  document.getElementById('pPopupTesto')?.value,
+    popup_colore: document.getElementById('pPopupColore')?.value || '#1a1a1a',
+  };
+
+  try {
+    const r = await fetch(`${API}/promo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    showMsg('promoAdminMsg', `✅ Codice "${data.codice}" creato!`, 'ok');
+    adminTabPromo(document.getElementById('adminContent'));
+  } catch(e) { showMsg('promoAdminMsg', e.message, 'err'); }
+}
+
+async function togglePromo(id, attivo) {
+  try {
+    await fetch(`${API}/promo/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ attivo })
+    });
+    adminTabPromo(document.getElementById('adminContent'));
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function eliminaPromo(id) {
+  if (!confirm('Eliminare questo codice promo?')) return;
+  try {
+    await fetch(`${API}/promo/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    adminTabPromo(document.getElementById('adminContent'));
   } catch(e) { alert('Errore: ' + e.message); }
 }
 

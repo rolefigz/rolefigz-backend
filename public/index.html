@@ -364,6 +364,17 @@
         <div id="spedizioneOpzioni"></div>
         <div id="benchysCheckoutWrap"></div>
         <div class="field" style="margin-top:12px"><label>Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
+
+        <!-- Codice Promo -->
+        <div style="margin-top:14px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">CODICE PROMOZIONALE</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="promoInput" placeholder="CODICE" style="text-transform:uppercase;letter-spacing:2px;flex:1"
+              oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')applicaPromo()"/>
+            <button type="button" class="action-btn" onclick="applicaPromo()" id="promoBtnApplica">APPLICA</button>
+          </div>
+          <div id="promoMsg" style="margin-top:6px"></div>
+        </div>
       </div>
 
       <div class="chk-box">
@@ -502,6 +513,14 @@
   </div>
 </div>
 
+<!-- ══ POPUP PROMO ══ -->
+<div id="promoPopupOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center" onclick="chiudiPromoPopup()">
+  <div id="promoPopupBox" onclick="event.stopPropagation()" style="max-width:420px;width:90%;padding:36px 32px;position:relative;font-family:'DM Mono',monospace">
+    <button onclick="chiudiPromoPopup()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:inherit;opacity:.6">✕</button>
+    <div id="promoPopupContent"></div>
+  </div>
+</div>
+
 <!-- ══ CHAT FAB ══ -->
 <button class="chat-fab" id="chatFab" onclick="alternaChat()" aria-label="Supporto">
   <iconify-icon icon="mdi:chat-outline" width="22"></iconify-icon>
@@ -563,6 +582,7 @@
 
 <script src="/js/config.js"></script>
 <script src="/js/punti.js"></script>
+<script src="/js/promo.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/cart.js"></script>

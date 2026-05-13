@@ -87,6 +87,11 @@ function aggiornaRiepilogoOrdine() {
   if (benchysRiscattati.tipo === 'spedizione_gratuita') spedCosto = 0;
   if (benchysRiscattati.tipo === 'sconto') scontoExtra = benchysRiscattati.sconto;
 
+  // Sconto codice promo
+  const promo = typeof promoApplicato !== 'undefined' ? promoApplicato : null;
+  if (promo?.spedizioneGratis) spedCosto = 0;
+  if (promo?.scontoEuro)       scontoExtra += promo.scontoEuro;
+
   const totale = Math.max(0, prodTotale + spedCosto - scontoExtra);
 
   document.getElementById('orderSummary').innerHTML = `
@@ -101,7 +106,9 @@ function aggiornaRiepilogoOrdine() {
       </span>
       ${benchysRiscattati.tipo==='spedizione_gratuita' ? '<span style="color:var(--green);font-weight:700">GRATIS 🚢</span>' : ''}
     </div>
-    ${scontoExtra > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Sconto Benchys 🚢</span><span>-€${scontoExtra.toFixed(2)}</span></div>` : ''}
+    ${benchysRiscattati.sconto > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Sconto Benchys 🚢</span><span>-€${benchysRiscattati.sconto.toFixed(2)}</span></div>` : ''}
+    ${promo?.scontoEuro > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Codice "${promo.codice || ''}"</span><span>-€${promo.scontoEuro.toFixed(2)}</span></div>` : ''}
+    ${promo?.spedizioneGratis ? `<div class="chk-summary-row" style="color:var(--green)"><span>Codice "${promo.codice || ''}"</span><span>🚚 GRATIS</span></div>` : ''}
     <div class="chk-total">
       <span class="chk-total-label">TOTALE</span>
       <span class="chk-total-val">€${totale.toFixed(2)}</span>
@@ -183,6 +190,7 @@ async function confermaOrdine() {
         telefono:              ((document.getElementById('chkPrefijo')?.value || '') + ' ' + (document.getElementById('chkTelNumero')?.value || '')).trim(),
         direccion,
         notas:                 document.getElementById('chkNotas').value,
+        codice_promo:          (typeof promoApplicato !== 'undefined' && promoApplicato) ? promoApplicato.codice : null,
         costo_spedizione:      spedizioneSelezionata.prezzo,
         carrier:               spedizioneSelezionata.corriere,
         shipping_service:      spedizioneSelezionata.servizio,

@@ -7,7 +7,7 @@ const { emailConfirmacionPedido, emailNuevoPedidoAdmin } = require("../utils/mai
 const crearOrden = async (req, res) => {
   const t = await require("../config/db").transaction();
   try {
-    const { nombre_cliente, email_cliente, telefono, direccion, notas, items } = req.body;
+    const { nombre_cliente, email_cliente, telefono, direccion, notas, items, codice_promo } = req.body;
 
     let usuario_id = null;
     const authHeader = req.headers["authorization"];
@@ -40,9 +40,25 @@ const crearOrden = async (req, res) => {
       dettagli.push({ prodotto, cantidad: item.cantidad, precio_unidad, subtotal: subtotale, variante: item.variante || null, foto_cliente: item.foto_cliente || null, data_consegna: item.data_consegna || null, supplemento_express: item.supplemento_express || 0 });
     }
 
+    // Applica codice promo se presente
+    let scontoPromo = 0;
+    let spedizioneGratis = false;
+    if (codice_promo) {
+      try {
+        const { CodicePromo } = require("../models");
+        const promo = await CodicePromo.findOne({ where: { codice: codice_promo.toUpperCase().trim(), attivo: true } });
+        if (promo) {
+          if (promo.tipo === "percentuale") scontoPromo = (totale * parseFloat(promo.valore)) / 100;
+          else if (promo.tipo === "fisso")  scontoPromo = Math.min(parseFloat(promo.valore), totale);
+          else if (promo.tipo === "spedizione_gratuita") spedizioneGratis = true;
+        }
+      } catch(e) { console.error("Promo apply:", e.message); }
+    }
+
     // Crea ordine
     const ordine = await Ordine.create({
-      nombre_cliente, email_cliente, telefono, direccion, notas, total: totale, usuario_id
+      nombre_cliente, email_cliente, telefono, direccion, notas, total: totale,
+      usuario_id, codice_promo: codice_promo || null
     }, { transaction: t });
 
     // Crea dettagli e decrementa stock
@@ -139,6 +155,14 @@ const cambiarEstado = async (req, res) => {
     if (!ordine) return res.status(404).json({ error: "Ordine non trovato" });
 
     await ordine.update({ estado });
+    // Traccia fatturato codice promo alla conferma
+    if (estado === "confirmado" && ordine.codice_promo) {
+      try {
+        const { registraUtilizzo } = require("./promoController");
+        await registraUtilizzo(ordine.codice_promo, ordine.total);
+      } catch(e) { console.error("Promo tracking:", e.message); }
+    }
+
     // Assegna Benchys quando l'ordine viene confermato
     if (estado === "confirmado" && ordine.estado !== "confirmado") {
       try {
