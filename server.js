@@ -2,7 +2,7 @@ const express         = require("express");
 const path            = require("path");
 const cors            = require("cors");
 const helmet          = require("helmet");
-const { sequelize }   = require("./src/models");
+const { sequelize, PuntiTransazione, CodicePromo } = require("./src/models");
 const { corsOptions, limitGeneral, limitAuth, limitAPI } = require("./src/middleware/sicurezza");
 const authRoutes        = require("./src/routers/authRoutes");
 const prodottiRoutes    = require("./src/routers/prodottiRoutes");
@@ -76,5 +76,13 @@ app.listen(PORT, () => {
   sequelize
     .sync({ alter: true })
     .then(() => console.log("✅ Database sincronizzato"))
-    .catch(err => console.error("❌ Errore DB:", err.message));
+    .catch(err => console.error("❌ Errore DB sync:", err.message));
+
+  // Crea tabelle nuove se non esistono (sicurezza extra)
+  PuntiTransazione.sync({ force: false })
+    .then(() => console.log("✅ punti_transazioni OK"))
+    .catch(err => console.error("❌ punti_transazioni:", err.message));
+  CodicePromo.sync({ force: false })
+    .then(() => console.log("✅ codici_promo OK"))
+    .catch(err => console.error("❌ codici_promo:", err.message));
 });
