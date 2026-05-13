@@ -1,4 +1,5 @@
 let spedizioneSelezionata = null;
+let benchysRiscattati = { tipo: null, sconto: 0 };
 
 function apriCheckout() {
   chiudiCarrello();
@@ -12,7 +13,9 @@ function apriCheckout() {
     prefisso.dataset.set = '1';
   }
   spedizioneSelezionata = null;
+  benchysRiscattati = { tipo: null, sconto: 0 };
   renderItemsCheckout();
+  renderBenchysCheckout();
   mostraVista('checkout');
   history.pushState({ tipo: 'checkout' }, 'Checkout — RoleFigz', '/checkout');
   calcolaSpedizioneAuto();
@@ -78,7 +81,13 @@ function calcolaSpedizioneAuto() {
 
 function aggiornaRiepilogoOrdine() {
   const prodTotale = totaleCarrello();
-  const spedCosto  = spedizioneSelezionata ? spedizioneSelezionata.prezzo : 0;
+  let spedCosto    = spedizioneSelezionata ? spedizioneSelezionata.prezzo : 0;
+  let scontoExtra  = 0;
+
+  if (benchysRiscattati.tipo === 'spedizione_gratuita') spedCosto = 0;
+  if (benchysRiscattati.tipo === 'sconto') scontoExtra = benchysRiscattati.sconto;
+
+  const totale = Math.max(0, prodTotale + spedCosto - scontoExtra);
 
   document.getElementById('orderSummary').innerHTML = `
     <div class="chk-summary-row">
@@ -87,14 +96,59 @@ function aggiornaRiepilogoOrdine() {
     </div>
     <div class="chk-summary-row">
       <span>${spedizioneSelezionata ? 'Spedizione standard' : 'Spedizione'}</span>
-      <span style="color:${spedizioneSelezionata ? 'inherit' : 'var(--muted)'}">
+      <span style="${benchysRiscattati.tipo==='spedizione_gratuita' ? 'text-decoration:line-through;color:var(--muted)' : ''}">
         ${spedizioneSelezionata ? '€10.00' : '—'}
       </span>
+      ${benchysRiscattati.tipo==='spedizione_gratuita' ? '<span style="color:var(--green);font-weight:700">GRATIS 🚢</span>' : ''}
     </div>
+    ${scontoExtra > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Sconto Benchys 🚢</span><span>-€${scontoExtra.toFixed(2)}</span></div>` : ''}
     <div class="chk-total">
       <span class="chk-total-label">TOTALE</span>
-      <span class="chk-total-val">€${(prodTotale + spedCosto).toFixed(2)}</span>
+      <span class="chk-total-val">€${totale.toFixed(2)}</span>
     </div>`;
+}
+
+function renderBenchysCheckout() {
+  const wrap = document.getElementById('benchysCheckoutWrap');
+  if (!wrap || !token || !utente) return;
+  const saldo = typeof benchySaldo !== 'undefined' ? benchySaldo : 0;
+  const minSpediz = typeof benchyConfig !== 'undefined' ? benchyConfig.spedizione_minimo : 150;
+
+  wrap.innerHTML = `
+    <div style="border:1px solid var(--accent);padding:14px;margin-bottom:12px;background:rgba(193,127,58,.05)">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);margin-bottom:10px">🚢 HAI ${saldo} BENCHYS</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${saldo >= minSpediz ? `
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px">
+            <input type="radio" name="benchyRiscatto" value="spedizione_gratuita" onchange="applicaBenchys(this.value)"/>
+            Spedizione gratuita (−${minSpediz} Benchys)
+          </label>` : `
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Servono ${minSpediz} Benchys per la spedizione gratuita (ne hai ${saldo})</div>`}
+        ${saldo >= 100 ? `
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px">
+            <input type="radio" name="benchyRiscatto" value="sconto" onchange="applicaBenchys(this.value)"/>
+            Sconto €${(Math.floor(saldo/100)*1).toFixed(2)} (−${Math.floor(saldo/100)*100} Benchys)
+          </label>` : ''}
+        ${(saldo >= minSpediz || saldo >= 100) ? `
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px">
+            <input type="radio" name="benchyRiscatto" value="nessuno" onchange="applicaBenchys(this.value)" checked/>
+            Non usare Benchys
+          </label>` : ''}
+      </div>
+    </div>`;
+}
+
+function applicaBenchys(tipo) {
+  const saldo = typeof benchySaldo !== 'undefined' ? benchySaldo : 0;
+  if (tipo === 'spedizione_gratuita') {
+    benchysRiscattati = { tipo: 'spedizione_gratuita', sconto: 0 };
+  } else if (tipo === 'sconto') {
+    const benchyUsati = Math.floor(saldo / 100) * 100;
+    benchysRiscattati = { tipo: 'sconto', sconto: (benchyUsati / 100) * 1.00 };
+  } else {
+    benchysRiscattati = { tipo: null, sconto: 0 };
+  }
+  aggiornaRiepilogoOrdine();
 }
 
 async function confermaOrdine() {

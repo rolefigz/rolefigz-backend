@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(verificaToken, 5 * 60 * 1000);
   verificaNonLettiAdmin();
   setInterval(verificaNonLettiAdmin, 20000);
+  verificaNonLettiAdminBenchys();
+  setInterval(verificaNonLettiAdminBenchys, 30000);
   const guard = document.getElementById('adminGuard');
   if (guard) guard.style.display = 'none';
   document.documentElement.style.display = '';

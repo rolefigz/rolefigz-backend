@@ -139,6 +139,16 @@ const cambiarEstado = async (req, res) => {
     if (!ordine) return res.status(404).json({ error: "Ordine non trovato" });
 
     await ordine.update({ estado });
+    // Assegna Benchys quando l'ordine viene confermato
+    if (estado === "confirmado" && ordine.estado !== "confirmado") {
+      try {
+        const { assegnaPunti, BENCHY } = require("./puntiController");
+        const euroSpesi = parseFloat(ordine.total) - parseFloat(ordine.costo_spedizione || 0);
+        const punti = Math.floor(euroSpesi * BENCHY.acquisto_per_euro);
+        if (punti > 0)
+          await assegnaPunti(ordine.usuario_id, "acquisto", punti, `Ordine #${ordine.id} confermato`, ordine.id);
+      } catch(e) { console.error("Punti ordine:", e.message); }
+    }
     res.json({ mensaje: "Stato aggiornato", estado: ordine.estado });
   } catch (err) {
     res.status(500).json({ error: err.message });

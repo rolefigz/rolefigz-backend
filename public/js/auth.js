@@ -241,7 +241,14 @@ function impostaSessione() {
   setTxt('perfilNombre', utente.nombre || '');
   setTxt('perfilEmail',  utente.email  || '');
   document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = 'none'; });
-  if (utente.rol !== 'admin') _impostaVisibilitaFabChat(true);
+  if (utente.rol !== 'admin') {
+    _impostaVisibilitaFabChat(true);
+    // Carica Benchys
+    if (typeof caricaBenchys === 'function') caricaBenchys().then(() => {
+      const sidebar = document.getElementById('benchySaldoSidebar');
+      if (sidebar) sidebar.textContent = benchySaldo + ' 🚢';
+    });
+  }
   if (utente.rol === 'admin') {
     const bar = document.getElementById('statusBar');
     if (bar) bar.style.display = 'flex';

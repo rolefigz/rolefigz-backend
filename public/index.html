@@ -43,6 +43,7 @@
       <span class="cart-badge" id="cartBadge"></span>
     </button>
     <button class="hn-login" onclick="apriAuth('login')" id="headerLoginBtn">ACCEDI</button>
+    <button class="hn-login" id="benchyBanner" onclick="mostraVista('perfil');tabProfilo('benchys',document.getElementById('benchysMenuTab'))" style="display:none;color:var(--accent);font-weight:700"></button>
 
     <!-- Avatar dropdown -->
     <div class="avatar-wrap" id="avatarWrap" style="display:none">
@@ -287,6 +288,11 @@
         <div class="perfil-email" id="perfilEmail">—</div>
         <div class="perfil-menu-item active" onclick="tabProfilo('ordenes',this)"><iconify-icon icon="mdi:clipboard-list-outline" width="15"></iconify-icon> <span>I miei ordini</span></div>
         <div class="perfil-menu-item" onclick="tabProfilo('datos',this)"><iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> <span>I miei dati</span></div>
+        <div class="perfil-menu-item" onclick="tabProfilo('benchys',this)" id="benchysMenuTab">
+          <iconify-icon icon="mdi:sail-boat" width="15"></iconify-icon>
+          <span>Benchys</span>
+          <span id="benchySaldoSidebar" style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)"></span>
+        </div>
       </div>
       <div class="perfil-content" id="perfilContent"><div class="loading">CARICAMENTO</div></div>
     </div>
@@ -356,6 +362,7 @@
           </select>
         </div>
         <div id="spedizioneOpzioni"></div>
+        <div id="benchysCheckoutWrap"></div>
         <div class="field" style="margin-top:12px"><label>Note</label><textarea id="chkNotas" placeholder="Istruzioni speciali..."></textarea></div>
       </div>
 
@@ -555,6 +562,7 @@
 </div>
 
 <script src="/js/config.js"></script>
+<script src="/js/punti.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/cart.js"></script>

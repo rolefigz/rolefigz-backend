@@ -16,6 +16,7 @@ const analiticheRoutes  = require("./src/routers/analiticheRoutes");
 const ticketsRoutes      = require("./src/routers/ticketsRoutes");
 const spedizioneRoutes   = require("./src/routers/spedizioneRoutes");
 const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
+const puntiRoutes        = require("./src/routers/puntiRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/analytics",  limitAPI,  analiticheRoutes);
 app.use("/api/tickets",    limitAPI,  ticketsRoutes);
 app.use("/api/spedizione", limitAPI,  spedizioneRoutes);
 app.use("/api",           limitAPI,  gadget3dRoutes);
+app.use("/api/punti",     limitAPI,  puntiRoutes);
 
 // ── Route SPA — blog, prodotti, checkout ─────────────────────────────────
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));

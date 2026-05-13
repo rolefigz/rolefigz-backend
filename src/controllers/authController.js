@@ -34,6 +34,11 @@ const verificarCodigo = async (req, res) => {
     if (!utente.codigoExpira || new Date() > utente.codigoExpira)
       return res.status(400).json({ error: "Codice scaduto. Registrati di nuovo" });
     await utente.update({ verificado: true, codigoVerificacion: null, codigoExpira: null });
+    // Assegna Benchys di benvenuto
+    try {
+      const { assegnaPunti } = require("./puntiController");
+      await assegnaPunti(utente.id, "registrazione", 30, "Benvenuto su RoleFigz! 🚢");
+    } catch(e) { console.error("Punti registrazione:", e.message); }
     const token = jwt.sign(
       { id: utente.id, email: utente.email, rol: utente.rol, nombre: utente.nombre },
       process.env.JWT_SECRET,

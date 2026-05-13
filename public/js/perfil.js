@@ -130,6 +130,12 @@ async function tabProfilo(tab, el) {
         <div id="perfilMsg"></div>`;
     } catch { content.innerHTML = '<div class="msg err">Error</div>'; }
   }
+
+  if (tab === 'benchys') {
+    content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+    await caricaBenchys();
+    content.innerHTML = renderTabBenchys();
+  }
 }
 
 async function salvaProfilo() {

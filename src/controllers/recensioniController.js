@@ -93,6 +93,13 @@ const moderarResena = async (req, res) => {
     const recensione = await Recensione.findByPk(req.params.id);
     if (!recensione) return res.status(404).json({ error: "Recensione non trovata" });
     await recensione.update({ verificado: req.body.verificado });
+    // Assegna Benchys quando la recensione viene approvata
+    if (req.body.verificado && !recensione.verificado && recensione.usuario_id) {
+      try {
+        const { assegnaPunti } = require("./puntiController");
+        await assegnaPunti(recensione.usuario_id, "recensione", 20, `Recensione approvata — prodotto #${recensione.producto_id}`, recensione.id);
+      } catch(e) { console.error("Punti recensione:", e.message); }
+    }
     res.json({ mensaje: "Stato aggiornato", resena: recensione });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };

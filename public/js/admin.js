@@ -254,6 +254,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'benchys') {
+    await adminTabBenchys(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;
@@ -703,10 +708,8 @@ async function creaProdottoAdmin() {
         body: fd
       });
     }
-    showMsg('productoMsg', `✅ "${data.producto.nombre}" creato`, 'ok');
     if (typeof caricaProdotti === 'function') caricaProdotti();
-    ['pNombre', 'pPrecio', 'pDesc', 'pStock'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('imgWrap').style.display = 'none';
+    adminGestisciProdotto(data.producto.id);
   } catch(e) { showMsg('productoMsg', e.message, 'err'); }
 }
 
@@ -1544,4 +1547,72 @@ async function moderaRecensione(id, verificato) {
     if (!r.ok) throw new Error('Errore');
     adminTabRecensioni(document.getElementById('adminContent'));
   } catch(e) { alert('Errore: ' + e.message); }
+}
+
+// ══ BENCHYS ═══════════════════════════════════════════════════════════════════
+
+async function adminTabBenchys(content) {
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API}/punti/admin/pending`, { headers: { Authorization: `Bearer ${token}` } });
+    const pending = await r.json();
+
+    // Aggiorna badge
+    const badge = document.getElementById('adminBenchysBadge');
+    if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
+
+    if (!pending.length) {
+      content.innerHTML = `
+        <div class="admin-form-title">🚢 BENCHYS — RICHIESTE</div>
+        <div class="empty-state"><div class="ei">🚢</div><h3>NESSUNA RICHIESTA IN ATTESA</h3></div>`;
+      return;
+    }
+
+    const TIPO_LABEL = { instagram_follow: '📸 Follow Instagram @rolefigz' };
+
+    content.innerHTML = `
+      <div class="admin-form-title">🚢 BENCHYS — RICHIESTE IN ATTESA (${pending.length})</div>
+      <table>
+        <thead><tr><th>Utente</th><th>Azione</th><th>Punti</th><th>Data</th><th>Azioni</th></tr></thead>
+        <tbody>
+          ${pending.map(t => `
+            <tr>
+              <td>
+                <strong>${t.Utente?.nombre || '—'}</strong><br>
+                <span style="font-size:10px;color:var(--muted)">${t.Utente?.email || ''}</span>
+              </td>
+              <td>${TIPO_LABEL[t.tipo] || t.tipo}</td>
+              <td><strong style="color:var(--green)">+${t.punti} 🚢</strong></td>
+              <td style="font-size:10px;color:var(--muted)">${new Date(t.createdAt).toLocaleDateString('it-IT')}</td>
+              <td>
+                <button class="action-btn" onclick="gestisciRichiestaBenchy(${t.id},'approvato')" style="margin-right:6px">✓ APPROVA</button>
+                <button class="action-btn danger" onclick="gestisciRichiestaBenchy(${t.id},'rifiutato')">✕ RIFIUTA</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+async function gestisciRichiestaBenchy(id, stato) {
+  try {
+    const r = await fetch(`${API}/punti/admin/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ stato })
+    });
+    if (!r.ok) throw new Error('Errore');
+    adminTabBenchys(document.getElementById('adminContent'));
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function verificaNonLettiAdminBenchys() {
+  if (!token) return;
+  try {
+    const r = await fetch(`${API}/punti/admin/pending`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return;
+    const pending = await r.json();
+    const badge = document.getElementById('adminBenchysBadge');
+    if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
+  } catch(e) {}
 }
