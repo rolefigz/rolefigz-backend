@@ -246,7 +246,7 @@ function impostaSessione() {
     // Carica Benchys
     if (typeof caricaBenchys === 'function') caricaBenchys().then(() => {
       const sidebar = document.getElementById('benchySaldoSidebar');
-      if (sidebar) sidebar.textContent = benchySaldo + ' 🚢';
+      if (sidebar) sidebar.innerHTML = benchySaldo + ' <img src="/assets/benchy.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle"/>';
     });
   }
   if (utente.rol === 'admin') {

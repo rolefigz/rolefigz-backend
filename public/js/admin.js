@@ -1568,15 +1568,15 @@ async function adminTabBenchys(content) {
 
     if (!pending.length) {
       content.innerHTML = `
-        <div class="admin-form-title">🚢 BENCHYS — RICHIESTE</div>
-        <div class="empty-state"><div class="ei">🚢</div><h3>NESSUNA RICHIESTA IN ATTESA</h3></div>`;
+        <div class="admin-form-title"><img src="/assets/benchy.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE</div>
+        <div class="empty-state"><div class="ei"><img src="/assets/benchy.png" style="width:48px;height:48px;object-fit:contain;opacity:.5"/></div><h3>NESSUNA RICHIESTA IN ATTESA</h3></div>`;
       return;
     }
 
     const TIPO_LABEL = { instagram_follow: '📸 Follow Instagram @rolefigz' };
 
     content.innerHTML = `
-      <div class="admin-form-title">🚢 BENCHYS — RICHIESTE IN ATTESA (${pending.length})</div>
+      <div class="admin-form-title"><img src="/assets/benchy.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE IN ATTESA (${pending.length})</div>
       <table>
         <thead><tr><th>Utente</th><th>Azione</th><th>Punti</th><th>Data</th><th>Azioni</th></tr></thead>
         <tbody>
@@ -1587,7 +1587,7 @@ async function adminTabBenchys(content) {
                 <span style="font-size:10px;color:var(--muted)">${t.Utente?.email || ''}</span>
               </td>
               <td>${TIPO_LABEL[t.tipo] || t.tipo}</td>
-              <td><strong style="color:var(--green)">+${t.punti} 🚢</strong></td>
+              <td><strong style="color:var(--green)">+${t.punti} <img src="/assets/benchy.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle"/></strong></td>
               <td style="font-size:10px;color:var(--muted)">${new Date(t.createdAt).toLocaleDateString('it-IT')}</td>
               <td>
                 <button class="action-btn" onclick="gestisciRichiestaBenchy(${t.id},'approvato')" style="margin-right:6px">✓ APPROVA</button>

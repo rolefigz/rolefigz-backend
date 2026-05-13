@@ -104,9 +104,9 @@ function aggiornaRiepilogoOrdine() {
       <span style="${benchysRiscattati.tipo==='spedizione_gratuita' ? 'text-decoration:line-through;color:var(--muted)' : ''}">
         ${spedizioneSelezionata ? '€10.00' : '—'}
       </span>
-      ${benchysRiscattati.tipo==='spedizione_gratuita' ? '<span style="color:var(--green);font-weight:700">GRATIS 🚢</span>' : ''}
+      ${benchysRiscattati.tipo==='spedizione_gratuita' ? '<span style="color:var(--green);font-weight:700">GRATIS <img src="/assets/benchy.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle"/></span>' : ''}
     </div>
-    ${benchysRiscattati.sconto > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Sconto Benchys 🚢</span><span>-€${benchysRiscattati.sconto.toFixed(2)}</span></div>` : ''}
+    ${benchysRiscattati.sconto > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Sconto Benchys <img src="/assets/benchy.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle"/></span><span>-€${benchysRiscattati.sconto.toFixed(2)}</span></div>` : ''}
     ${promo?.scontoEuro > 0 ? `<div class="chk-summary-row" style="color:var(--green)"><span>Codice "${promo.codice || ''}"</span><span>-€${promo.scontoEuro.toFixed(2)}</span></div>` : ''}
     ${promo?.spedizioneGratis ? `<div class="chk-summary-row" style="color:var(--green)"><span>Codice "${promo.codice || ''}"</span><span>🚚 GRATIS</span></div>` : ''}
     <div class="chk-total">
@@ -123,7 +123,7 @@ function renderBenchysCheckout() {
 
   wrap.innerHTML = `
     <div style="border:1px solid var(--accent);padding:14px;margin-bottom:12px;background:rgba(193,127,58,.05)">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);margin-bottom:10px">🚢 HAI ${saldo} BENCHYS</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px"><img src="/assets/benchy.png" style="width:13px;height:13px;object-fit:contain"/> HAI ${saldo} BENCHYS</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${saldo >= minSpediz ? `
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px">
