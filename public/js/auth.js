@@ -91,6 +91,9 @@ async function registrati() {
   if (!nome || !email || !pass || !pass2) {
     showMsg('registerMsg', 'Tutti i campi sono obbligatori', 'err'); return;
   }
+  if (!document.getElementById('regTermini')?.checked) {
+    showMsg('registerMsg', 'Devi accettare i Termini e Condizioni per continuare', 'err'); return;
+  }
   if (pass !== pass2) {
     showMsg('registerMsg', 'Le password non coincidono', 'err'); return;
   }
