@@ -11,6 +11,7 @@ function alternaChat() {
 }
 
 function apriChat() {
+  if (!token) { apriAuth('login'); return; }
   document.getElementById('chatPanel').classList.add('on');
   chatMostraLista();
   caricaMieiTicket();

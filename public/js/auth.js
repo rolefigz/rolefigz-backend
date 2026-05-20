@@ -214,7 +214,7 @@ async function reimpostaPassword() {
 
 function _impostaVisibilitaFabChat(visibile) {
   const fab = document.getElementById('chatFab');
-  if (fab) fab.classList.toggle('visible', visibile);
+  if (fab) fab.classList.add('visible');
   if (visibile) avviaPollingFab();
   else { fermaPollingFab(); fermaPollingChat(); }
 }
