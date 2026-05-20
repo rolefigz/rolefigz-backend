@@ -2,6 +2,35 @@ let chatTicketCorrente = null;
 let chatPollingInterval = null;
 let chatFabInterval    = null;
 
+// ── FAB guest ────────────────────────────────────────────────────────────────
+
+function mostrarFabGuest() {
+  const fab = document.getElementById('chatFab');
+  if (fab) fab.classList.add('visible');
+  fermaPollingFab();
+  avviaPollingFabGuest();
+}
+
+async function avviaPollingFabGuest() {
+  fermaPollingFab();
+  await aggiornaBadgeFabGuest();
+  chatFabInterval = setInterval(aggiornaBadgeFabGuest, 30000);
+}
+
+async function aggiornaBadgeFabGuest() {
+  const guestToken = localStorage.getItem('rfGuestToken');
+  if (!guestToken) return;
+  try {
+    const r = await fetch(`${API}/tickets/guest/${guestToken}/unread`);
+    const data = await r.json();
+    const badge = document.getElementById('chatFabBadge');
+    if (badge) {
+      badge.textContent = data.count || '';
+      badge.classList.toggle('on', data.count > 0);
+    }
+  } catch {}
+}
+
 // ── FAB & Pannello ───────────────────────────────────────────────────────────
 
 function alternaChat() {
@@ -12,9 +41,21 @@ function alternaChat() {
 
 function apriChat() {
   document.getElementById('chatPanel').classList.add('on');
-  chatMostraLista();
-  caricaMieiTicket();
-  avviaPollingFab();
+  if (token) {
+    chatMostraLista();
+    caricaMieiTicket();
+    avviaPollingFab();
+  } else {
+    const guestToken = localStorage.getItem('rfGuestToken');
+    if (guestToken) {
+      chatTicketCorrente = guestToken;
+      chatMostraConversazione();
+      caricaMessaggiGuest(guestToken);
+      avviaPollingChatGuest(guestToken);
+    } else {
+      chatMostraNuovoForm();
+    }
+  }
 }
 
 function chiudiChat() {
@@ -37,7 +78,16 @@ function chatMostraNuovoForm() {
   document.getElementById('chatConvView').classList.remove('on');
   document.getElementById('chatAsunto').value    = '';
   document.getElementById('chatPrimerMsg').value = '';
-  setTimeout(() => document.getElementById('chatAsunto').focus(), 50);
+  const guestFields = document.getElementById('chatGuestFields');
+  if (guestFields) guestFields.style.display = token ? 'none' : '';
+  const backBtn = document.getElementById('chatNewBackBtn');
+  if (backBtn) backBtn.style.display = token ? '' : 'none';
+  setTimeout(() => {
+    const first = token
+      ? document.getElementById('chatAsunto')
+      : document.getElementById('chatGuestNombre');
+    if (first) first.focus();
+  }, 50);
 }
 
 function chatMostraConversazione() {
@@ -46,7 +96,7 @@ function chatMostraConversazione() {
   document.getElementById('chatConvView').classList.add('on');
 }
 
-// ── Lista ticket ─────────────────────────────────────────────────────────────
+// ── Lista ticket (solo utenti autenticati) ───────────────────────────────────
 
 async function caricaMieiTicket() {
   const el = document.getElementById('chatTicketsList');
@@ -72,7 +122,7 @@ async function caricaMieiTicket() {
   } catch {}
 }
 
-// ── Conversazione ─────────────────────────────────────────────────────────────
+// ── Conversazione (utenti autenticati) ───────────────────────────────────────
 
 async function apriTicket(id) {
   chatTicketCorrente = id;
@@ -84,8 +134,12 @@ async function apriTicket(id) {
 function tornaListaChat() {
   chatTicketCorrente = null;
   fermaPollingChat();
-  chatMostraLista();
-  caricaMieiTicket();
+  if (token) {
+    chatMostraLista();
+    caricaMieiTicket();
+  } else {
+    chiudiChat();
+  }
 }
 
 async function caricaMessaggi(id) {
@@ -98,6 +152,25 @@ async function caricaMessaggi(id) {
     aggiornaBadgeFab();
   } catch {}
 }
+
+// ── Conversazione (guest) ────────────────────────────────────────────────────
+
+async function caricaMessaggiGuest(guestToken) {
+  try {
+    const r = await fetch(`${API}/tickets/guest/${guestToken}`);
+    if (!r.ok) { localStorage.removeItem('rfGuestToken'); chiudiChat(); return; }
+    const data = await r.json();
+    renderMessaggi(data.mensajes, data.ticket);
+    aggiornaBadgeFabGuest();
+  } catch {}
+}
+
+function avviaPollingChatGuest(guestToken) {
+  fermaPollingChat();
+  chatPollingInterval = setInterval(() => caricaMessaggiGuest(guestToken), 4000);
+}
+
+// ── Render messaggi (condiviso) ───────────────────────────────────────────────
 
 function renderMessaggi(messaggi, ticket) {
   const titleEl = document.getElementById('chatConvTitle');
@@ -125,6 +198,8 @@ function renderMessaggi(messaggi, ticket) {
   el.scrollTop = el.scrollHeight;
 }
 
+// ── Invia messaggio ───────────────────────────────────────────────────────────
+
 async function inviaMessaggio() {
   const input = document.getElementById('chatMsgInput');
   const testo = input?.value.trim();
@@ -133,14 +208,25 @@ async function inviaMessaggio() {
   const btn = document.getElementById('chatSendBtn');
   if (btn) btn.disabled = true;
   try {
-    const r = await fetch(`${API}/tickets/${chatTicketCorrente}/mensajes`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ texto: testo })
-    });
-    if (!r.ok) throw new Error();
-    input.value = '';
-    await caricaMessaggi(chatTicketCorrente);
+    if (token) {
+      const r = await fetch(`${API}/tickets/${chatTicketCorrente}/mensajes`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ texto: testo })
+      });
+      if (!r.ok) throw new Error();
+      input.value = '';
+      await caricaMessaggi(chatTicketCorrente);
+    } else {
+      const r = await fetch(`${API}/tickets/guest/${chatTicketCorrente}/mensajes`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ texto: testo })
+      });
+      if (!r.ok) throw new Error();
+      input.value = '';
+      await caricaMessaggiGuest(chatTicketCorrente);
+    }
   } catch {}
   if (btn) btn.disabled = false;
 }
@@ -155,19 +241,37 @@ async function creaTicket() {
 
   btn.disabled = true; btn.textContent = '...';
   try {
-    const r = await fetch(`${API}/tickets`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ asunto, texto: testo })
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error);
-    apriTicket(data.ticket.id);
+    if (token) {
+      const r = await fetch(`${API}/tickets`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ asunto, texto: testo })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      apriTicket(data.ticket.id);
+    } else {
+      const nombre = document.getElementById('chatGuestNombre').value.trim();
+      const email  = document.getElementById('chatGuestEmail').value.trim();
+      if (!nombre || !email) { btn.disabled = false; btn.textContent = 'INVIA'; return; }
+      const r = await fetch(`${API}/tickets/guest`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre, email, asunto, texto: testo })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      localStorage.setItem('rfGuestToken', data.token);
+      chatTicketCorrente = data.token;
+      chatMostraConversazione();
+      await caricaMessaggiGuest(data.token);
+      avviaPollingChatGuest(data.token);
+    }
   } catch {}
-  btn.disabled = false; btn.textContent = 'ENVIAR';
+  btn.disabled = false; btn.textContent = 'INVIA';
 }
 
-// ── Polling & badge ───────────────────────────────────────────────────────────
+// ── Polling & badge (utenti autenticati) ──────────────────────────────────────
 
 function avviaPollingChat(id) {
   fermaPollingChat();
@@ -211,7 +315,7 @@ function formattaOrarioChat(iso) {
   const d = new Date(iso);
   const oggi = new Date();
   const eOggi = d.toDateString() === oggi.toDateString();
-  if (eOggi) return d.toLocaleTimeString(localeDate(), { hour: '2-digit', minute: '2-digit' });
-  return d.toLocaleDateString(localeDate(), { day: '2-digit', month: '2-digit' }) + ' ' +
-         d.toLocaleTimeString(localeDate(), { hour: '2-digit', minute: '2-digit' });
+  if (eOggi) return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }

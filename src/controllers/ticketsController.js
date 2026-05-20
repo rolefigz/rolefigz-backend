@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const { randomUUID } = require("crypto");
 const { Ticket, Messaggio, Utente } = require("../models");
 
 // POST /api/tickets — crea ticket + primo messaggio (cliente)
@@ -103,6 +104,75 @@ const enviarMensaje = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
+// ── Guest (no auth) ───────────────────────────────────────────────────────────
+
+// POST /api/tickets/guest
+const crearTicketGuest = async (req, res) => {
+  try {
+    const { nombre, email, asunto, texto } = req.body;
+    if (!nombre?.trim() || !email?.trim() || !asunto?.trim() || !texto?.trim())
+      return res.status(400).json({ error: "Tutti i campi sono obbligatori" });
+
+    const guest_token = randomUUID();
+    const ticket = await Ticket.create({
+      asunto: asunto.trim(),
+      guest_token,
+      guest_nombre: nombre.trim(),
+      guest_email:  email.trim(),
+    });
+    await Messaggio.create({ ticket_id: ticket.id, remitente: "cliente", texto: texto.trim() });
+    res.status(201).json({ token: guest_token, ticket_id: ticket.id });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// GET /api/tickets/guest/:token
+const getMensajesGuest = async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({ where: { guest_token: req.params.token } });
+    if (!ticket) return res.status(404).json({ error: "Ticket non trovato" });
+
+    await Messaggio.update(
+      { leido: true },
+      { where: { ticket_id: ticket.id, remitente: "admin", leido: false } }
+    );
+    const messaggi = await Messaggio.findAll({
+      where: { ticket_id: ticket.id },
+      order: [["createdAt", "ASC"]]
+    });
+    res.json({ ticket, mensajes: messaggi });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// POST /api/tickets/guest/:token/mensajes
+const enviarMensajeGuest = async (req, res) => {
+  try {
+    const { texto } = req.body;
+    if (!texto?.trim()) return res.status(400).json({ error: "Messaggio vuoto" });
+
+    const ticket = await Ticket.findOne({ where: { guest_token: req.params.token } });
+    if (!ticket) return res.status(404).json({ error: "Ticket non trovato" });
+    if (ticket.estado === "cerrado") return res.status(400).json({ error: "Ticket chiuso" });
+
+    const msg = await Messaggio.create({ ticket_id: ticket.id, remitente: "cliente", texto: texto.trim() });
+    await Ticket.update({ updatedAt: new Date() }, { where: { id: ticket.id } });
+    res.status(201).json({ data: msg });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// GET /api/tickets/guest/:token/unread
+const getUnreadGuest = async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({ where: { guest_token: req.params.token }, attributes: ["id"] });
+    if (!ticket) return res.json({ count: 0 });
+    const count = await Messaggio.count({
+      where: { ticket_id: ticket.id, remitente: "admin", leido: false }
+    });
+    res.json({ count });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // GET /api/tickets — tutti i ticket (admin)
 const getAllTickets = async (req, res) => {
   try {
@@ -152,4 +222,4 @@ const cambiarEstado = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { crearTicket, getMisTickets, getUnreadCliente, getMensajes, enviarMensaje, getAllTickets, getUnreadAdmin, cambiarEstado };
+module.exports = { crearTicket, getMisTickets, getUnreadCliente, getMensajes, enviarMensaje, getAllTickets, getUnreadAdmin, cambiarEstado, crearTicketGuest, getMensajesGuest, enviarMensajeGuest, getUnreadGuest };

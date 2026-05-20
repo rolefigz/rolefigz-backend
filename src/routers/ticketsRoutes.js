@@ -4,8 +4,15 @@ const { verifyToken, soloAdmin } = require("../middleware/auth");
 const {
   crearTicket, getMisTickets, getUnreadCliente,
   getMensajes, enviarMensaje,
-  getAllTickets, getUnreadAdmin, cambiarEstado
+  getAllTickets, getUnreadAdmin, cambiarEstado,
+  crearTicketGuest, getMensajesGuest, enviarMensajeGuest, getUnreadGuest
 } = require("../controllers/ticketsController");
+
+// Guest (no auth) — prima delle rotte con :id
+router.post("/guest",                    crearTicketGuest);
+router.get("/guest/:token",              getMensajesGuest);
+router.post("/guest/:token/mensajes",    enviarMensajeGuest);
+router.get("/guest/:token/unread",       getUnreadGuest);
 
 // Cliente
 router.post("/",              verifyToken,            crearTicket);
