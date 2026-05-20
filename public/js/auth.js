@@ -290,7 +290,6 @@ function disconnetti() {
     setTxt('authStatus', 'NESSUNA SESSIONE');
     document.querySelectorAll('[onclick*="apriAuth"]').forEach(el => { el.style.display = ''; });
     _impostaVisibilitaFabChat(false);
-    mostrarFabGuest();
     const chatPanel = document.getElementById('chatPanel');
     if (chatPanel) chatPanel.classList.remove('on');
     const bar = document.getElementById('statusBar');

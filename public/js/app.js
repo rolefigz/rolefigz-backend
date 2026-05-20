@@ -61,8 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (token) {
       try { utente = JSON.parse(atob(token.split('.')[1])); impostaSessione(utente); }
       catch(e) { disconnetti(); }
-    } else {
-      mostrarFabGuest();
     }
     setInterval(verificaToken, 5 * 60 * 1000);
   }

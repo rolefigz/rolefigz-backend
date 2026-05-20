@@ -576,17 +576,6 @@
 
   <!-- Nuovo ticket -->
   <div class="chat-new-form" id="chatNewForm">
-    <!-- Campi solo per guest -->
-    <div id="chatGuestFields" style="display:none">
-      <div class="field" style="margin-bottom:10px">
-        <label>NOME</label>
-        <input type="text" id="chatGuestNombre" placeholder="Il tuo nome" onkeydown="if(event.key==='Enter')document.getElementById('chatGuestEmail').focus()"/>
-      </div>
-      <div class="field" style="margin-bottom:10px">
-        <label>EMAIL</label>
-        <input type="email" id="chatGuestEmail" placeholder="La tua email" onkeydown="if(event.key==='Enter')document.getElementById('chatAsunto').focus()"/>
-      </div>
-    </div>
     <div class="field" style="margin-bottom:10px">
       <label>OGGETTO</label>
       <input type="text" id="chatAsunto" placeholder="Come possiamo aiutarti?" onkeydown="if(event.key==='Enter')document.getElementById('chatPrimerMsg').focus()"/>
@@ -596,7 +585,7 @@
       <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')creaTicket()"></textarea>
     </div>
     <button class="chat-new-btn" id="chatCreateBtn" onclick="creaTicket()">INVIA</button>
-    <button class="chat-back-btn" id="chatNewBackBtn" style="margin:6px 0" onclick="chatMostraLista()">← Indietro</button>
+    <button class="chat-back-btn" style="margin:6px 0" onclick="chatMostraLista()">← Indietro</button>
   </div>
 
   <!-- Conversazione -->
