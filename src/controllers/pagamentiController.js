@@ -54,7 +54,8 @@ const crearSesion = async (req, res) => {
   try {
     const { nombre_cliente, email_cliente, telefono, direccion, notas, items,
             costo_spedizione, carrier, shipping_service, shippo_rate_id,
-            tracking_number, label_url, shippo_transaction_id } = req.body;
+            tracking_number, label_url, shippo_transaction_id,
+            codice_promo } = req.body;
 
     if (!nombre_cliente || !email_cliente)
       return res.status(400).json({ error: "Nome e email obbligatori" });
@@ -101,8 +102,29 @@ const crearSesion = async (req, res) => {
       });
     }
 
+    // Verifica codice promo spedizione gratuita
+    let spedizioneGratis = false;
+    let codicePromoValido = null;
+    if (codice_promo) {
+      try {
+        const { CodicePromo } = require("../models");
+        const promo = await CodicePromo.findOne({
+          where: { codice: codice_promo.toUpperCase().trim(), attivo: true }
+        });
+        if (promo) {
+          const ora = new Date();
+          const nonScaduto = !promo.data_scadenza || new Date(promo.data_scadenza) >= ora;
+          const nonEsaurito = promo.max_utilizzi === null || promo.utilizzi_attuali < promo.max_utilizzi;
+          if (nonScaduto && nonEsaurito && promo.tipo === "spedizione_gratuita") {
+            spedizioneGratis = true;
+            codicePromoValido = promo.codice;
+          }
+        }
+      } catch (e) { console.error("Promo checkout:", e.message); }
+    }
+
     // Aggiunge spedizione al totale e a Stripe
-    const costoSpediz = parseFloat(costo_spedizione || 0);
+    const costoSpediz = spedizioneGratis ? 0 : parseFloat(costo_spedizione || 0);
     if (costoSpediz > 0) {
       totale += costoSpediz;
       lineItems.push({
@@ -124,6 +146,7 @@ const crearSesion = async (req, res) => {
       tracking_number:       tracking_number       || null,
       label_url:             label_url             || null,
       shippo_transaction_id: shippo_transaction_id || null,
+      codice_promo:          codicePromoValido     || null,
     }, { transaction: t });
 
     for (const d of dettagli) {
