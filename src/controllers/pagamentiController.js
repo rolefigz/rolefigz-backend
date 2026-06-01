@@ -51,6 +51,7 @@ async function autoGeneraEtichetta(ordine) {
 
 const crearSesion = async (req, res) => {
   const t = await require("../config/db").transaction();
+  let committed = false;
   try {
     const { nombre_cliente, email_cliente, telefono, direccion, notas, items,
             costo_spedizione, carrier, shipping_service, shippo_rate_id,
@@ -137,6 +138,11 @@ const crearSesion = async (req, res) => {
       });
     }
 
+    // Stripe richiede un minimo di €0.50 per EUR
+    const totaleLineItems = lineItems.reduce((sum, li) => sum + li.price_data.unit_amount * li.quantity, 0);
+    if (totaleLineItems < 50)
+      throw new Error("L'importo minimo per il pagamento è €0.50");
+
     // Crea l'ordine nel DB (stato: pendente fino alla conferma pagamento)
     const ordine = await Ordine.create({
       nombre_cliente, email_cliente, telefono, direccion, notas, total: totale, usuario_id,
@@ -165,6 +171,7 @@ const crearSesion = async (req, res) => {
     }
 
     await t.commit();
+    committed = true;
 
     // Crea sessione di pagamento su Stripe
     const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
@@ -181,7 +188,7 @@ const crearSesion = async (req, res) => {
     res.json({ url: session.url, orden_id: ordine.id });
 
   } catch (err) {
-    await t.rollback();
+    if (!committed) await t.rollback();
     res.status(400).json({ error: err.message });
   }
 };
