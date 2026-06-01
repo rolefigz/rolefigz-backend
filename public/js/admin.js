@@ -301,6 +301,30 @@ async function adminTab(tab, el) {
 
 // ── Quill editor blog ────────────────────────────────────────────────────────
 let _quillBlog = null;
+let _blogHtmlMode = {};
+
+function toggleBlogHtmlMode(prefix) {
+  const isHtml = _blogHtmlMode[prefix] = !_blogHtmlMode[prefix];
+  const editorWrap = document.getElementById(`${prefix}ContenutoEditor`);
+  const textarea   = document.getElementById(`${prefix}ContenutoHtml`);
+  const btn        = document.getElementById(`${prefix}HtmlToggleBtn`);
+  if (isHtml) {
+    textarea.value = _quillBlog ? _quillBlog.root.innerHTML : '';
+    editorWrap.style.display = 'none';
+    textarea.style.display   = 'block';
+    btn.textContent = '↩ VISTA VISUALE';
+  } else {
+    if (_quillBlog) _quillBlog.root.innerHTML = textarea.value;
+    textarea.style.display   = 'none';
+    editorWrap.style.display = 'block';
+    btn.textContent = '‹/› SORGENTE HTML';
+  }
+}
+
+function getBlogContenuto(prefix) {
+  if (_blogHtmlMode[prefix]) return document.getElementById(`${prefix}ContenutoHtml`).value.trim();
+  return _quillBlog ? _quillBlog.root.innerHTML.trim() : '';
+}
 
 function initQuillBlog(containerId, html = '') {
   setTimeout(() => {
@@ -354,8 +378,12 @@ function adminNuovoArticolo() {
     <div class="field"><label>Titolo *</label><input id="aTitolo" type="text" placeholder="Come stampare in 3D..."/></div>
     <div class="field"><label>Estratto</label><textarea id="aEstratto" placeholder="Breve descrizione..."></textarea></div>
     <div class="field">
-      <label>Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label style="margin:0">Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+        <button type="button" id="aHtmlToggleBtn" class="action-btn" style="font-size:9px;padding:4px 10px" onclick="toggleBlogHtmlMode('a')">‹/› SORGENTE HTML</button>
+      </div>
       <div id="aContenutoEditor" style="min-height:280px;background:var(--bg);border:1px solid var(--border)"></div>
+      <textarea id="aContenutoHtml" style="display:none;width:100%;min-height:280px;font-family:'DM Mono',monospace;font-size:12px;padding:12px;background:var(--bg);border:1px solid var(--border);color:var(--text);resize:vertical;box-sizing:border-box"></textarea>
     </div>
     <div class="field">
       <label>Meta descrizione (<span id="metaCount">0</span>/160)</label>
@@ -396,8 +424,12 @@ async function adminModificaArticolo(id) {
       <div class="field"><label>Titolo *</label><input id="eTitolo" type="text" value="${a.titolo.replace(/"/g,'&quot;')}"/></div>
       <div class="field"><label>Estratto</label><textarea id="eEstratto">${a.estratto || ''}</textarea></div>
       <div class="field">
-        <label>Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label style="margin:0">Contenuto * <span style="font-size:9px;color:var(--muted);letter-spacing:1px">— usa la toolbar per immagini e video</span></label>
+          <button type="button" id="eHtmlToggleBtn" class="action-btn" style="font-size:9px;padding:4px 10px" onclick="toggleBlogHtmlMode('e')">‹/› SORGENTE HTML</button>
+        </div>
         <div id="eContenutoEditor" style="min-height:280px;background:var(--bg);border:1px solid var(--border)"></div>
+        <textarea id="eContenutoHtml" style="display:none;width:100%;min-height:280px;font-family:'DM Mono',monospace;font-size:12px;padding:12px;background:var(--bg);border:1px solid var(--border);color:var(--text);resize:vertical;box-sizing:border-box"></textarea>
       </div>
       <div class="field">
         <label>Meta descrizione (<span id="metaCountE">${(a.meta_desc||'').length}</span>/160)</label>
@@ -418,7 +450,7 @@ async function adminModificaArticolo(id) {
 
 async function creaArticoloAdmin() {
   const titolo    = document.getElementById('aTitolo').value.trim();
-  const contenuto = _quillBlog ? _quillBlog.root.innerHTML.trim() : '';
+  const contenuto = getBlogContenuto('a');
   if (!titolo || !contenuto || contenuto === '<p><br></p>') {
     showMsg('articoloMsg', 'Titolo e contenuto obbligatori', 'err'); return;
   }
@@ -447,7 +479,7 @@ async function salvaArticoloAdmin(id) {
   const body = {
     titolo:     document.getElementById('eTitolo').value.trim(),
     estratto:   document.getElementById('eEstratto').value,
-    contenuto:  _quillBlog ? _quillBlog.root.innerHTML.trim() : '',
+    contenuto:  getBlogContenuto('e'),
     meta_desc:  document.getElementById('eMetaDesc').value,
     tags:       document.getElementById('eTags').value,
     pubblicato: document.getElementById('ePubblica').checked,
