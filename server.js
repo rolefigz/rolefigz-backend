@@ -2,7 +2,7 @@ const express         = require("express");
 const path            = require("path");
 const cors            = require("cors");
 const helmet          = require("helmet");
-const { sequelize, PuntiTransazione, CodicePromo } = require("./src/models");
+const { sequelize, PuntiTransazione, CodicePromo, Ordine } = require("./src/models");
 const { corsOptions, limitGeneral, limitAuth, limitAPI } = require("./src/middleware/sicurezza");
 const authRoutes        = require("./src/routers/authRoutes");
 const prodottiRoutes    = require("./src/routers/prodottiRoutes");
@@ -85,4 +85,7 @@ app.listen(PORT, () => {
   CodicePromo.sync({ alter: true })
     .then(() => console.log("✅ codici_promo OK"))
     .catch(err => console.error("❌ codici_promo:", err.message));
+  Ordine.sync({ alter: true })
+    .then(() => console.log("✅ ordenes OK"))
+    .catch(err => console.error("❌ ordenes:", err.message));
 });
