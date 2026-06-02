@@ -3,7 +3,6 @@ const { Op } = require("sequelize");
 const { Ordine, DettaglioOrdine, Prodotto } = require("../models");
 const { emailConfirmacionPedido, emailNuevoPedidoAdmin } = require("../utils/mailer");
 
-// POST /api/ordines — crea ordine (pubblico, collega utente se c'è token)
 const crearOrden = async (req, res) => {
   const t = await require("../config/db").transaction();
   try {
@@ -22,7 +21,6 @@ const crearOrden = async (req, res) => {
     if (!items || !items.length)
       return res.status(400).json({ error: "Il carrello è vuoto" });
 
-    // Calcola totale e verifica stock
     let totale = 0;
     const dettagli = [];
 
@@ -55,13 +53,11 @@ const crearOrden = async (req, res) => {
       } catch(e) { console.error("Promo apply:", e.message); }
     }
 
-    // Crea ordine
     const ordine = await Ordine.create({
       nombre_cliente, email_cliente, telefono, direccion, notas, total: totale,
       usuario_id, codice_promo: codice_promo || null
     }, { transaction: t });
 
-    // Crea dettagli e decrementa stock
     for (const d of dettagli) {
       await DettaglioOrdine.create({
         orden_id:      ordine.id,
@@ -83,7 +79,7 @@ const crearOrden = async (req, res) => {
 
     await t.commit();
 
-    // Invia email (senza bloccare la risposta in caso di errore)
+    // mando la mail ma non aspetto, non voglio bloccare la risposta
     const ordineConDettagli = await Ordine.findByPk(ordine.id, {
       include: [{
         model: DettaglioOrdine,
@@ -108,7 +104,6 @@ const crearOrden = async (req, res) => {
   }
 };
 
-// GET /api/ordini — tutti (admin)
 const getOrdenes = async (req, res) => {
   try {
     const ordini = await Ordine.findAll({
@@ -126,7 +121,6 @@ const getOrdenes = async (req, res) => {
   }
 };
 
-// GET /api/ordini/:id — singolo ordine (admin)
 const getOrdenById = async (req, res) => {
   try {
     const ordine = await Ordine.findByPk(req.params.id, {
@@ -143,7 +137,6 @@ const getOrdenById = async (req, res) => {
   }
 };
 
-// PATCH /api/ordini/:id/estado — cambia stato (admin)
 const cambiarEstado = async (req, res) => {
   try {
     const { estado } = req.body;
@@ -155,7 +148,6 @@ const cambiarEstado = async (req, res) => {
     if (!ordine) return res.status(404).json({ error: "Ordine non trovato" });
 
     await ordine.update({ estado });
-    // Traccia fatturato codice promo alla conferma
     if (estado === "confirmado" && ordine.codice_promo) {
       try {
         const { registraUtilizzo } = require("./promoController");

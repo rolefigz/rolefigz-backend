@@ -27,7 +27,7 @@ async function autoGeneraEtichetta(ordine) {
 
     if (tx.status !== "SUCCESS") {
       const msg = tx.messages?.map(m => m.text).join("; ") || "Errore sconosciuto";
-      console.warn(`⚠️ Auto-etichetta Shippo fallita (ordine #${ordine.id}): ${msg}`);
+      console.warn(`etichetta Shippo fallita (ordine #${ordine.id}): ${msg}`);
       return null;
     }
 
@@ -41,10 +41,10 @@ async function autoGeneraEtichetta(ordine) {
     });
 
     emailSpedizione(ordine).catch(err => console.error("Email spedizione:", err.message));
-    console.log(`✅ Etichetta auto-generata — ordine #${ordine.id} tracking: ${tx.tracking_number}`);
+    console.log(`etichetta generata — ordine #${ordine.id} tracking: ${tx.tracking_number}`);
     return tx.tracking_number;
   } catch (err) {
-    console.error(`❌ Auto-etichetta errore (ordine #${ordine.id}):`, err.message);
+    console.error(`errore etichetta (ordine #${ordine.id}):`, err.message);
     return null;
   }
 }
@@ -63,7 +63,7 @@ const crearSesion = async (req, res) => {
     if (!items || !items.length)
       return res.status(400).json({ error: "Il carrello è vuoto" });
 
-    // Estrae usuario_id dal token se presente
+    // prendo l'id utente dal token se è loggato
     let usuario_id = null;
     const authHeader = req.headers["authorization"];
     const tkn = authHeader && authHeader.split(" ")[1];
@@ -74,7 +74,6 @@ const crearSesion = async (req, res) => {
       } catch {}
     }
 
-    // Verifica stock e costruisce line_items di Stripe
     let totale = 0;
     const dettagli  = [];
     const lineItems = [];
@@ -103,7 +102,7 @@ const crearSesion = async (req, res) => {
       });
     }
 
-    // Verifica codice promo spedizione gratuita
+    // controllo se il codice promo è per spedizione gratis
     let spedizioneGratis = false;
     let codicePromoValido = null;
     if (codice_promo) {
@@ -138,12 +137,11 @@ const crearSesion = async (req, res) => {
       });
     }
 
-    // Stripe richiede un minimo di €0.50 per EUR
+    // stripe rifiuta pagamenti sotto i 50 centesimi
     const totaleLineItems = lineItems.reduce((sum, li) => sum + li.price_data.unit_amount * li.quantity, 0);
     if (totaleLineItems < 50)
       throw new Error("L'importo minimo per il pagamento è €0.50");
 
-    // Crea l'ordine nel DB (stato: pendente fino alla conferma pagamento)
     const ordine = await Ordine.create({
       nombre_cliente, email_cliente, telefono, direccion, notas, total: totale, usuario_id,
       costo_spedizione:      costoSpediz > 0 ? costoSpediz : null,
@@ -167,13 +165,11 @@ const crearSesion = async (req, res) => {
         data_consegna:       d.data_consegna,
         supplemento_express: d.supplemento_express,
       }, { transaction: t });
-      // Stock decrementato solo dopo conferma pagamento
     }
 
     await t.commit();
     committed = true;
 
-    // Crea sessione di pagamento su Stripe
     const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
     const session  = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
@@ -193,14 +189,12 @@ const crearSesion = async (req, res) => {
   }
 };
 
-// POST /api/pagos/confirmar — chiamato dal frontend al ritorno da Stripe
 const confirmarPago = async (req, res) => {
   try {
     const { orden_id, session_id } = req.body;
     if (!orden_id || !session_id)
       return res.status(400).json({ error: "Dati incompleti" });
 
-    // Verifica con Stripe che il pagamento sia stato completato
     const session = await getStripe().checkout.sessions.retrieve(session_id);
     if (session.payment_status !== "paid")
       return res.status(400).json({ error: "Pagamento non completato" });
@@ -219,7 +213,6 @@ const confirmarPago = async (req, res) => {
     if (ordine.estado !== "confirmado") {
       await ordine.update({ estado: "confirmado" });
 
-      // Decrementa stock solo ora che il pagamento è confermato
       for (const d of ordine.detalles) {
         await Prodotto.decrement("stock", { by: d.cantidad, where: { id: d.producto_id } });
       }
@@ -232,7 +225,6 @@ const confirmarPago = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// Webhook: Stripe chiama qui quando il pagamento è confermato
 const webhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
@@ -266,7 +258,7 @@ const webhook = async (req, res) => {
           await ordine.update({ estado: "confirmado" });
           emailConfirmacionPedido(ordine, ordine.detalles).catch(console.error);
           emailNuevoPedidoAdmin(ordine).catch(console.error);
-          console.log(`✅ Pagamento confermato — Ordine #${orden_id}`);
+          console.log(`pagamento confermato — ordine #${orden_id}`);
         }
       } catch (err) {
         console.error("Errore elaborazione webhook:", err.message);

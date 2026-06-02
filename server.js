@@ -23,20 +23,17 @@ require("dotenv").config();
 const app = express();
 app.set("trust proxy", 1);
 
-// ── Sicurezza globale ─────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors(corsOptions));
 
-// ── Webhook Stripe (PRIMA di express.json — richiede raw body) ────────────
+// il webhook stripe deve stare prima del json parser, altrimenti non legge il body correttamente
 app.post("/api/pagos/webhook", express.raw({ type: "application/json" }), webhook);
 
-// ── Body & file statici ───────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname)));
 
-// ── Route ─────────────────────────────────────────────────
 app.use(limitGeneral);
 app.get("/", (req, res) => res.send("API RoleFigz operativa ✅"));
 app.use("/api/auth",       limitAuth, authRoutes);
@@ -53,39 +50,29 @@ app.use("/api",           limitAPI,  gadget3dRoutes);
 app.use("/api/punti",     limitAPI,  puntiRoutes);
 app.use("/api/promo",     limitAPI,  promoRoutes);
 
-// ── Route SPA — blog, prodotti, checkout ─────────────────────────────────
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
 app.get("/blog/:slug", serveApp);
 app.get("/checkout",   serveApp);
 
-// ── SPA catch-all — serve index.html per le route prodotto ───────────────
 app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ── Gestore errori globale ────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error("❌ Errore:", err.message);
+  console.error("Errore:", err.message);
   res.status(err.status || 500).json({ error: err.message || "Errore interno del server" });
 });
 
-// ── Server — parte subito, DB si sincronizza in background ───────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server avviato sulla porta ${PORT}`);
+  console.log(`Server avviato sulla porta ${PORT}`);
   sequelize
     .sync({ alter: true })
-    .then(() => console.log("✅ Database sincronizzato"))
-    .catch(err => console.error("❌ Errore DB sync:", err.message));
+    .then(() => console.log("db sincronizzato"))
+    .catch(err => console.error("errore db sync:", err.message));
 
-  // Sync esplicito per nuovi modelli (crea + aggiorna colonne)
-  PuntiTransazione.sync({ alter: true })
-    .then(() => console.log("✅ punti_transazioni OK"))
-    .catch(err => console.error("❌ punti_transazioni:", err.message));
-  CodicePromo.sync({ alter: true })
-    .then(() => console.log("✅ codici_promo OK"))
-    .catch(err => console.error("❌ codici_promo:", err.message));
-  Ordine.sync({ alter: true })
-    .then(() => console.log("✅ ordenes OK"))
-    .catch(err => console.error("❌ ordenes:", err.message));
+  // questi li metto esplicitamente perché il sync generale a volte non aggiunge le colonne nuove
+  PuntiTransazione.sync({ alter: true }).catch(err => console.error("punti_transazioni:", err.message));
+  CodicePromo.sync({ alter: true }).catch(err => console.error("codici_promo:", err.message));
+  Ordine.sync({ alter: true }).catch(err => console.error("ordenes:", err.message));
 });

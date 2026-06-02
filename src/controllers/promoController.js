@@ -1,7 +1,6 @@
 const { CodicePromo, Ordine } = require("../models");
 const { Op } = require("sequelize");
 
-// ── Calcola sconto da applicare ───────────────────────────────────────────────
 function calcolaSconto(codice, totaleCarrello, costoSpedizione) {
   if (!codice.attivo) return null;
   if (codice.data_scadenza && new Date() > new Date(codice.data_scadenza)) return null;
@@ -21,7 +20,6 @@ function calcolaSconto(codice, totaleCarrello, costoSpedizione) {
   return result;
 }
 
-// ── POST /api/promo/verifica — controlla codice (pubblico) ────────────────────
 const verificaCodice = async (req, res) => {
   try {
     const { codice, totale_carrello = 0, costo_spedizione = 0 } = req.body;
@@ -43,7 +41,6 @@ const verificaCodice = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/promo/popup — codici con popup attivo (pubblico) ─────────────────
 const getPopup = async (req, res) => {
   try {
     const popups = await CodicePromo.findAll({
@@ -57,7 +54,6 @@ const getPopup = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── GET /api/promo — tutti i codici (admin) ───────────────────────────────────
 const getTutti = async (req, res) => {
   try {
     const codici = await CodicePromo.findAll({ order: [["createdAt", "DESC"]] });
@@ -65,7 +61,6 @@ const getTutti = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── POST /api/promo — crea codice (admin) ─────────────────────────────────────
 const creaCodice = async (req, res) => {
   try {
     const { codice, tipo, valore, descrizione, data_scadenza, max_utilizzi,
@@ -88,7 +83,6 @@ const creaCodice = async (req, res) => {
   }
 };
 
-// ── PUT /api/promo/:id — aggiorna codice (admin) ──────────────────────────────
 const aggiornaCodice = async (req, res) => {
   try {
     const promo = await CodicePromo.findByPk(req.params.id);
@@ -102,7 +96,6 @@ const aggiornaCodice = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── DELETE /api/promo/:id — elimina codice (admin) ────────────────────────────
 const eliminaCodice = async (req, res) => {
   try {
     const promo = await CodicePromo.findByPk(req.params.id);
@@ -112,7 +105,7 @@ const eliminaCodice = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-// ── Chiamata interna: registra utilizzo + fatturato ───────────────────────────
+// uso questa funzione internamente quando un ordine viene confermato
 async function registraUtilizzo(codice, totaleOrdine) {
   try {
     const promo = await CodicePromo.findOne({ where: { codice: codice.toUpperCase().trim() } });
