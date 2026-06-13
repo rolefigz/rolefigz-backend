@@ -137,20 +137,226 @@ const emailConfirmacionPedido = async (ordine, dettagli) => {
   await invia(ordine.email_cliente, `✅ Ordine #${ordine.id} confermato — RoleFigz`, html);
 };
 
-// Email interno per l'admin
-const emailNuevoPedidoAdmin = async (ordine) => {
+const emailRichiestaRicevuta = async (ordine, dettagli = []) => {
+  const righe = dettagli.map(d => `
+    <tr>
+      <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ccc">
+        ${d.Prodotto?.nombre || "Prodotto"}
+        ${d.variante ? `<div style="font-size:10px;color:#666;margin-top:3px;letter-spacing:1px">${d.variante}</div>` : ""}
+        ${d.data_consegna ? `<div style="font-size:10px;color:#888;margin-top:3px">📅 ${new Date(d.data_consegna).toLocaleDateString('it-IT')}${parseFloat(d.supplemento_express||0)>0?` (+€${parseFloat(d.supplemento_express).toFixed(2)} express)`:''}</div>` : ""}
+      </td>
+      <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ccc;text-align:center">${d.cantidad}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ff3c00;text-align:right;font-weight:bold">€${parseFloat(d.subtotal).toFixed(2)}</td>
+    </tr>`).join("");
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head><meta charset="UTF-8"/></head>
+  <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+      <tr><td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+          <tr>
+            <td style="padding:32px 40px;border-bottom:1px solid #222">
+              <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#ff3c00">FIGZ</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 24px;background:#0f0f0f">
+              <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#ff3c00;text-transform:uppercase">// Richiesta ricevuta</p>
+              <h1 style="margin:0;font-size:36px;font-weight:900;letter-spacing:2px;color:#f0ece4">ORDINE<br>RICEVUTO!</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;border-bottom:1px solid #222">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:8px 0">
+                    <span style="font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Ordine</span><br>
+                    <span style="font-size:20px;font-weight:bold;color:#ff3c00">#${ordine.id}</span>
+                  </td>
+                  <td style="padding:8px 0">
+                    <span style="font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Cliente</span><br>
+                    <span style="font-size:15px;color:#f0ece4">${ordine.nombre_cliente}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;border-bottom:1px solid #222">
+              <p style="margin:0 0 16px;font-size:10px;letter-spacing:3px;color:#666;text-transform:uppercase">// Prodotti</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a1a1a">
+                <thead>
+                  <tr style="background:#0a0a0a">
+                    <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#666;text-align:left;font-weight:normal">PRODOTTO</th>
+                    <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#666;text-align:center;font-weight:normal">QTÀ</th>
+                    <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#666;text-align:right;font-weight:normal">SUBTOTALE</th>
+                  </tr>
+                </thead>
+                <tbody>${righe}</tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;border-bottom:1px solid #222;background:#0f0f0f">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:11px;letter-spacing:3px;color:#666;text-transform:uppercase">TOTALE ORDINE</td>
+                  <td style="text-align:right;font-size:32px;font-weight:900;color:#ff3c00">€${parseFloat(ordine.total).toFixed(2)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ${ordine.direccion ? `
+          <tr>
+            <td style="padding:24px 40px;border-bottom:1px solid #222">
+              <p style="margin:0 0 8px;font-size:10px;letter-spacing:3px;color:#666;text-transform:uppercase">// Indirizzo di spedizione</p>
+              <p style="margin:0;font-size:14px;color:#ccc;line-height:1.6">${ordine.direccion}</p>
+            </td>
+          </tr>` : ""}
+          <tr>
+            <td style="padding:28px 40px;background:#0a0a0a">
+              <p style="margin:0;font-size:12px;color:#444;line-height:1.7">
+                Abbiamo ricevuto il tuo ordine e ti contatteremo presto per organizzare il pagamento e la spedizione.<br>
+                Hai domande? Rispondi a questa email.
+              </p>
+              <p style="margin:16px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+  </html>`;
+
+  await invia(ordine.email_cliente, `📋 Richiesta ordine #${ordine.id} ricevuta — RoleFigz`, html);
+};
+
+// Email interno per l'admin con tutti i dettagli
+const emailNuevoPedidoAdmin = async (ordine, dettagli = []) => {
+  const righe = dettagli.map(d => `
+    <tr>
+      <td style="padding:10px 16px;border-bottom:1px solid #222;color:#ccc">
+        <strong style="color:#f0ece4">${d.Prodotto?.nombre || "Prodotto"}</strong>
+        ${d.variante ? `<div style="font-size:11px;color:#888;margin-top:4px;letter-spacing:1px">↳ ${d.variante}</div>` : ""}
+        ${d.data_consegna ? `<div style="font-size:11px;color:#666;margin-top:3px">📅 ${new Date(d.data_consegna).toLocaleDateString('it-IT')}${parseFloat(d.supplemento_express||0)>0?` (+€${parseFloat(d.supplemento_express).toFixed(2)} express)`:''}</div>` : ""}
+        ${d.foto_cliente ? `<div style="font-size:11px;margin-top:4px"><a href="${d.foto_cliente}" style="color:#ff3c00">📎 Foto cliente allegata</a></div>` : ""}
+      </td>
+      <td style="padding:10px 16px;border-bottom:1px solid #222;color:#ccc;text-align:center;font-size:16px;font-weight:bold">${d.cantidad}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #222;color:#999;text-align:right">€${parseFloat(d.precio_unidad).toFixed(2)}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #222;color:#ff3c00;text-align:right;font-weight:bold">€${parseFloat(d.subtotal).toFixed(2)}</td>
+    </tr>`).join("");
+
   await invia(
     ADMIN,
-    `🛒 Nuovo ordine #${ordine.id} — €${parseFloat(ordine.total).toFixed(2)}`,
-    `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
-      <h2 style="color:#ff3c00;letter-spacing:3px">NUOVO ORDINE #${ordine.id}</h2>
-      <p><strong>Cliente:</strong> ${ordine.nombre_cliente}</p>
-      <p><strong>Email:</strong> ${ordine.email_cliente}</p>
-      <p><strong>Telefono:</strong> ${ordine.telefono || "—"}</p>
-      <p><strong>Totale:</strong> <span style="color:#ff3c00;font-size:20px">€${parseFloat(ordine.total).toFixed(2)}</span></p>
-      <p><strong>Indirizzo:</strong> ${ordine.direccion || "—"}</p>
-      <p><strong>Note:</strong> ${ordine.notas || "—"}</p>
-    </div>`
+    `🛒 Nuovo ordine #${ordine.id} — €${parseFloat(ordine.total).toFixed(2)} — ${ordine.nombre_cliente}`,
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+        <tr><td align="center">
+          <table width="620" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+
+            <tr>
+              <td style="padding:28px 40px;border-bottom:1px solid #222;background:#0a0a0a">
+                <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#ff3c00">FIGZ</span></span>
+                <span style="float:right;font-family:monospace;font-size:10px;color:#555;letter-spacing:2px;padding-top:10px;text-transform:uppercase">Nuovo Ordine</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:32px 40px 16px;background:#0f0f0f">
+                <p style="margin:0 0 4px;font-size:10px;letter-spacing:3px;color:#ff3c00;text-transform:uppercase">// ordine ricevuto</p>
+                <h1 style="margin:0;font-size:40px;font-weight:900;letter-spacing:2px;color:#f0ece4">#${ordine.id}</h1>
+                <p style="margin:6px 0 0;font-size:11px;color:#555">${new Date().toLocaleString('it-IT')}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 40px;border-bottom:1px solid #222">
+                <p style="margin:0 0 14px;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase">Dati cliente</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:6px 0;width:50%;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Nome</span><br>
+                      <span style="font-size:17px;font-weight:bold;color:#f0ece4">${ordine.nombre_cliente}</span>
+                    </td>
+                    <td style="padding:6px 0;width:50%;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Email</span><br>
+                      <a href="mailto:${ordine.email_cliente}" style="font-size:14px;color:#ff3c00;text-decoration:none">${ordine.email_cliente}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 0 6px;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Telefono</span><br>
+                      <span style="font-size:14px;color:#ccc">${ordine.telefono || "—"}</span>
+                    </td>
+                    <td style="padding:10px 0 6px;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Indirizzo spedizione</span><br>
+                      <span style="font-size:13px;color:#ccc;line-height:1.5">${ordine.direccion || "—"}</span>
+                    </td>
+                  </tr>
+                  ${ordine.notas ? `
+                  <tr>
+                    <td colspan="2" style="padding:10px 0 6px;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Note del cliente</span><br>
+                      <span style="font-size:13px;color:#aaa;font-style:italic">${ordine.notas}</span>
+                    </td>
+                  </tr>` : ""}
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 40px;border-bottom:1px solid #222">
+                <p style="margin:0 0 14px;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase">Prodotti ordinati</p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a1a1a">
+                  <thead>
+                    <tr style="background:#0a0a0a">
+                      <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#555;text-align:left;font-weight:normal;text-transform:uppercase">Prodotto / Variante</th>
+                      <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#555;text-align:center;font-weight:normal;text-transform:uppercase">Qtà</th>
+                      <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#555;text-align:right;font-weight:normal;text-transform:uppercase">Prezzo unit.</th>
+                      <th style="padding:10px 16px;font-size:10px;letter-spacing:2px;color:#555;text-align:right;font-weight:normal;text-transform:uppercase">Subtotale</th>
+                    </tr>
+                  </thead>
+                  <tbody>${righe}</tbody>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 40px;border-bottom:1px solid #222;background:#0f0f0f">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  ${ordine.costo_spedizione ? `
+                  <tr>
+                    <td style="padding:3px 0;font-size:12px;color:#555">Subtotale prodotti</td>
+                    <td style="padding:3px 0;text-align:right;font-size:12px;color:#888">€${(parseFloat(ordine.total) - parseFloat(ordine.costo_spedizione)).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:3px 0;font-size:12px;color:#555">Spedizione (${ordine.carrier || "Standard"})</td>
+                    <td style="padding:3px 0;text-align:right;font-size:12px;color:#888">€${parseFloat(ordine.costo_spedizione).toFixed(2)}</td>
+                  </tr>
+                  <tr><td colspan="2" style="padding:8px 0 0"><hr style="border:none;border-top:1px solid #1a1a1a;margin:0"/></td></tr>` : ""}
+                  <tr>
+                    <td style="padding:10px 0 0;font-size:11px;letter-spacing:3px;color:#666;text-transform:uppercase">TOTALE</td>
+                    <td style="padding:10px 0 0;text-align:right;font-size:32px;font-weight:900;color:#ff3c00">€${parseFloat(ordine.total).toFixed(2)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:28px 40px;background:#0a0a0a;text-align:center">
+                <a href="mailto:${ordine.email_cliente}" style="display:inline-block;padding:14px 32px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none;text-transform:uppercase">✉ RISPONDI AL CLIENTE</a>
+                <p style="margin:20px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
+              </td>
+            </tr>
+
+          </table>
+        </td></tr>
+      </table>
+    </body></html>`
   );
 };
 
@@ -361,4 +567,75 @@ const emailGadget3DAdmin = async ({ id, nome, email, gadget, azienda, settore, d
   );
 };
 
-module.exports = { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
+const emailNuovoTicketAdmin = async ({ id, asunto, texto, utente }) => {
+  await invia(
+    ADMIN,
+    `🎫 Nuovo ticket #${id} — ${utente.nombre || utente.email}`,
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+        <tr><td align="center">
+          <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+            <tr>
+              <td style="padding:28px 40px;border-bottom:1px solid #222;background:#0a0a0a">
+                <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#ff3c00">FIGZ</span></span>
+                <span style="float:right;font-family:monospace;font-size:10px;color:#555;letter-spacing:2px;padding-top:10px">SUPPORT</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 40px 16px;background:#0f0f0f">
+                <p style="margin:0 0 4px;font-size:10px;letter-spacing:3px;color:#ff3c00;text-transform:uppercase">// nuovo ticket</p>
+                <h1 style="margin:0;font-size:38px;font-weight:900;letter-spacing:2px;color:#f0ece4">#${id}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 40px;border-bottom:1px solid #222">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:6px 0;width:50%;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Utente</span><br>
+                      <span style="font-size:16px;font-weight:bold;color:#f0ece4">${utente.nombre || "—"}</span>
+                    </td>
+                    <td style="padding:6px 0;width:50%;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Email</span><br>
+                      <a href="mailto:${utente.email}" style="font-size:14px;color:#ff3c00;text-decoration:none">${utente.email}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding:14px 0 6px;vertical-align:top">
+                      <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px">Oggetto</span><br>
+                      <span style="font-size:17px;font-weight:bold;color:#f0ece4">${asunto}</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 40px;border-bottom:1px solid #222;background:#0f0f0f">
+                <p style="margin:0 0 10px;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase">Messaggio</p>
+                <p style="margin:0;font-size:14px;color:#ccc;line-height:1.7;white-space:pre-wrap">${texto}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 40px;background:#0a0a0a;text-align:center">
+                <a href="mailto:${utente.email}" style="display:inline-block;padding:14px 32px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none;text-transform:uppercase">✉ RISPONDI</a>
+                <p style="margin:20px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body></html>`
+  );
+};
+
+async function notificaWhatsApp(testo) {
+  const phone  = process.env.WHATSAPP_PHONE;
+  const apikey = process.env.WHATSAPP_APIKEY;
+  if (!phone || !apikey) return;
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(testo)}&apikey=${apikey}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`CallMeBot HTTP ${r.status}`);
+}
+
+module.exports = { emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };

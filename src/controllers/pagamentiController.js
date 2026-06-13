@@ -5,7 +5,7 @@ function getStripe() {
 }
 const jwt    = require("jsonwebtoken");
 const { Ordine, DettaglioOrdine, Prodotto } = require("../models");
-const { emailConfirmacionPedido, emailNuevoPedidoAdmin, emailSpedizione } = require("../utils/mailer");
+const { emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailSpedizione } = require("../utils/mailer");
 
 // Genera etichetta Shippo automaticamente dopo il pagamento
 async function autoGeneraEtichetta(ordine) {
@@ -137,11 +137,6 @@ const crearSesion = async (req, res) => {
       });
     }
 
-    // stripe rifiuta pagamenti sotto i 50 centesimi
-    const totaleLineItems = lineItems.reduce((sum, li) => sum + li.price_data.unit_amount * li.quantity, 0);
-    if (totaleLineItems < 50)
-      throw new Error("L'importo minimo per il pagamento è €0.50");
-
     const ordine = await Ordine.create({
       nombre_cliente, email_cliente, telefono, direccion, notas, total: totale, usuario_id,
       costo_spedizione:      costoSpediz > 0 ? costoSpediz : null,
@@ -170,18 +165,18 @@ const crearSesion = async (req, res) => {
     await t.commit();
     committed = true;
 
-    const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
-    const session  = await getStripe().checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items:           lineItems,
-      mode:                 "payment",
-      customer_email:       email_cliente,
-      metadata:             { orden_id: String(ordine.id) },
-      success_url:          `${BASE_URL}/index.html?pago=ok&orden_id=${ordine.id}&sid={CHECKOUT_SESSION_ID}`,
-      cancel_url:           `${BASE_URL}/index.html?pago=cancelado`,
+    const ordineDettagliato = await Ordine.findByPk(ordine.id, {
+      include: [{
+        model: DettaglioOrdine,
+        as: "detalles",
+        include: [{ model: Prodotto, attributes: ["nombre"] }]
+      }]
     });
 
-    res.json({ url: session.url, orden_id: ordine.id });
+    emailRichiestaRicevuta(ordineDettagliato, ordineDettagliato.detalles).catch(console.error);
+    emailNuevoPedidoAdmin(ordineDettagliato, ordineDettagliato.detalles).catch(console.error);
+
+    res.json({ ok: true, orden_id: ordine.id });
 
   } catch (err) {
     if (!committed) await t.rollback();

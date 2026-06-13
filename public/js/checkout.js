@@ -176,7 +176,7 @@ async function confermaOrdine() {
   const naz       = document.getElementById('chkNazione').value || 'IT';
   const direccion = [via, cap, citta, prov, naz].filter(Boolean).join(', ');
 
-  btn.textContent = 'PAGAMENTO IN CORSO...';
+  btn.textContent = 'INVIO IN CORSO...';
   try {
     const r = await fetch(`${API}/pagos/crear-sesion`, {
       method: 'POST',
@@ -215,11 +215,11 @@ async function confermaOrdine() {
 
     carrello = [];
     aggiornaUICarrello();
-    window.location.href = data.url;
+    window.location.href = `/?pago=ok&orden_id=${data.orden_id}`;
 
   } catch(e) {
     showMsg('checkoutMsg', e.message, 'err');
     btn.disabled    = false;
-    btn.textContent = 'CONFERMA ORDINE';
+    btn.textContent = 'INVIA ORDINE';
   }
 }

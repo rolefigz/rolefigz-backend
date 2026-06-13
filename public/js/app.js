@@ -131,21 +131,8 @@ function gestisciRitornoStripe() {
 
   if (pago === 'ok') {
     const ordineId = params.get('orden_id');
-    const sid      = params.get('sid');
     mostraBannerPagamento(true, ordineId);
     caricaProdotti();
-    if (ordineId && sid) {
-      fetch(`${API}/pagos/confirmar`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ orden_id: parseInt(ordineId), session_id: sid })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.tracking_number) mostraBannerTracking(ordineId, data.tracking_number);
-      })
-      .catch(() => {});
-    }
   } else if (pago === 'cancelado') {
     mostraBannerPagamento(false, null);
   }
@@ -155,8 +142,8 @@ function mostraBannerPagamento(successo, ordineId) {
   const banner = document.createElement('div');
   banner.className = 'stripe-banner ' + (successo ? 'ok' : 'err');
   banner.innerHTML = successo
-    ? `✅ Pagamento confermato! Ordine <strong>#${ordineId}</strong> — controlla la tua email.`
-    : `❌ Pagamento annullato.`;
+    ? `✅ Ordine <strong>#${ordineId}</strong> ricevuto! Ti contatteremo presto — controlla la tua email.`
+    : `❌ Ordine annullato.`;
   document.body.prepend(banner);
   setTimeout(() => banner.remove(), 7000);
 }

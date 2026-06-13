@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 const { Ticket, Messaggio, Utente } = require("../models");
+const { emailNuovoTicketAdmin } = require("../utils/mailer");
+const { sendMessage } = require("../utils/telegram");
 
 // POST /api/tickets — crea ticket + primo messaggio (cliente)
 const crearTicket = async (req, res) => {
@@ -10,6 +12,12 @@ const crearTicket = async (req, res) => {
 
     const ticket = await Ticket.create({ usuario_id: req.usuario.id, asunto: asunto.trim() });
     await Messaggio.create({ ticket_id: ticket.id, remitente: "cliente", texto: texto.trim() });
+
+    emailNuovoTicketAdmin({ id: ticket.id, asunto: asunto.trim(), texto: texto.trim(), utente: req.usuario }).catch(console.error);
+    sendMessage(
+      `🎫 <b>Nuovo ticket #${ticket.id}</b>\n👤 ${req.usuario.nombre || ""} — <code>${req.usuario.email}</code>\n📋 <b>${asunto.trim()}</b>\n\n${texto.trim()}\n\n<i>↩️ Rispondi a questo messaggio per rispondere al cliente.</i>\n[T:${ticket.id}]`
+    ).catch(console.error);
+
     res.status(201).json({ mensaje: "Ticket creato", ticket });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
@@ -96,8 +104,13 @@ const enviarMensaje = async (req, res) => {
     const mittente = req.usuario.rol === "admin" ? "admin" : "cliente";
     const msg      = await Messaggio.create({ ticket_id: ticket.id, remitente: mittente, texto: texto.trim() });
 
-    // Aggiorna updatedAt del ticket per l'ordinamento
     await Ticket.update({ updatedAt: new Date() }, { where: { id: ticket.id } });
+
+    if (mittente === "cliente") {
+      sendMessage(
+        `💬 <b>Nuovo messaggio</b> — ticket #${ticket.id}\n👤 ${req.usuario.nombre || req.usuario.email}\n\n${texto.trim()}\n\n<i>↩️ Rispondi a questo messaggio per rispondere.</i>\n[T:${ticket.id}]`
+      ).catch(console.error);
+    }
 
     res.status(201).json({ mensaje: "Messaggio inviato", data: msg });
   } catch (err) { res.status(500).json({ error: err.message }); }
