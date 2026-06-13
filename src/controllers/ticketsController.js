@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const { Ticket, Messaggio, Utente } = require("../models");
-const { emailNuovoTicketAdmin } = require("../utils/mailer");
+const { emailNuovoTicketAdmin, emailRispostaTicket } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 
 // POST /api/tickets — crea ticket + primo messaggio (cliente)
@@ -94,7 +94,9 @@ const enviarMensaje = async (req, res) => {
     const { texto } = req.body;
     if (!texto?.trim()) return res.status(400).json({ error: "Messaggio vuoto" });
 
-    const ticket = await Ticket.findByPk(req.params.id);
+    const ticket = await Ticket.findByPk(req.params.id, {
+      include: [{ model: Utente, attributes: ["nombre", "email"] }]
+    });
     if (!ticket) return res.status(404).json({ error: "Ticket non trovato" });
     if (req.usuario.rol !== "admin" && ticket.usuario_id !== req.usuario.id)
       return res.status(403).json({ error: "Accesso negato" });
@@ -110,6 +112,15 @@ const enviarMensaje = async (req, res) => {
       sendMessage(
         `💬 <b>Nuovo messaggio</b> — ticket #${ticket.id}\n👤 ${req.usuario.nombre || req.usuario.email}\n\n${texto.trim()}\n\n<i>↩️ Rispondi a questo messaggio per rispondere.</i>\n[T:${ticket.id}]`
       ).catch(console.error);
+    }
+
+    if (mittente === "admin" && ticket.Utente?.email) {
+      emailRispostaTicket({
+        ticket,
+        texto:        texto.trim(),
+        emailCliente: ticket.Utente.email,
+        nomeCliente:  ticket.Utente.nombre || ticket.Utente.email,
+      }).catch(console.error);
     }
 
     res.status(201).json({ mensaje: "Messaggio inviato", data: msg });

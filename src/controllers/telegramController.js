@@ -1,5 +1,6 @@
-const { Ticket, Messaggio } = require("../models");
+const { Ticket, Messaggio, Utente } = require("../models");
 const { sendMessage, registraWebhook } = require("../utils/telegram");
+const { emailRispostaTicket } = require("../utils/mailer");
 
 // POST /api/telegram/webhook — riceve aggiornamenti da Telegram
 const webhook = async (req, res) => {
@@ -20,7 +21,9 @@ const webhook = async (req, res) => {
   const ticketId = parseInt(match[1]);
 
   try {
-    const ticket = await Ticket.findByPk(ticketId);
+    const ticket = await Ticket.findByPk(ticketId, {
+      include: [{ model: Utente, attributes: ["nombre", "email"] }]
+    });
 
     if (!ticket) {
       await sendMessage(`⚠️ Ticket #${ticketId} non trovato.`, { reply_to_message_id: message.message_id });
@@ -33,6 +36,15 @@ const webhook = async (req, res) => {
 
     await Messaggio.create({ ticket_id: ticket.id, remitente: "admin", texto: message.text });
     await Ticket.update({ updatedAt: new Date() }, { where: { id: ticket.id } });
+
+    if (ticket.Utente?.email) {
+      emailRispostaTicket({
+        ticket,
+        texto:        message.text,
+        emailCliente: ticket.Utente.email,
+        nomeCliente:  ticket.Utente.nombre || ticket.Utente.email,
+      }).catch(console.error);
+    }
 
     await sendMessage(`✅ Risposta inviata al cliente — ticket #${ticket.id}`, { reply_to_message_id: message.message_id });
   } catch (err) {

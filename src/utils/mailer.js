@@ -638,4 +638,52 @@ async function notificaWhatsApp(testo) {
   if (!r.ok) throw new Error(`CallMeBot HTTP ${r.status}`);
 }
 
-module.exports = { emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
+const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente }) => {
+  const BASE_URL = process.env.BASE_URL || "https://www.rolefigz.com";
+  await invia(
+    emailCliente,
+    `💬 Nuova risposta al tuo ticket #${ticket.id} — RoleFigz`,
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+        <tr><td align="center">
+          <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+            <tr>
+              <td style="padding:28px 40px;border-bottom:1px solid #222;background:#0a0a0a">
+                <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#ff3c00">FIGZ</span></span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 40px 16px;background:#0f0f0f">
+                <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#ff3c00;text-transform:uppercase">// supporto</p>
+                <h1 style="margin:0;font-size:30px;font-weight:900;letter-spacing:2px;color:#f0ece4">HAI UNA NUOVA<br>RISPOSTA</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 40px;border-bottom:1px solid #222">
+                <span style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px">Ticket</span><br>
+                <span style="font-size:18px;font-weight:bold;color:#ff3c00">#${ticket.id}</span>
+                <span style="font-size:14px;color:#888;margin-left:10px">${ticket.asunto}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 40px;border-bottom:1px solid #222;background:#0f0f0f">
+                <p style="margin:0 0 10px;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase">Messaggio</p>
+                <p style="margin:0;font-size:15px;color:#ccc;line-height:1.7;white-space:pre-wrap">${texto}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 40px;background:#0a0a0a;text-align:center">
+                <a href="${BASE_URL}" style="display:inline-block;padding:14px 32px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none;text-transform:uppercase">APRI IL TICKET</a>
+                <p style="margin:20px 0 0;font-size:12px;color:#444;line-height:1.7">Accedi al tuo account per rispondere.</p>
+                <p style="margin:12px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body></html>`
+  );
+};
+
+module.exports = { emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
