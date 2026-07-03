@@ -646,5 +646,22 @@
 <script src="/js/resenas.js"></script>
 <script src="/js/chat.js"></script>
 <script src="/js/app.js"></script>
+
+<!-- ══ COOKIE BANNER ══ -->
+<div id="cookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--dark);color:#ccc;padding:18px 32px;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:2px solid var(--accent);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px">
+  <span>🍪 Questo sito usa cookie tecnici necessari al funzionamento. Nessun cookie di profilazione. <a href="/privacy.html" style="color:var(--accent);text-decoration:none">Privacy Policy</a></span>
+  <button onclick="accettaCookie()" style="background:var(--accent);border:none;color:#fff;padding:9px 22px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;white-space:nowrap">HO CAPITO</button>
+</div>
+<script>
+  (function() {
+    if (!localStorage.getItem('rf_cookie_ok')) {
+      document.getElementById('cookieBanner').style.display = 'flex';
+    }
+  })();
+  function accettaCookie() {
+    localStorage.setItem('rf_cookie_ok', '1');
+    document.getElementById('cookieBanner').style.display = 'none';
+  }
+</script>
 </body>
 </html>

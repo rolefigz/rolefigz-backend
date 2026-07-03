@@ -50,7 +50,7 @@ function renderProdotti(lista) {
       <div class="card" onclick="vediProdotto(${p.id})">
         ${p.stock < 3 && p.stock > 0 ? `<div class="card-badge">ULTIMI</div>` : ''}
         ${p.stock === 0 ? `<div class="card-badge" style="background:var(--muted)">${'ESAURITO'}</div>` : ''}
-        ${img ? `<img class="card-img" src="${img}" alt="${p.nombre}" onerror="this.outerHTML='<div class=card-ph>3D</div>'">` : '<div class="card-ph">3D</div>'}
+        ${img ? `<img class="card-img" src="${img}" alt="${p.nombre}" loading="lazy" onerror="this.outerHTML='<div class=card-ph>3D</div>'">` : '<div class="card-ph">3D</div>'}
         <div class="card-body">
           <div class="card-cat">${p.Categoria ? p.Categoria.nombre : ''}</div>
           <div class="card-name">${p.nombre}</div>

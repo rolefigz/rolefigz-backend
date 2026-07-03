@@ -19,6 +19,7 @@ const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
 const puntiRoutes        = require("./src/routers/puntiRoutes");
 const promoRoutes           = require("./src/routers/promoRoutes");
 const impostazioniRoutes    = require("./src/routers/impostazioniRoutes");
+const sitemapRoutes         = require("./src/routers/sitemapRoutes");
 const telegramRoutes     = require("./src/routers/telegramRoutes");
 require("dotenv").config();
 
@@ -52,6 +53,7 @@ app.use("/api",           limitAPI,  gadget3dRoutes);
 app.use("/api/punti",     limitAPI,  puntiRoutes);
 app.use("/api/promo",          limitAPI,  promoRoutes);
 app.use("/api/impostazioni",   limitAPI,  impostazioniRoutes);
+app.use("/",                              sitemapRoutes);
 app.use("/api/telegram", limitAPI,  telegramRoutes);
 
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -60,6 +62,13 @@ app.get("/checkout",   serveApp);
 
 app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api/")) {
+    return res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+  }
+  res.status(404).json({ error: "Risorsa non trovata" });
 });
 
 app.use((err, req, res, next) => {
