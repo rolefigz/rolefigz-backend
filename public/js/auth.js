@@ -65,7 +65,7 @@ async function accedi() {
         showMsg('verificaMsg', '✅ Codice inviato! Controlla la tua email.', 'ok');
         return;
       }
-      throw new Error(data.error || 'Error');
+      throw new Error(data.error || 'Errore');
     }
     token = data.token;
     localStorage.setItem('rfToken', token);

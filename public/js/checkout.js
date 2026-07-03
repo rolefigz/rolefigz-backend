@@ -166,6 +166,7 @@ async function confermaOrdine() {
   const cap   = document.getElementById('chkCap').value.trim();
 
   if (!nome || !email) { showMsg('checkoutMsg', 'Nome e email obbligatori', 'err'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('checkoutMsg', 'Inserisci un indirizzo email valido', 'err'); return; }
   if (!via || !citta || !cap) { showMsg('checkoutMsg', 'Completa i dati di spedizione: via, città e CAP', 'err'); return; }
   if (!spedizioneSelezionata) { showMsg('checkoutMsg', 'Seleziona un paese valido per la spedizione', 'err'); return; }
 

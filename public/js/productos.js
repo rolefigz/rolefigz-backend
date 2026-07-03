@@ -298,6 +298,12 @@ async function caricaFotoCliente(input) {
   const file = input.files[0];
   if (!file) return;
   const msgEl = document.getElementById('fotoUploadMsg');
+  if (file.size > 5 * 1024 * 1024) {
+    msgEl.textContent = 'File troppo grande (max 5MB)';
+    msgEl.style.color = 'var(--accent)';
+    input.value = '';
+    return;
+  }
   msgEl.textContent = 'Caricamento...';
   msgEl.style.color = 'var(--muted)';
   const fd = new FormData();

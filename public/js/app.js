@@ -42,7 +42,7 @@ function renderCategorie() {
     <button class="cat-card" onclick="filtraPerCategoria(${c.id})">
       <div class="cat-icon"><iconify-icon icon="${icone[i % icone.length]}" width="28"></iconify-icon></div>
       <div class="cat-name">${c.nombre}</div>
-      <div class="cat-count">${c.descripcion || '— productos'}</div>
+      <div class="cat-count">${c.descripcion || '— prodotti'}</div>
     </button>`).join('') +
     `<button class="cat-card" onclick="filtraPerCategoria(null)">
       <div class="cat-icon">🗂️</div>

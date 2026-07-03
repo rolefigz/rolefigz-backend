@@ -9,6 +9,8 @@ async function caricaRecensioni(prodottoId) {
   const formEl  = document.getElementById('resenas-form-wrap');
   if (!listaEl) return;
 
+  listaEl.innerHTML = '<div class="loading" style="padding:20px 0">CARICAMENTO RECENSIONI</div>';
+
   try {
     const r = await fetch(`${API}/resenas/${prodottoId}`);
     if (!r.ok) throw new Error('Errore nel caricamento delle recensioni');

@@ -5,7 +5,7 @@ async function applicaPromo() {
   const input = document.getElementById('promoInput');
   const btn   = document.getElementById('promoBtnApplica');
   const codice = input?.value.trim().toUpperCase();
-  if (!codice) return;
+  if (!codice) { showMsg('promoMsg', 'Inserisci un codice promozionale', 'err'); return; }
 
   btn.disabled = true; btn.textContent = '...';
   promoApplicato = null;
