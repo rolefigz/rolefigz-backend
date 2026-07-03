@@ -3,8 +3,10 @@ function getImgUrl(p) {
   return p.imagen || null;
 }
 
-function filtraPerCategoria(catId) {
+function filtraPerCategoria(catId, btnEl) {
   document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth' });
+  document.querySelectorAll('#catsGrid .filtro-pill').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
   if (!catId) { renderProdotti(); return; }
   const filtrati = prodotti.filter(p =>
     p.categoria_id === catId || (p.Categoria && p.Categoria.id === catId)

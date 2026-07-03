@@ -37,18 +37,11 @@ async function verificaAPI() {
 function renderCategorie() {
   const el = document.getElementById('catsGrid');
   if (!el || !categorie.length) return;
-  const icone = ['mdi:drama-masks','mdi:office-building-outline','mdi:gamepad-variant-outline','mdi:lightbulb-outline','mdi:printer-3d','mdi:star-four-points-outline','mdi:gift-outline','mdi:lightning-bolt'];
-  el.innerHTML = categorie.map((c, i) => `
-    <button class="cat-card" onclick="filtraPerCategoria(${c.id})">
-      <div class="cat-icon"><iconify-icon icon="${icone[i % icone.length]}" width="28"></iconify-icon></div>
-      <div class="cat-name">${c.nombre}</div>
-      <div class="cat-count">${c.descripcion || '— prodotti'}</div>
-    </button>`).join('') +
-    `<button class="cat-card" onclick="filtraPerCategoria(null)">
-      <div class="cat-icon">🗂️</div>
-      <div class="cat-name">CATALOGO</div>
-      <div class="cat-count">tutti i prodotti</div>
-    </button>`;
+  el.innerHTML =
+    `<button class="filtro-pill active" onclick="filtraPerCategoria(null, this)">TUTTI</button>` +
+    categorie.map(c =>
+      `<button class="filtro-pill" onclick="filtraPerCategoria(${c.id}, this)">${c.nombre.toUpperCase()}</button>`
+    ).join('');
 }
 
 // Scroll reveal — attiva quando l'elemento entra nel viewport
