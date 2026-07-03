@@ -15,11 +15,12 @@ const OpzioneSpedizione   = require("./OpzioneSpedizione");
 const RichiestaGadget     = require("./RichiestaGadget");
 const PuntiTransazione    = require("./PuntiTransazione");
 const CodicePromo         = require("./CodicePromo");
+const Impostazione        = require("./Impostazione");
 
 module.exports = {
   sequelize,
   Utente, Categoria, Prodotto, Ordine, DettaglioOrdine,
   VarianteProdotto, ImmagineProdotto, Recensione,
   Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget,
-  PuntiTransazione, CodicePromo
+  PuntiTransazione, CodicePromo, Impostazione
 };

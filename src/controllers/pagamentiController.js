@@ -165,6 +165,25 @@ const crearSesion = async (req, res) => {
     await t.commit();
     committed = true;
 
+    // Se Stripe è attivo, crea la sessione di pagamento
+    const { get: getSetting } = require("./impostazioniController");
+    const stripeAttivo = (await getSetting("stripe_attivo")) === "true";
+
+    if (stripeAttivo) {
+      const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+      const session  = await getStripe().checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items:           lineItems,
+        mode:                 "payment",
+        customer_email:       email_cliente,
+        metadata:             { orden_id: String(ordine.id) },
+        success_url:          `${BASE_URL}/index.html?pago=ok&orden_id=${ordine.id}&sid={CHECKOUT_SESSION_ID}`,
+        cancel_url:           `${BASE_URL}/index.html?pago=cancelado`,
+      });
+      return res.json({ url: session.url, orden_id: ordine.id });
+    }
+
+    // Stripe disattivo — ordine salvato, email inviate, redirect diretto
     const ordineDettagliato = await Ordine.findByPk(ordine.id, {
       include: [{
         model: DettaglioOrdine,

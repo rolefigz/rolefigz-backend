@@ -216,7 +216,12 @@ async function confermaOrdine() {
 
     carrello = [];
     aggiornaUICarrello();
-    window.location.href = `/?pago=ok&orden_id=${data.orden_id}`;
+
+    if (data.url) {
+      window.location.href = data.url; // redirect a Stripe
+    } else {
+      window.location.href = `/?pago=ok&orden_id=${data.orden_id}`; // Stripe disattivo
+    }
 
   } catch(e) {
     showMsg('checkoutMsg', e.message, 'err');

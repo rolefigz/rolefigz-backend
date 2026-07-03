@@ -264,6 +264,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'impostazioni') {
+    await adminTabImpostazioni(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;
@@ -1796,4 +1801,53 @@ async function verificaNonLettiAdminBenchys() {
     const badge = document.getElementById('adminBenchysBadge');
     if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
   } catch(e) {}
+}
+
+async function adminTabImpostazioni(content) {
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API}/impostazioni`, { headers: { Authorization: `Bearer ${token}` } });
+    const cfg = await r.json();
+    const stripeAttivo = cfg.stripe_attivo === 'true';
+
+    content.innerHTML = `
+      <div class="admin-form-title" style="margin-bottom:24px">IMPOSTAZIONI</div>
+
+      <div style="border:1px solid var(--border);padding:24px;max-width:480px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--dark)">Pagamenti Stripe</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:1px">
+              ${stripeAttivo
+                ? '✅ ATTIVO — gli ordini passano per Stripe'
+                : '⏸ DISATTIVO — gli ordini vengono salvati senza addebito'}
+            </div>
+          </div>
+          <button id="stripeToggleBtn" onclick="toggleStripe(${stripeAttivo})"
+            class="btn-submit" style="white-space:nowrap;background:${stripeAttivo ? 'var(--red)' : 'var(--green)'}">
+            ${stripeAttivo ? 'DISATTIVA' : 'ATTIVA'}
+          </button>
+        </div>
+      </div>
+      <div id="impostazioniMsg" style="margin-top:12px"></div>`;
+  } catch(e) {
+    content.innerHTML = '<div class="msg err">Errore caricamento impostazioni</div>';
+  }
+}
+
+async function toggleStripe(attivoOra) {
+  const btn = document.getElementById('stripeToggleBtn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const r = await fetch(`${API}/impostazioni`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ chiave: 'stripe_attivo', valore: String(!attivoOra) })
+    });
+    if (!r.ok) throw new Error((await r.json()).error);
+    await adminTabImpostazioni(document.getElementById('adminContent'));
+  } catch(e) {
+    showMsg('impostazioniMsg', e.message, 'err');
+    btn.disabled = false;
+  }
 }
