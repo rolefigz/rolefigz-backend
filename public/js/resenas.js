@@ -55,7 +55,7 @@ function renderRecensioni({ resenas, promedio, total }, listaEl) {
     <div class="resena-card">
       <div class="resena-header">
         <div>${stelline(r.puntuacion, 15)}</div>
-        ${r.compra_verificada ? '<div class="resena-badge">✓ COMPRA VERIFICADA</div>' : ''}
+        ${r.compra_verificada ? '<div class="resena-badge">✓ ACQUISTO VERIFICATO</div>' : ''}
       </div>
       ${r.comentario ? `<div class="resena-texto">"${r.comentario}"</div>` : ''}
       <div class="resena-autor">

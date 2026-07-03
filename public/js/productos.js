@@ -111,7 +111,7 @@ function copiaLink(slug, btn) {
   const url = `${window.location.origin}/producto/${slug}`;
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '✓ COPIADO';
+    btn.textContent = '✓ COPIATO';
     btn.style.borderColor = 'var(--green)';
     btn.style.color = 'var(--green)';
     setTimeout(() => {
@@ -240,7 +240,7 @@ function renderDettaglioProdotto(p) {
       </div>
       <div class="producto-meta">
         <div class="meta-row"><span class="meta-key">CATEGORIA</span><span>${p.Categoria ? p.Categoria.nombre : '—'}</span></div>
-        <div class="meta-row"><span class="meta-key">MATERIAL</span><span>PLA Premium</span></div>
+        <div class="meta-row"><span class="meta-key">MATERIALE</span><span>PLA Premium</span></div>
         <div class="meta-row"><span class="meta-key">RIFERIMENTO</span><span style="font-family:'DM Mono',monospace;font-size:10px">RF-${String(p.id).padStart(4, '0')}</span></div>
         ${haVarianti ? `<div class="meta-row"><span class="meta-key">VARIANTI</span><span>${p.variantes.length} opzioni</span></div>` : ''}
       </div>
