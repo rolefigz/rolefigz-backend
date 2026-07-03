@@ -51,7 +51,26 @@ function renderCategorie() {
     </button>`;
 }
 
+// Scroll reveal — attiva quando l'elemento entra nel viewport
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        entry.target.style.transitionDelay = `${i * 0.07}s`;
+        entry.target.classList.add('in-view');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.step, .why-card, .how-section .section-title, .cats-section .section-title, .why-section .section-title').forEach(el => {
+    el.classList.add('will-animate');
+    observer.observe(el);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  setTimeout(initScrollReveal, 200);
   const percorso = window.location.pathname;
   const productMatch = percorso.match(/^\/producto\/([^/]+)/);
   const blogMatch    = percorso.match(/^\/blog\/([^/]+)/);
