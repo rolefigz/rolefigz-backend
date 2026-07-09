@@ -7,218 +7,118 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  background: #f0eeeb;
-  color: #1a1a1a;
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  background: #f0eeeb; color: #1a1a1a;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
 }
-
 header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 20px;
-  background: #fff;
-  border-bottom: 1px solid #e0ddd8;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 16px; padding: 12px 20px;
+  background: #fff; border-bottom: 1px solid #e0ddd8; flex-shrink: 0;
 }
 header .logo { font-size: 18px; font-weight: 900; letter-spacing: 3px; }
 header .logo span { color: #ff3c00; }
 header h1 { font-size: 11px; letter-spacing: 2px; color: #999; text-transform: uppercase; }
-
 .main { display: flex; flex: 1; overflow: hidden; }
-
 .canvas-area {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #e4e1dc;
-  position: relative;
-  overflow: hidden;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: #e4e1dc; position: relative; overflow: hidden;
 }
-
 #canvas2d { cursor: default; display: block; }
-
 .upload-hint {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  color: #b0aba4;
-  pointer-events: none;
+  position: absolute; display: flex; flex-direction: column;
+  align-items: center; gap: 10px; color: #b0aba4; pointer-events: none;
 }
 .upload-hint p { letter-spacing: 2px; font-size: 10px; }
-
 .canvas-area.drag-over { outline: 2px dashed #ff3c00; outline-offset: -8px; }
-
 #preview3d {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  width: 180px;
-  height: 140px;
-  border: 1px solid #ccc;
-  background: #f7f5f2;
-  cursor: grab;
-  display: none;
-  border-radius: 2px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  position: absolute; bottom: 16px; right: 16px; width: 180px; height: 140px;
+  border: 1px solid #ccc; background: #f7f5f2; cursor: grab; display: none;
+  border-radius: 2px; box-shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 #preview3d.active { display: block; }
 #pvLabel {
-  position: absolute;
-  bottom: 20px;
-  right: 202px;
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: #bbb;
-  display: none;
+  position: absolute; bottom: 20px; right: 202px;
+  font-size: 9px; letter-spacing: 2px; color: #bbb; display: none;
 }
 #pvLabel.active { display: block; }
-
-/* PANEL */
 .panel {
-  width: 268px;
-  flex-shrink: 0;
-  background: #fff;
-  border-left: 1px solid #e0ddd8;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  width: 268px; flex-shrink: 0; background: #fff;
+  border-left: 1px solid #e0ddd8; display: flex; flex-direction: column; overflow-y: auto;
 }
-
 .panel-section { border-bottom: 1px solid #ede9e4; padding: 14px 16px; }
-
-.section-title {
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: #ff3c00;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
+.section-title { font-size: 9px; letter-spacing: 3px; color: #ff3c00; text-transform: uppercase; margin-bottom: 12px; }
 .field { margin-bottom: 10px; }
 .field:last-child { margin-bottom: 0; }
 .field label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #888;
-  margin-bottom: 5px;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center;
+  color: #888; margin-bottom: 5px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
 }
 .field label span { color: #1a1a1a; }
-
 input[type=range] { width: 100%; accent-color: #ff3c00; cursor: pointer; }
-
 input[type=color] {
-  width: 100%; height: 30px;
-  border: 1px solid #ddd;
-  background: none;
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 2px;
+  width: 100%; height: 30px; border: 1px solid #ddd;
+  background: none; cursor: pointer; padding: 2px; border-radius: 2px;
 }
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
+.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .toggle-label { color: #888; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
-
 .toggle {
-  width: 36px; height: 20px;
-  background: #ccc; border-radius: 10px;
-  position: relative; cursor: pointer;
-  border: 1px solid #bbb; transition: background .2s;
+  width: 36px; height: 20px; background: #ccc; border-radius: 10px;
+  position: relative; cursor: pointer; border: 1px solid #bbb; transition: background .2s;
 }
 .toggle.on { background: #ff3c00; border-color: #ff3c00; }
 .toggle::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  background: #fff; border-radius: 50%;
-  top: 2px; left: 2px; transition: left .2s;
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: left .2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .toggle.on::after { left: 18px; }
-
 .sub-panel { display: none; padding-top: 10px; }
 .sub-panel.visible { display: block; }
-
 .upload-btn {
-  width: 100%; padding: 10px;
-  background: #f7f5f2; border: 1px dashed #ccc;
-  color: #888; cursor: pointer;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 2px; text-align: center;
-  transition: border-color .2s, color .2s;
+  width: 100%; padding: 10px; background: #f7f5f2; border: 1px dashed #ccc;
+  color: #888; cursor: pointer; font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-align: center; transition: border-color .2s, color .2s;
 }
 .upload-btn:hover { border-color: #ff3c00; color: #ff3c00; }
-
 .btn-3mf {
-  margin: 16px; padding: 12px;
-  background: #ff3c00; border: none; color: #fff;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; letter-spacing: 3px;
-  cursor: pointer; text-transform: uppercase;
-  opacity: .3; pointer-events: none;
+  margin: 16px; padding: 12px; background: #ff3c00; border: none; color: #fff;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px;
+  cursor: pointer; text-transform: uppercase; opacity: .3; pointer-events: none;
   transition: opacity .2s, background .15s;
 }
 .btn-3mf.ready { opacity: 1; pointer-events: all; }
 .btn-3mf:hover { background: #cc3000; }
 .btn-3mf:disabled { opacity: .5; cursor: wait; }
-
+#stat { font-size: 9px; color: #bbb; letter-spacing: 1px; text-align: center; padding: 0 16px 12px; }
 #fileInput { display: none; }
-
-@media (max-width: 600px) {
-  .main { flex-direction: column-reverse; }
-  .panel { width: 100%; border-left: none; border-top: 1px solid #e0ddd8; max-height: 45dvh; }
-}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">ROLE<span>FIGZ</span></div>
   <h1>// Configuratore Llavero</h1>
 </header>
-
 <div class="main">
   <div class="canvas-area" id="dropZone">
     <canvas id="canvas2d"></canvas>
     <div class="upload-hint" id="uploadHint">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0bbb4" stroke-width="1.5">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
-      <p>Trascina un'immagine o clicca per caricare</p>
-      <p style="color:#ccc;margin-top:4px">PNG · JPG · SVG</p>
+      <p>Carica un PNG con sfondo trasparente</p>
+      <p style="color:#ccc;margin-top:4px;font-size:9px">La forma del llavero seguirà il contorno dell'immagine</p>
     </div>
     <span id="pvLabel">PREVIEW 3D</span>
     <canvas id="preview3d" width="180" height="140"></canvas>
   </div>
-
   <div class="panel">
     <div class="panel-section">
       <div class="section-title">// Immagine</div>
-      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">+ CARICA IMMAGINE</button>
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">+ CARICA PNG</button>
       <input type="file" id="fileInput" accept="image/*">
     </div>
-
     <div class="panel-section">
       <div class="section-title">// Dimensioni</div>
       <div class="field">
@@ -229,46 +129,34 @@ input[type=color] {
         <label>Spessore (mm) <span id="valT">3</span></label>
         <input type="range" id="slT" min="1" max="6" value="3" step="0.5">
       </div>
-      <div class="field">
-        <label>Margine (mm) <span id="valM">4</span></label>
-        <input type="range" id="slM" min="0" max="12" value="4" step="0.5">
-      </div>
-      <div class="field">
-        <label>Angoli (mm) <span id="valR">4</span></label>
-        <input type="range" id="slR" min="0" max="15" value="4" step="1">
-      </div>
     </div>
-
     <div class="panel-section">
       <div class="section-title">// Colore base</div>
-      <div class="field">
-        <input type="color" id="colBase" value="#ffffff">
-      </div>
+      <div class="field"><input type="color" id="colBase" value="#ffffff"></div>
     </div>
-
     <div class="panel-section">
-      <div class="section-title">// Anello</div>
+      <div class="section-title">// Foro portachiavi</div>
       <div class="toggle-row">
         <span class="toggle-label">Attivo</span>
-        <div class="toggle on" id="togRing" onclick="toggleRing()"></div>
+        <div class="toggle on" id="togHole" onclick="toggleHole()"></div>
       </div>
-      <div class="sub-panel visible" id="ringPanel">
+      <div class="sub-panel visible" id="holePanel">
         <div class="field">
-          <label>Ø esterno (mm) <span id="valRO">7</span></label>
-          <input type="range" id="slRO" min="4" max="14" value="7" step="0.5">
+          <label>Diametro (mm) <span id="valHD">4</span></label>
+          <input type="range" id="slHD" min="2" max="10" value="4" step="0.5">
         </div>
         <div class="field">
-          <label>Ø foro (mm) <span id="valRI">4</span></label>
-          <input type="range" id="slRI" min="2" max="10" value="4" step="0.5">
+          <label>Posizione X (mm) <span id="valHX">0</span></label>
+          <input type="range" id="slHX" min="-30" max="30" value="0" step="1">
         </div>
         <div class="field">
-          <label>Posizione X (mm) <span id="valRX">0</span></label>
-          <input type="range" id="slRX" min="-20" max="20" value="0" step="1">
+          <label>Dall'alto (mm) <span id="valHY">5</span></label>
+          <input type="range" id="slHY" min="0" max="30" value="5" step="0.5">
         </div>
       </div>
     </div>
-
     <button class="btn-3mf" id="btn3mf" onclick="esporta3MF()">↓ SCARICA 3MF</button>
+    <div id="stat"></div>
   </div>
 </div>
 
@@ -277,83 +165,120 @@ input[type=color] {
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let userImg = null, imgAspect = 1;
+let mask = null, sampW = 0, sampH = 0, sampData = null;
 
 const p = {
-  width: 50, thickness: 3, margin: 4, radius: 4,
-  baseColor: '#ffffff',
-  ring: true, ringOuter: 7, ringHole: 4, ringOffX: 0,
+  width: 50, thickness: 3, baseColor: '#ffffff',
+  hole: true, holeDiam: 4, holeOffX: 0, holeTopY: 5,
 };
 
-function dims() { return { pw: p.width, ph: p.width * imgAspect }; }
+const CS = 1.0; // mm per grid cell
+
+function dims() {
+  const pw = p.width, ph = pw * imgAspect;
+  const NX = Math.ceil(pw / CS), NY = Math.ceil(ph / CS);
+  return { pw, ph, NX, NY };
+}
+
+// ─── MASK ────────────────────────────────────────────────────────────────────
+function buildMask() {
+  if (!userImg) return;
+  const { pw, ph, NX, NY } = dims();
+  sampW = NX * 2; sampH = NY * 2;
+  const sc = document.createElement('canvas');
+  sc.width = sampW; sc.height = sampH;
+  const sctx = sc.getContext('2d');
+  sctx.drawImage(userImg, 0, 0, sampW, sampH);
+  sampData = sctx.getImageData(0, 0, sampW, sampH).data;
+
+  mask = [];
+  for (let i = 0; i < NX; i++) {
+    mask[i] = new Uint8Array(NY);
+    for (let j = 0; j < NY; j++) {
+      const px = Math.floor((i + 0.5) / NX * sampW);
+      const py = Math.floor((j + 0.5) / NY * sampH);
+      mask[i][j] = sampData[((py * sampW + px) * 4) + 3] > 20 ? 1 : 0;
+    }
+  }
+}
+
+function inHole(mmX, mmY) {
+  if (!p.hole) return false;
+  const { pw } = dims();
+  const hcx = pw / 2 + p.holeOffX;
+  const hcy = p.holeTopY;
+  return (mmX - hcx) ** 2 + (mmY - hcy) ** 2 <= (p.holeDiam / 2) ** 2;
+}
+
+function isIncluded(i, j) {
+  const { NX, NY } = dims();
+  if (i < 0 || i >= NX || j < 0 || j >= NY) return false;
+  if (!mask || !mask[i][j]) return false;
+  return !inHole((i + 0.5) * CS, (j + 0.5) * CS);
+}
+
+// ─── COLOR SAMPLING ──────────────────────────────────────────────────────────
+function hexToRgb(h) {
+  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+}
+
+function sampleColor(mmX, mmY) {
+  if (!sampData) return p.baseColor;
+  const { pw, ph } = dims();
+  const px = Math.min(Math.floor(mmX / pw * sampW), sampW - 1);
+  const py = Math.min(Math.floor(mmY / ph * sampH), sampH - 1);
+  const idx = (py * sampW + px) * 4;
+  const alpha = sampData[idx + 3] / 255;
+  const [br, bg, bb] = hexToRgb(p.baseColor);
+  const fr = Math.round(sampData[idx]   * alpha + br * (1 - alpha));
+  const fg = Math.round(sampData[idx+1] * alpha + bg * (1 - alpha));
+  const fb = Math.round(sampData[idx+2] * alpha + bb * (1 - alpha));
+  return `#${fr.toString(16).padStart(2,'0')}${fg.toString(16).padStart(2,'0')}${fb.toString(16).padStart(2,'0')}`;
+}
 
 // ─── 2D CANVAS ───────────────────────────────────────────────────────────────
 const c2d = document.getElementById('canvas2d');
 const ctx = c2d.getContext('2d');
 const dropZone = document.getElementById('dropZone');
 
-function rrPath(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);       ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);       ctx.quadraticCurveTo(x, y + h,     x, y + h - r);
-  ctx.lineTo(x, y + r);           ctx.quadraticCurveTo(x, y,         x + r, y);
-  ctx.closePath();
-}
-
 function draw() {
-  const { pw, ph } = dims();
   c2d.width  = dropZone.clientWidth;
   c2d.height = dropZone.clientHeight;
   ctx.clearRect(0, 0, c2d.width, c2d.height);
   if (!userImg) return;
 
-  const ringTop = p.ring ? p.ringOuter + 4 : 0;
+  const { pw, ph } = dims();
   const PAD = 60;
-  const sc  = Math.min((c2d.width - PAD*2) / pw, (c2d.height - PAD*2 - ringTop) / ph);
-  const ox  = (c2d.width  - pw * sc) / 2;
-  const oy  = (c2d.height - ph * sc) / 2 + ringTop * sc / 2;
-  const r   = Math.min(p.radius * sc, pw * sc / 2, ph * sc / 2);
+  const sc  = Math.min((c2d.width - PAD*2) / pw, (c2d.height - PAD*2) / ph);
+  const ox  = (c2d.width  - pw*sc) / 2;
+  const oy  = (c2d.height - ph*sc) / 2;
 
-  // Shadow + plate
+  // Drop shadow behind image
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 6;
-  rrPath(ctx, ox, oy, pw * sc, ph * sc, r);
-  ctx.fillStyle = p.baseColor;
-  ctx.fill();
+  ctx.shadowColor = 'rgba(0,0,0,0.22)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  ctx.drawImage(userImg, ox, oy, pw*sc, ph*sc);
   ctx.restore();
 
-  // Clipped image
-  const mx = p.margin * sc;
-  const ir = Math.max(0, r - mx);
-  ctx.save();
-  rrPath(ctx, ox + mx, oy + mx, pw * sc - mx*2, ph * sc - mx*2, ir);
-  ctx.clip();
-  ctx.drawImage(userImg, ox + mx, oy + mx, pw * sc - mx*2, ph * sc - mx*2);
-  ctx.restore();
+  // Image (handles its own transparency = shape)
+  ctx.drawImage(userImg, ox, oy, pw*sc, ph*sc);
 
-  // Plate border
-  rrPath(ctx, ox, oy, pw * sc, ph * sc, r);
-  ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1.5; ctx.stroke();
-
-  // Ring
-  if (p.ring) {
-    const rox2 = ox + pw * sc / 2 + p.ringOffX * sc;
-    const roy2 = oy - (p.ringOuter / 2 - 1) * sc;
+  // Hole overlay
+  if (p.hole) {
+    const hcx = ox + (pw/2 + p.holeOffX) * sc;
+    const hcy = oy + p.holeTopY * sc;
+    const hr  = p.holeDiam / 2 * sc;
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 8;
-    ctx.beginPath(); ctx.arc(rox2, roy2, p.ringOuter / 2 * sc, 0, Math.PI*2);
-    ctx.fillStyle = p.baseColor; ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(hcx, hcy, hr, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,3]); ctx.stroke();
     ctx.restore();
-    ctx.beginPath(); ctx.arc(rox2, roy2, p.ringHole / 2 * sc, 0, Math.PI*2);
-    ctx.fillStyle = '#e4e1dc'; ctx.fill();
   }
 
-  ctx.fillStyle = '#aaa'; ctx.font = '10px DM Mono, monospace'; ctx.textAlign = 'left';
-  ctx.fillText(`${p.width} × ${Math.round(ph)} mm  |  spessore ${p.thickness} mm`, ox, oy + ph * sc + 22);
-
-  update3D();
+  // Dimension label
+  ctx.fillStyle = '#999'; ctx.font = '10px DM Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`${p.width} × ${Math.round(ph)} mm  ·  ${p.thickness} mm spessore`,
+               c2d.width / 2, oy + ph * sc + 22);
 }
 
 // ─── UPLOAD ──────────────────────────────────────────────────────────────────
@@ -368,11 +293,12 @@ function loadFile(file) {
     document.getElementById('btn3mf').classList.add('ready');
     document.getElementById('preview3d').classList.add('active');
     document.getElementById('pvLabel').classList.add('active');
-    rebuild3D(); draw();
+    buildMask();
+    rebuild3D();
+    draw();
   };
   img.src = url;
 }
-
 document.getElementById('fileInput').onchange = e => loadFile(e.target.files[0]);
 dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
@@ -381,20 +307,25 @@ dropZone.addEventListener('click', e => { if (e.target === c2d || e.target === d
 
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
 let dbt;
-function schedDraw(rb) { clearTimeout(dbt); dbt = setTimeout(() => { if (rb) rebuild3D(); draw(); }, 60); }
+function schedDraw(rebuildMask, rebuild3d) {
+  clearTimeout(dbt);
+  dbt = setTimeout(() => {
+    if (rebuildMask) buildMask();
+    if (rebuild3d || rebuildMask) rebuild3D();
+    draw();
+  }, 80);
+}
 
-function bind(id, vid, key, rb) {
-  const sl = document.getElementById(id), vl = document.getElementById(vid);
-  sl.addEventListener('input', () => { p[key] = parseFloat(sl.value); vl.textContent = sl.value; schedDraw(rb); });
+function bind(slId, vlId, key, rebuildMask) {
+  const sl = document.getElementById(slId), vl = document.getElementById(vlId);
+  sl.addEventListener('input', () => { p[key] = parseFloat(sl.value); vl.textContent = sl.value; schedDraw(rebuildMask, true); });
 }
 
 bind('slW',  'valW',  'width',     true);
-bind('slT',  'valT',  'thickness', true);
-bind('slM',  'valM',  'margin',    false);
-bind('slR',  'valR',  'radius',    false);
-bind('slRO', 'valRO', 'ringOuter', true);
-bind('slRI', 'valRI', 'ringHole',  true);
-bind('slRX', 'valRX', 'ringOffX',  false);
+bind('slT',  'valT',  'thickness', false);
+bind('slHD', 'valHD', 'holeDiam',  false);
+bind('slHX', 'valHX', 'holeOffX',  false);
+bind('slHY', 'valHY', 'holeTopY',  false);
 
 document.getElementById('colBase').addEventListener('input', e => {
   p.baseColor = e.target.value;
@@ -402,11 +333,11 @@ document.getElementById('colBase').addEventListener('input', e => {
   draw();
 });
 
-function toggleRing() {
-  p.ring = !p.ring;
-  document.getElementById('togRing').classList.toggle('on', p.ring);
-  document.getElementById('ringPanel').classList.toggle('visible', p.ring);
-  rebuild3D(); draw();
+function toggleHole() {
+  p.hole = !p.hole;
+  document.getElementById('togHole').classList.toggle('on', p.hole);
+  document.getElementById('holePanel').classList.toggle('visible', p.hole);
+  schedDraw(false, true);
 }
 
 new ResizeObserver(() => draw()).observe(dropZone);
@@ -415,16 +346,17 @@ new ResizeObserver(() => draw()).observe(dropZone);
 const pv    = document.getElementById('preview3d');
 const pvRen = new THREE.WebGLRenderer({ canvas: pv, antialias: true });
 pvRen.setSize(180, 140);
-pvRen.setClearColor(0xf7f5f2, 1);
+pvRen.setClearColor(0xf0eeeb, 1);
 
 const pvScene = new THREE.Scene();
 const pvCam   = new THREE.PerspectiveCamera(38, 180/140, 0.1, 2000);
 pvScene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const kl = new THREE.DirectionalLight(0xffffff, 0.8); kl.position.set(1,2,2); pvScene.add(kl);
+const kl = new THREE.DirectionalLight(0xffffff, 0.8);
+kl.position.set(1, 2, 2); pvScene.add(kl);
 
-let pvTheta = 0.4, pvPhi = 1.0, pvRadius = 120;
+let pvTheta = 0.5, pvPhi = 0.9, pvRadius = 120;
 const pvTarget = new THREE.Vector3();
-let pvMeshes = [], matSide = null, imgTex = null;
+let pvMeshes = [], matSide = null;
 
 function pvUpdateCam() {
   pvCam.position.set(
@@ -435,268 +367,189 @@ function pvUpdateCam() {
   pvCam.lookAt(pvTarget);
 }
 
-let pvDrag = false, pvPrev = {x:0,y:0};
+let pvDrag = false, pvPrev = { x:0, y:0 };
 pv.addEventListener('pointerdown', e => { pvDrag=true; pvPrev={x:e.clientX,y:e.clientY}; pv.style.cursor='grabbing'; });
 window.addEventListener('pointerup', () => { pvDrag=false; pv.style.cursor='grab'; });
 window.addEventListener('pointermove', e => {
   if (!pvDrag) return;
   pvTheta -= (e.clientX - pvPrev.x) * 0.018;
-  pvPhi    = Math.max(0.15, Math.min(Math.PI-0.15, pvPhi - (e.clientY - pvPrev.y) * 0.018));
-  pvPrev   = {x:e.clientX,y:e.clientY};
+  pvPhi    = Math.max(0.15, Math.min(Math.PI - 0.15, pvPhi - (e.clientY - pvPrev.y) * 0.018));
+  pvPrev   = { x:e.clientX, y:e.clientY };
   pvUpdateCam();
 });
-pv.addEventListener('wheel', e => { pvRadius = Math.max(30, Math.min(300, pvRadius + e.deltaY*0.15)); pvUpdateCam(); }, {passive:true});
-
-function makeRRS(x, y, w, h, r) {
-  const s = new THREE.Shape();
-  s.moveTo(x+r, y); s.lineTo(x+w-r, y); s.quadraticCurveTo(x+w,y,x+w,y+r);
-  s.lineTo(x+w,y+h-r); s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  s.lineTo(x+r,y+h); s.quadraticCurveTo(x,y+h,x,y+h-r);
-  s.lineTo(x,y+r); s.quadraticCurveTo(x,y,x+r,y);
-  return s;
-}
+pv.addEventListener('wheel', e => {
+  pvRadius = Math.max(30, Math.min(400, pvRadius + e.deltaY * 0.2));
+  pvUpdateCam();
+}, { passive: true });
 
 function rebuild3D() {
-  if (!userImg) return;
+  if (!userImg || !mask) return;
   pvMeshes.forEach(m => { pvScene.remove(m); m.geometry.dispose(); });
   pvMeshes = [];
 
-  const { pw, ph } = dims();
-  const r = Math.min(p.radius, pw/2, ph/2);
+  const { pw, ph, NX, NY } = dims();
   const th = p.thickness;
 
+  // Build texture
   const tc = document.createElement('canvas');
-  tc.width = 512; tc.height = Math.round(512 * imgAspect);
+  tc.width = NX; tc.height = NY;
   const tcx = tc.getContext('2d');
-  tcx.fillStyle = p.baseColor; tcx.fillRect(0,0,tc.width,tc.height);
-  const mx = (p.margin/pw)*tc.width, my = (p.margin/ph)*tc.height;
-  tcx.drawImage(userImg, mx, my, tc.width-mx*2, tc.height-my*2);
+  tcx.fillStyle = p.baseColor; tcx.fillRect(0, 0, NX, NY);
+  tcx.drawImage(userImg, 0, 0, NX, NY);
+  const tex = new THREE.CanvasTexture(tc);
 
-  if (imgTex) imgTex.dispose();
-  imgTex = new THREE.CanvasTexture(tc);
   matSide = new THREE.MeshStandardMaterial({ color: p.baseColor, roughness: 0.45 });
-  const matTop = new THREE.MeshStandardMaterial({ map: imgTex, roughness: 0.35 });
+  const matTop = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35 });
 
-  const pg = new THREE.ExtrudeGeometry(makeRRS(0,0,pw,ph,r), {depth:th, bevelEnabled:false});
-  const pm = new THREE.Mesh(pg, [matSide, matTop, matSide]);
-  pm.position.set(-pw/2, -ph/2, -th/2);
-  pvScene.add(pm); pvMeshes.push(pm);
+  const topPos = [], topUV = [], sidePos = [];
 
-  if (p.ring) {
-    const rs = new THREE.Shape(); rs.absarc(0,0,p.ringOuter/2,0,Math.PI*2,false);
-    const rh = new THREE.Path(); rh.absarc(0,0,p.ringHole/2,0,Math.PI*2,true); rs.holes.push(rh);
-    const rg = new THREE.ExtrudeGeometry(rs, {depth:th, bevelEnabled:false});
-    const rm = new THREE.Mesh(rg, matSide);
-    rm.position.set(p.ringOffX, ph/2 + p.ringOuter/2 - 1, -th/2);
-    pvScene.add(rm); pvMeshes.push(rm);
+  for (let i = 0; i < NX; i++) {
+    for (let j = 0; j < NY; j++) {
+      if (!isIncluded(i, j)) continue;
+      const x0=i*CS, x1=x0+CS, y0=j*CS, y1=y0+CS;
+      const u0=i/NX, u1=(i+1)/NX, v0=1-j/NY, v1=1-(j+1)/NY;
+
+      // Top face
+      topPos.push(x0,y0,th, x1,y0,th, x1,y1,th, x0,y0,th, x1,y1,th, x0,y1,th);
+      topUV.push(u0,v0, u1,v0, u1,v1, u0,v0, u1,v1, u0,v1);
+
+      // Bottom + sides
+      sidePos.push(x0,y0,0, x1,y1,0, x1,y0,0, x0,y0,0, x0,y1,0, x1,y1,0);
+      if (!isIncluded(i-1,j)) sidePos.push(x0,y0,0, x0,y0,th, x0,y1,0, x0,y0,th, x0,y1,th, x0,y1,0);
+      if (!isIncluded(i+1,j)) sidePos.push(x1,y0,0, x1,y1,0, x1,y0,th, x1,y1,0, x1,y1,th, x1,y0,th);
+      if (!isIncluded(i,j-1)) sidePos.push(x0,y0,0, x1,y0,0, x0,y0,th, x1,y0,0, x1,y0,th, x0,y0,th);
+      if (!isIncluded(i,j+1)) sidePos.push(x0,y1,0, x0,y1,th, x1,y1,0, x1,y1,0, x0,y1,th, x1,y1,th);
+    }
   }
 
-  const maxD = Math.max(pw, ph + (p.ring ? p.ringOuter : 0));
-  pvRadius = maxD * 2.4;
-  pvTarget.set(p.ringOffX/2, p.ring ? p.ringOuter/4 : 0, 0);
-  pvUpdateCam();
-}
+  const topGeo = new THREE.BufferGeometry();
+  topGeo.setAttribute('position', new THREE.Float32BufferAttribute(topPos, 3));
+  topGeo.setAttribute('uv',       new THREE.Float32BufferAttribute(topUV, 2));
+  topGeo.computeVertexNormals();
+  const topMesh = new THREE.Mesh(topGeo, matTop);
+  topMesh.position.set(-pw/2, -ph/2, -th/2);
+  pvScene.add(topMesh); pvMeshes.push(topMesh);
 
-function update3D() {
-  if (matSide) matSide.color.set(p.baseColor);
-  pvRen.render(pvScene, pvCam);
+  if (sidePos.length) {
+    const sideGeo = new THREE.BufferGeometry();
+    sideGeo.setAttribute('position', new THREE.Float32BufferAttribute(sidePos, 3));
+    sideGeo.computeVertexNormals();
+    const sideMesh = new THREE.Mesh(sideGeo, matSide);
+    sideMesh.position.set(-pw/2, -ph/2, -th/2);
+    pvScene.add(sideMesh); pvMeshes.push(sideMesh);
+  }
+
+  const maxD = Math.max(pw, ph);
+  pvRadius = maxD * 2.6;
+  pvTarget.set(0, 0, 0);
+  pvUpdateCam();
 }
 
 (function loop() { requestAnimationFrame(loop); pvRen.render(pvScene, pvCam); })();
 pvUpdateCam();
 
 // ─── 3MF EXPORT ──────────────────────────────────────────────────────────────
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
-}
-
 async function esporta3MF() {
-  if (!userImg) return;
+  if (!userImg || !mask) return;
   const btn = document.getElementById('btn3mf');
   btn.textContent = 'GENERAZIONE...'; btn.disabled = true;
-
-  // Give the UI a tick to update
   await new Promise(r => setTimeout(r, 30));
 
-  const { pw, ph } = dims();
+  const { pw, ph, NX, NY } = dims();
   const th = p.thickness;
-  const cr = Math.min(p.radius, pw/2, ph/2);
 
-  // ── Sample image at ~3px/mm resolution
-  const sampW = Math.min(300, Math.ceil(pw * 3));
-  const sampH = Math.round(sampW * imgAspect);
-  const sc2 = document.createElement('canvas');
-  sc2.width = sampW; sc2.height = sampH;
-  const sctx = sc2.getContext('2d');
-  sctx.drawImage(userImg, 0, 0, sampW, sampH);
-  const rawData = sctx.getImageData(0, 0, sampW, sampH).data;
-  const [br, bg, bb] = hexToRgb(p.baseColor);
-
-  function sampleColor(mmX, mmY) {
-    const u = (mmX - p.margin) / Math.max(0.001, pw - 2*p.margin);
-    const v = (mmY - p.margin) / Math.max(0.001, ph - 2*p.margin);
-    if (u < 0 || u > 1 || v < 0 || v > 1) return p.baseColor;
-    const px = Math.min(Math.floor(u * sampW), sampW-1);
-    const py = Math.min(Math.floor(v * sampH), sampH-1);
-    const idx = (py * sampW + px) * 4;
-    const alpha = rawData[idx+3] / 255;
-    const fr = Math.round(rawData[idx]   * alpha + br * (1-alpha));
-    const fg = Math.round(rawData[idx+1] * alpha + bg * (1-alpha));
-    const fb = Math.round(rawData[idx+2] * alpha + bb * (1-alpha));
-    return `#${fr.toString(16).padStart(2,'0')}${fg.toString(16).padStart(2,'0')}${fb.toString(16).padStart(2,'0')}`;
-  }
-
-  function insideRR(x, y) {
-    if (x<0||x>pw||y<0||y>ph) return false;
-    const lx=cr, rx=pw-cr, ty=cr, by=ph-cr;
-    if (x>=lx&&x<=rx||y>=ty&&y<=by) return true;
-    const cx=x<lx?lx:(x>rx?rx:x), cy=y<ty?ty:(y>by?by:y);
-    return (x-cx)**2+(y-cy)**2<=cr**2;
-  }
-
-  // Color index table
-  const colorMap = new Map();
-  const colorList = [];
-  function colorIdx(hex) {
+  // Color table
+  const colorMap = new Map(), colorList = [];
+  function ci(hex) {
     if (!colorMap.has(hex)) { colorMap.set(hex, colorList.length); colorList.push(hex); }
     return colorMap.get(hex);
   }
-  const baseIdx = colorIdx(p.baseColor);
+  const baseCI = ci(p.baseColor);
 
   // Flat triangle buffers
-  const VA = []; // vertex positions: x,y,z triples
-  const TA = []; // triangles: v0,v1,v2,colorIdx quads
+  const VA = [], TA = []; // vertices (x,y,z) and triangles (v0,v1,v2,colorIdx)
+  function v(x,y,z) { const i=VA.length/3; VA.push(x,y,z); return i; }
+  function t(a,b,c,k) { TA.push(a,b,c,k); }
 
-  function addV(x,y,z) { const i=VA.length/3; VA.push(x,y,z); return i; }
-  function addT(a,b,c,ci) { TA.push(a,b,c,ci); }
-
-  // ── TOP FACE: 1mm grid, colored from image
-  const cellSz = Math.max(0.5, pw / Math.ceil(pw));
-  const NX = Math.ceil(pw / cellSz);
-  const NY = Math.ceil(ph / cellSz);
-  const dx = pw / NX, dy = ph / NY;
-
+  let cellCount = 0;
   for (let i = 0; i < NX; i++) {
     for (let j = 0; j < NY; j++) {
-      const x0=i*dx, x1=x0+dx, y0=j*dy, y1=y0+dy;
-      const mx=(x0+x1)/2, my=(y0+y1)/2;
-      if (!insideRR(mx, my)) continue;
-      const ci = colorIdx(sampleColor(mx, my));
-      const a=addV(x0,y0,th), b=addV(x1,y0,th), c2=addV(x1,y1,th), d=addV(x0,y1,th);
-      addT(a,b,c2,ci); addT(a,c2,d,ci);
+      if (!isIncluded(i, j)) continue;
+      cellCount++;
+      const x0=i*CS, x1=x0+CS, y0=j*CS, y1=y0+CS;
+      const k = ci(sampleColor((x0+x1)/2, (y0+y1)/2));
+
+      // Top face (+Z)
+      const a=v(x0,y0,th), b=v(x1,y0,th), c_=v(x1,y1,th), d=v(x0,y1,th);
+      t(a,b,c_,k); t(a,c_,d,k);
+
+      // Bottom face (-Z)
+      const e=v(x0,y0,0), f=v(x1,y0,0), g=v(x1,y1,0), h=v(x0,y1,0);
+      t(e,g,f,baseCI); t(e,h,g,baseCI);
+
+      // Left wall (-X)
+      if (!isIncluded(i-1,j)) {
+        t(v(x0,y0,0),v(x0,y0,th),v(x0,y1,0),baseCI);
+        t(v(x0,y0,th),v(x0,y1,th),v(x0,y1,0),baseCI);
+      }
+      // Right wall (+X)
+      if (!isIncluded(i+1,j)) {
+        t(v(x1,y0,0),v(x1,y1,0),v(x1,y0,th),baseCI);
+        t(v(x1,y1,0),v(x1,y1,th),v(x1,y0,th),baseCI);
+      }
+      // Top wall (-Y)
+      if (!isIncluded(i,j-1)) {
+        t(v(x0,y0,0),v(x1,y0,0),v(x0,y0,th),baseCI);
+        t(v(x1,y0,0),v(x1,y0,th),v(x0,y0,th),baseCI);
+      }
+      // Bottom wall (+Y)
+      if (!isIncluded(i,j+1)) {
+        t(v(x0,y1,0),v(x0,y1,th),v(x1,y1,0),baseCI);
+        t(v(x1,y1,0),v(x0,y1,th),v(x1,y1,th),baseCI);
+      }
     }
   }
 
-  // ── BOTTOM FACE: same grid, base color, reversed winding
-  for (let i = 0; i < NX; i++) {
-    for (let j = 0; j < NY; j++) {
-      const x0=i*dx, x1=x0+dx, y0=j*dy, y1=y0+dy;
-      if (!insideRR((x0+x1)/2, (y0+y1)/2)) continue;
-      const a=addV(x0,y0,0), b=addV(x1,y0,0), c2=addV(x1,y1,0), d=addV(x0,y1,0);
-      addT(a,c2,b,baseIdx); addT(a,d,c2,baseIdx);
-    }
+  const nV = VA.length/3, nT = TA.length/4;
+  document.getElementById('stat').textContent = `${cellCount} celle · ${nT.toLocaleString()} triangoli · ${colorList.length} colori`;
+
+  // Build XML
+  const vLines = [];
+  for (let i=0;i<nV;i++) vLines.push(`<vertex x="${VA[i*3].toFixed(3)}" y="${VA[i*3+1].toFixed(3)}" z="${VA[i*3+2].toFixed(3)}"/>`);
+
+  const tLines = [];
+  for (let i=0;i<nT;i++) {
+    const v0=TA[i*4],v1=TA[i*4+1],v2=TA[i*4+2],k=TA[i*4+3];
+    tLines.push(`<triangle v1="${v0}" v2="${v1}" v3="${v2}" pid="1" p1="${k}" p2="${k}" p3="${k}"/>`);
   }
 
-  // ── SIDE WALLS: outline of rounded rect
-  function buildOutline(nSegs) {
-    const pts = [], n = Math.max(4, Math.ceil(nSegs/4));
-    for (let i=0;i<=n;i++) { const a=(-90+90*i/n)*Math.PI/180; pts.push([pw-cr+cr*Math.cos(a), cr+cr*Math.sin(a)]); }
-    for (let i=1;i<=n;i++) { const a=(90*i/n)*Math.PI/180;     pts.push([pw-cr+cr*Math.cos(a), ph-cr+cr*Math.sin(a)]); }
-    for (let i=1;i<=n;i++) { const a=(90+90*i/n)*Math.PI/180;  pts.push([cr+cr*Math.cos(a),    ph-cr+cr*Math.sin(a)]); }
-    for (let i=1;i<=n;i++) { const a=(180+90*i/n)*Math.PI/180; pts.push([cr+cr*Math.cos(a),    cr+cr*Math.sin(a)]); }
-    return pts;
-  }
-  const outline = buildOutline(64);
-  for (let i = 0; i < outline.length; i++) {
-    const [x0,y0] = outline[i], [x1,y1] = outline[(i+1)%outline.length];
-    const a=addV(x0,y0,0), b=addV(x1,y1,0), c2=addV(x1,y1,th), d=addV(x0,y0,th);
-    addT(a,b,c2,baseIdx); addT(a,c2,d,baseIdx);
-  }
+  const cGroup = colorList.map(c=>`<m:color color="${c}"/>`).join('');
 
-  // ── RING
-  if (p.ring) {
-    const rox = pw/2 + p.ringOffX;
-    const roy = ph + p.ringOuter/2 - 1;
-    const ro = p.ringOuter/2, ri = p.ringHole/2;
-    const RS = 48;
-    for (let i = 0; i < RS; i++) {
-      const a0=(i/RS)*Math.PI*2, a1=((i+1)/RS)*Math.PI*2;
-      const c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
-
-      // Top annulus
-      const oa=addV(rox+ro*c0,roy+ro*s0,th), ob=addV(rox+ro*c1,roy+ro*s1,th);
-      const ia=addV(rox+ri*c0,roy+ri*s0,th), ib=addV(rox+ri*c1,roy+ri*s1,th);
-      addT(oa,ob,ib,baseIdx); addT(oa,ib,ia,baseIdx);
-      // Bottom annulus
-      const oa2=addV(rox+ro*c0,roy+ro*s0,0), ob2=addV(rox+ro*c1,roy+ro*s1,0);
-      const ia2=addV(rox+ri*c0,roy+ri*s0,0), ib2=addV(rox+ri*c1,roy+ri*s1,0);
-      addT(oa2,ib2,ob2,baseIdx); addT(oa2,ia2,ib2,baseIdx);
-      // Outer wall
-      addT(addV(rox+ro*c0,roy+ro*s0,0), addV(rox+ro*c1,roy+ro*s1,0), addV(rox+ro*c1,roy+ro*s1,th), baseIdx);
-      addT(addV(rox+ro*c0,roy+ro*s0,0), addV(rox+ro*c1,roy+ro*s1,th), addV(rox+ro*c0,roy+ro*s0,th), baseIdx);
-      // Inner wall
-      addT(addV(rox+ri*c0,roy+ri*s0,0), addV(rox+ri*c0,roy+ri*s0,th), addV(rox+ri*c1,roy+ri*s1,th), baseIdx);
-      addT(addV(rox+ri*c0,roy+ri*s0,0), addV(rox+ri*c1,roy+ri*s1,th), addV(rox+ri*c1,roy+ri*s1,0), baseIdx);
-    }
-  }
-
-  // ── BUILD 3MF XML
-  const numV = VA.length / 3;
-  const numT = TA.length / 4;
-
-  const vParts = [];
-  for (let i = 0; i < numV; i++)
-    vParts.push(`<vertex x="${VA[i*3].toFixed(4)}" y="${VA[i*3+1].toFixed(4)}" z="${VA[i*3+2].toFixed(4)}" />`);
-
-  const tParts = [];
-  for (let i = 0; i < numT; i++) {
-    const v0=TA[i*4],v1=TA[i*4+1],v2=TA[i*4+2],ci=TA[i*4+3];
-    tParts.push(`<triangle v1="${v0}" v2="${v1}" v3="${v2}" pid="1" p1="${ci}" p2="${ci}" p3="${ci}" />`);
-  }
-
-  const colorGroupXML = colorList.map(c => `<m:color color="${c}" />`).join('');
-
-  const modelXML =
-`<?xml version="1.0" encoding="UTF-8"?>
+  const model = `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US"
   xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
   xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
   <resources>
-    <m:colorgroup id="1">${colorGroupXML}</m:colorgroup>
-    <object id="2" type="model" pid="1" pindex="${baseIdx}">
+    <m:colorgroup id="1">${cGroup}</m:colorgroup>
+    <object id="2" type="model" pid="1" pindex="${baseCI}">
       <mesh>
-        <vertices>${vParts.join('')}</vertices>
-        <triangles>${tParts.join('')}</triangles>
+        <vertices>${vLines.join('')}</vertices>
+        <triangles>${tLines.join('')}</triangles>
       </mesh>
     </object>
   </resources>
-  <build>
-    <item objectid="2" />
-  </build>
+  <build><item objectid="2"/></build>
 </model>`;
 
-  const contentTypes =
-`<?xml version="1.0" encoding="UTF-8"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />
-  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml" />
-</Types>`;
-
-  const rels =
-`<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" Target="/3D/3dmodel.model" Id="rel0" />
-</Relationships>`;
-
   const zip = new JSZip();
-  zip.file('[Content_Types].xml', contentTypes);
-  zip.file('_rels/.rels', rels);
-  zip.file('3D/3dmodel.model', modelXML);
+  zip.file('[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>`);
+  zip.file('_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" Target="/3D/3dmodel.model" Id="r0"/></Relationships>`);
+  zip.file('3D/3dmodel.model', model);
 
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-  const url = URL.createObjectURL(blob);
-  Object.assign(document.createElement('a'), { href: url, download: 'llavero_rolefigz.3mf' }).click();
-  URL.revokeObjectURL(url);
+  const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', compressionOptions:{level:6} });
+  Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'llavero_rolefigz.3mf' }).click();
 
   btn.textContent = '↓ SCARICA 3MF'; btn.disabled = false;
 }
