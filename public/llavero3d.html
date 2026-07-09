@@ -135,6 +135,19 @@ input[type=color] {
       <div class="field"><input type="color" id="colBase" value="#ffffff"></div>
     </div>
     <div class="panel-section">
+      <div class="section-title">// Risoluzione mesh</div>
+      <div class="field">
+        <label>Qualità</label>
+        <select id="selRes" style="width:100%;font-family:inherit;font-size:11px;padding:5px 8px;border:1px solid #e0ddd8;background:#fff;cursor:pointer">
+          <option value="1.0">Bozza — 1 mm/cella (veloce)</option>
+          <option value="0.5" selected>Media — 0.5 mm/cella</option>
+          <option value="0.3">Alta — 0.3 mm/cella (lenta)</option>
+          <option value="0.2">Ultra — 0.2 mm/cella (molto lenta)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel-section">
       <div class="section-title">// Colori stampa</div>
       <div class="field">
         <label>N. filamenti <span id="valNC">4</span></label>
@@ -180,7 +193,7 @@ const p = {
   hole: true, holeDiam: 4, holeOffX: 0, holeTopY: 5,
 };
 
-const CS = 1.0; // mm per grid cell
+let CS = 0.5; // mm per grid cell
 
 function dims() {
   const pw = p.width, ph = pw * imgAspect;
@@ -339,6 +352,11 @@ let nColors = 4;
 document.getElementById('slNC').addEventListener('input', e => {
   nColors = parseInt(e.target.value);
   document.getElementById('valNC').textContent = nColors;
+});
+
+document.getElementById('selRes').addEventListener('change', e => {
+  CS = parseFloat(e.target.value);
+  schedDraw(true, true);
 });
 
 document.getElementById('colBase').addEventListener('input', e => {
