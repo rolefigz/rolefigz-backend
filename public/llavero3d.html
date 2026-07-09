@@ -135,6 +135,14 @@ input[type=color] {
       <div class="field"><input type="color" id="colBase" value="#ffffff"></div>
     </div>
     <div class="panel-section">
+      <div class="section-title">// Colori stampa</div>
+      <div class="field">
+        <label>N. filamenti <span id="valNC">4</span></label>
+        <input type="range" id="slNC" min="2" max="8" value="4" step="1">
+      </div>
+    </div>
+
+    <div class="panel-section">
       <div class="section-title">// Foro portachiavi</div>
       <div class="toggle-row">
         <span class="toggle-label">Attivo</span>
@@ -327,6 +335,12 @@ bind('slHD', 'valHD', 'holeDiam',  false);
 bind('slHX', 'valHX', 'holeOffX',  false);
 bind('slHY', 'valHY', 'holeTopY',  false);
 
+let nColors = 4;
+document.getElementById('slNC').addEventListener('input', e => {
+  nColors = parseInt(e.target.value);
+  document.getElementById('valNC').textContent = nColors;
+});
+
 document.getElementById('colBase').addEventListener('input', e => {
   p.baseColor = e.target.value;
   if (matSide) matSide.color.set(p.baseColor);
@@ -448,8 +462,61 @@ function rebuild3D() {
 (function loop() { requestAnimationFrame(loop); pvRen.render(pvScene, pvCam); })();
 pvUpdateCam();
 
-// ─── 3MF EXPORT ──────────────────────────────────────────────────────────────
-// Bambu Studio ignores m:colorgroup — usa texture PNG embebida en el 3MF.
+// ─── 3MF EXPORT — formato Bambu Studio nativo ────────────────────────────────
+// Struttura copiata da vs.3mf (file reale che funziona in Bambu Studio):
+//  - Oggetti separati per colore, assegnati via model_settings.config
+//  - Estensione production (p:) con UUID
+//  - Assembly object con <components> che puntano ai sub-object
+
+function kMeans(pts, k, maxIter) {
+  maxIter = maxIter || 15;
+  // Inizializzazione k-means++
+  const centroids = [pts[Math.floor(Math.random() * pts.length)].slice()];
+  while (centroids.length < k) {
+    const dists = pts.map(pt => {
+      let min = Infinity;
+      for (const c of centroids) {
+        const d = pt.reduce((s, v, i) => s + (v - c[i]) ** 2, 0);
+        if (d < min) min = d;
+      }
+      return min;
+    });
+    const sum = dists.reduce((s, d) => s + d, 0);
+    let r = Math.random() * sum;
+    let chosen = pts[pts.length - 1];
+    for (let i = 0; i < pts.length; i++) { r -= dists[i]; if (r <= 0) { chosen = pts[i]; break; } }
+    centroids.push(chosen.slice());
+  }
+  // Iterazioni
+  for (let iter = 0; iter < maxIter; iter++) {
+    const clusters = Array.from({ length: k }, () => []);
+    for (const pt of pts) {
+      let minD = Infinity, minK = 0;
+      for (let j = 0; j < k; j++) {
+        const d = centroids[j].reduce((s, v, i) => s + (v - pt[i]) ** 2, 0);
+        if (d < minD) { minD = d; minK = j; }
+      }
+      clusters[minK].push(pt);
+    }
+    let moved = false;
+    for (let j = 0; j < k; j++) {
+      if (!clusters[j].length) { centroids[j] = pts[Math.floor(Math.random() * pts.length)].slice(); moved = true; continue; }
+      const nc = centroids[j].map((_, d) => clusters[j].reduce((s, p) => s + p[d], 0) / clusters[j].length);
+      if (nc.some((v, d) => Math.abs(v - centroids[j][d]) > 0.5)) moved = true;
+      centroids[j] = nc;
+    }
+    if (!moved) break;
+  }
+  return centroids;
+}
+
+function mkUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 async function esporta3MF() {
   if (!userImg || !mask) return;
   const btn = document.getElementById('btn3mf');
@@ -458,113 +525,192 @@ async function esporta3MF() {
 
   const { pw, ph, NX, NY } = dims();
   const th = p.thickness;
+  const N = nColors;
 
-  // ── Exporta imagen como PNG (máx 1024px) embebida en el ZIP
-  const maxDim = 1024;
-  const sc2 = Math.min(1, maxDim / Math.max(userImg.naturalWidth, userImg.naturalHeight));
-  const tw = Math.round(userImg.naturalWidth * sc2);
-  const tsh = Math.round(userImg.naturalHeight * sc2);
-  const tc2 = document.createElement('canvas');
-  tc2.width = tw; tc2.height = tsh;
-  tc2.getContext('2d').drawImage(userImg, 0, 0, tw, tsh);
-  const pngBlob = await new Promise(r => tc2.toBlob(r, 'image/png'));
-  const pngArr  = new Uint8Array(await pngBlob.arrayBuffer());
-
-  // ── UV table (deduplicated)
-  const uvMap = new Map(), uvList = []; // u, v pairs
-  function getUV(u, v) {
-    const key = `${(u * 65535)|0},${(v * 65535)|0}`;
-    if (!uvMap.has(key)) { uvMap.set(key, uvList.length/2); uvList.push(u, v); }
-    return uvMap.get(key);
-  }
-
-  // ── Vertex array and two triangle XML arrays (top=texture, rest=plain)
-  const VA = [];
-  function addV(x, y, z) { const i = VA.length/3; VA.push(x,y,z); return i; }
-
-  const topTriLines  = []; // triangles with pid=tex group
-  const restTriLines = []; // triangles without pid (inherit object default)
-
-  function tTop(a, b, c, ua, ub, uc) {
-    topTriLines.push(`<triangle v1="${a}" v2="${b}" v3="${c}" pid="3" p1="${ua}" p2="${ub}" p3="${uc}"/>`);
-  }
-  function tRest(a, b, c) {
-    restTriLines.push(`<triangle v1="${a}" v2="${b}" v3="${c}"/>`);
-  }
-
-  let cellCount = 0;
+  // 1. Raccoglie tutte le celle incluse con colore campionato
+  const cells = [];
   for (let i = 0; i < NX; i++) {
     for (let j = 0; j < NY; j++) {
       if (!isIncluded(i, j)) continue;
-      cellCount++;
-      const x0=i*CS, x1=x0+CS, y0=j*CS, y1=y0+CS;
-
-      // UV coords — in 3MF Materials spec (0,0)=top-left of image
-      const u0=i/NX, u1=(i+1)/NX, v0=j/NY, v1=(j+1)/NY;
-      const uvTL=getUV(u0,v0), uvTR=getUV(u1,v0), uvBR=getUV(u1,v1), uvBL=getUV(u0,v1);
-
-      // Top face (+Z) — textured
-      const a=addV(x0,y0,th), b=addV(x1,y0,th), c=addV(x1,y1,th), d=addV(x0,y1,th);
-      tTop(a,b,c, uvTL,uvTR,uvBR);
-      tTop(a,c,d, uvTL,uvBR,uvBL);
-
-      // Bottom face (-Z) — plain
-      const e=addV(x0,y0,0), f=addV(x1,y0,0), g=addV(x1,y1,0), h=addV(x0,y1,0);
-      tRest(e,g,f); tRest(e,h,g);
-
-      // Side walls — plain
-      if (!isIncluded(i-1,j)) { tRest(addV(x0,y0,0),addV(x0,y0,th),addV(x0,y1,0)); tRest(addV(x0,y0,th),addV(x0,y1,th),addV(x0,y1,0)); }
-      if (!isIncluded(i+1,j)) { tRest(addV(x1,y0,0),addV(x1,y1,0),addV(x1,y0,th)); tRest(addV(x1,y1,0),addV(x1,y1,th),addV(x1,y0,th)); }
-      if (!isIncluded(i,j-1)) { tRest(addV(x0,y0,0),addV(x1,y0,0),addV(x0,y0,th)); tRest(addV(x1,y0,0),addV(x1,y0,th),addV(x0,y0,th)); }
-      if (!isIncluded(i,j+1)) { tRest(addV(x0,y1,0),addV(x0,y1,th),addV(x1,y1,0)); tRest(addV(x1,y1,0),addV(x0,y1,th),addV(x1,y1,th)); }
+      const col = sampleColor((i + 0.5) * CS, (j + 0.5) * CS);
+      const [r, g, b] = hexToRgb(col);
+      cells.push({ i, j, r, g, b });
     }
   }
 
-  const nV = VA.length/3;
-  const nT = topTriLines.length + restTriLines.length;
-  document.getElementById('stat').textContent = `${cellCount} celle · ${nT.toLocaleString()} triangoli`;
+  // 2. K-means quantization per assegnare ogni cella a un colore-filamento
+  const step = Math.max(1, Math.floor(cells.length / 600));
+  const pts = cells.filter((_, idx) => idx % step === 0).map(c => [c.r, c.g, c.b]);
+  const centroids = kMeans(pts, Math.min(N, pts.length));
+  const NC = centroids.length;
 
-  // ── Build 3MF XML
-  const vXML = [];
-  for (let i=0;i<nV;i++) vXML.push(`<vertex x="${VA[i*3].toFixed(3)}" y="${VA[i*3+1].toFixed(3)}" z="${VA[i*3+2].toFixed(3)}"/>`);
+  const cellColor = new Map();
+  for (const c of cells) {
+    let minD = Infinity, minK = 0;
+    for (let j = 0; j < NC; j++) {
+      const d = (c.r - centroids[j][0]) ** 2 + (c.g - centroids[j][1]) ** 2 + (c.b - centroids[j][2]) ** 2;
+      if (d < minD) { minD = d; minK = j; }
+    }
+    cellColor.set(`${c.i},${c.j}`, minK);
+  }
 
-  const uvXML = [];
-  for (let i=0;i<uvList.length;i+=2) uvXML.push(`<m:tex2coord u="${uvList[i].toFixed(5)}" v="${uvList[i+1].toFixed(5)}"/>`);
+  // 3. Costruisce la geometria per ciascun oggetto-colore
+  //    Ogni oggetto copre solo le celle del suo colore, a piena altezza (z=0→th).
+  //    Pareti laterali generate a OGNI confine (esterno O cambio colore) → ogni
+  //    oggetto è un solido chiuso; il slicer si occupa delle intersezioni.
+  const getK = (i, j) => cellColor.get(`${i},${j}`) ?? -1;
 
-  const model = `<?xml version="1.0" encoding="UTF-8"?>
-<model unit="millimeter" xml:lang="en-US"
-  xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
-  xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
-  <resources>
-    <m:colorgroup id="1"><m:color color="${p.baseColor}"/></m:colorgroup>
-    <m:texture2d id="2" path="/3D/Textures/image.png" contenttype="image/png" tilestyleu="clamp" tilestylev="clamp" filter="linear"/>
-    <m:texture2dgroup id="3" texid="2">${uvXML.join('')}</m:texture2dgroup>
-    <object id="4" type="model" pid="1" pindex="0">
-      <mesh>
-        <vertices>${vXML.join('')}</vertices>
-        <triangles>${topTriLines.join('')}${restTriLines.join('')}</triangles>
-      </mesh>
-    </object>
-  </resources>
-  <build><item objectid="4"/></build>
-</model>`;
+  const objects = []; // { vXML, tXML, colorHex }
+  let totalCells = 0, totalTris = 0;
 
-  // ── Relationships for the 3D model (needed for texture to be found)
-  const modelRels = `<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture" Target="/3D/Textures/image.png" Id="r1"/>
-</Relationships>`;
+  for (let k = 0; k < NC; k++) {
+    const verts = [], tris = [];
+    const av = (x, y, z) => { const i = verts.length / 3; verts.push(x, y, z); return i; };
+    const at = (a, b, c) => tris.push(`<triangle v1="${a}" v2="${b}" v3="${c}"/>`);
 
+    for (const { i, j } of cells) {
+      if (getK(i, j) !== k) continue;
+      totalCells++;
+      const x0 = i * CS, x1 = x0 + CS, y0 = j * CS, y1 = y0 + CS;
+
+      // Faccia superiore (z=th)
+      const a = av(x0,y0,th), b = av(x1,y0,th), c = av(x1,y1,th), d = av(x0,y1,th);
+      at(a,b,c); at(a,c,d);
+
+      // Faccia inferiore (z=0)
+      const e = av(x0,y0,0), f = av(x1,y0,0), g = av(x1,y1,0), h = av(x0,y1,0);
+      at(e,g,f); at(e,h,g);
+
+      // Pareti laterali — solo al confine con celle di colore diverso o fuori keychain
+      if (getK(i-1,j) !== k) { at(av(x0,y0,0),av(x0,y0,th),av(x0,y1,0)); at(av(x0,y0,th),av(x0,y1,th),av(x0,y1,0)); }
+      if (getK(i+1,j) !== k) { at(av(x1,y0,0),av(x1,y1,0),av(x1,y0,th)); at(av(x1,y1,0),av(x1,y1,th),av(x1,y0,th)); }
+      if (getK(i,j-1) !== k) { at(av(x0,y0,0),av(x1,y0,0),av(x0,y0,th)); at(av(x1,y0,0),av(x1,y0,th),av(x0,y0,th)); }
+      if (getK(i,j+1) !== k) { at(av(x0,y1,0),av(x0,y1,th),av(x1,y1,0)); at(av(x1,y1,0),av(x0,y1,th),av(x1,y1,th)); }
+    }
+
+    totalTris += tris.length;
+
+    const vXML = [];
+    for (let v = 0; v < verts.length; v += 3)
+      vXML.push(`<vertex x="${verts[v].toFixed(3)}" y="${verts[v+1].toFixed(3)}" z="${verts[v+2].toFixed(3)}"/>`);
+
+    const [cr, cg, cb] = centroids[k].map(v => Math.min(255, Math.max(0, Math.round(v))));
+    const colorHex = `#${cr.toString(16).padStart(2,'0')}${cg.toString(16).padStart(2,'0')}${cb.toString(16).padStart(2,'0')}`;
+    objects.push({ vXML: vXML.join(''), tXML: tris.join(''), colorHex });
+  }
+
+  document.getElementById('stat').textContent =
+    `${cells.length} celle · ${NC} colori · ${totalTris.toLocaleString()} triangoli`;
+
+  // 4. XML per il file degli oggetti (3D/Objects/objects.model)
+  //    Contiene tutti gli oggetti mesh, id a partire da 1001
+  const START_ID = 1001;
+  const objsModel = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<model unit="millimeter" xml:lang="en-US"',
+    ' xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"',
+    ' xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06"',
+    ' requiredextensions="p">',
+    '<metadata name="BambuStudio:3mfVersion"> 1 </metadata>',
+    '<resources>',
+    ...objects.map((o, k) =>
+      `<object id="${START_ID + k}" type="model"><mesh>` +
+      `<vertices>${o.vXML}</vertices>` +
+      `<triangles>${o.tXML}</triangles>` +
+      `</mesh></object>`
+    ),
+    '</resources><build/></model>'
+  ].join('');
+
+  // 5. File assembly principale (3D/3dmodel.model) — solo componenti, niente geometria
+  const mainUUID = mkUUID(), buildUUID = mkUUID(), itemUUID = mkUUID();
+  const components = objects.map((_, k) =>
+    `<component p:path="/3D/Objects/objects.model" objectid="${START_ID + k}"/>`
+  ).join('');
+
+  const mainModel = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<model unit="millimeter" xml:lang="en-US"',
+    ' xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"',
+    ' xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06"',
+    ' requiredextensions="p">',
+    '<metadata name="Application">RoleFigz-Llavero</metadata>',
+    '<resources>',
+    `<object id="1000" p:uuid="${mainUUID}" type="model">`,
+    `<components>${components}</components>`,
+    '</object>',
+    '</resources>',
+    `<build p:uuid="${buildUUID}">`,
+    `<item objectid="1000" p:uuid="${itemUUID}" transform="1 0 0 0 1 0 0 0 1 0 0 0" printable="1"/>`,
+    '</build></model>'
+  ].join('');
+
+  // 6. model_settings.config — QUI Bambu Studio legge l'assegnazione filamenti
+  const parts = objects.map((o, k) =>
+    `<part id="${START_ID + k}" subtype="normal_part">` +
+    `<metadata key="name" value="Colore ${k + 1} ${o.colorHex}"/>` +
+    `<metadata key="extruder" value="${k + 1}"/>` +
+    `</part>`
+  ).join('');
+
+  const filamentMaps = objects.map((_, k) => k + 1).join(' ');
+
+  const configXML = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<config>',
+    '<object id="1000">',
+    '<metadata key="name" value="llavero"/>',
+    '<metadata key="extruder" value="1"/>',
+    parts,
+    '</object>',
+    '<plate>',
+    '<metadata key="plater_id" value="1"/>',
+    '<metadata key="plater_name" value="plate-1"/>',
+    '<model_instance>',
+    '<metadata key="object_id" value="1000"/>',
+    '<metadata key="instance_id" value="0"/>',
+    '</model_instance>',
+    `<metadata key="filament_maps" value="${filamentMaps}"/>`,
+    '</plate>',
+    '<assemble>',
+    '<assemble_item object_id="1000" instance_id="0" offset="0 0 0"/>',
+    '</assemble>',
+    '</config>'
+  ].join('');
+
+  // 7. File di infrastruttura ZIP
+  const contentTypes =
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>' +
+    '<Default Extension="config" ContentType="application/xml"/>' +
+    '</Types>';
+
+  const rootRels =
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rel-1" Target="/3D/3dmodel.model"' +
+    ' Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>' +
+    '</Relationships>';
+
+  const modelRels =
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Target="/3D/Objects/objects.model" Id="rel-1001"' +
+    ' Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>' +
+    '</Relationships>';
+
+  // 8. Genera ZIP e scarica
   const zip = new JSZip();
-  zip.file('[Content_Types].xml',
-    `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="png" ContentType="image/png"/></Types>`);
-  zip.file('_rels/.rels',
-    `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" Target="/3D/3dmodel.model" Id="r0"/></Relationships>`);
-  zip.file('3D/3dmodel.model', model);
+  zip.file('[Content_Types].xml',         contentTypes);
+  zip.file('_rels/.rels',                 rootRels);
+  zip.file('3D/3dmodel.model',            mainModel);
   zip.file('3D/_rels/3dmodel.model.rels', modelRels);
-  zip.file('3D/Textures/image.png', pngArr, { binary: true });
+  zip.file('3D/Objects/objects.model',    objsModel);
+  zip.file('Metadata/model_settings.config', configXML);
 
-  const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', compressionOptions:{level:6} });
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
   Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'llavero_rolefigz.3mf' }).click();
 
   btn.textContent = '↓ SCARICA 3MF'; btn.disabled = false;
