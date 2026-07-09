@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Llavero 3D — RoleFigz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #1a1a1a;
+  --accent: #ff3c00;
+  --text: #f0ece4;
+  --text-dim: #888880;
+  --border: #2a2a2a;
+  --panel: 350px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── Controls panel ── */
+#controls {
+  width: var(--panel);
+  min-width: var(--panel);
+  max-width: var(--panel);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#controls::-webkit-scrollbar { width: 4px; }
+#controls::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+#logo-bar {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#logo-bar .brand {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+#logo-bar .brand span { color: var(--accent); }
+#logo-bar .subtitle {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.section-title {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+/* Upload zone */
+#upload-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: 6px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+#upload-zone:hover, #upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(255,60,0,0.05);
+}
+#upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+#upload-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: var(--text-dim);
+}
+#upload-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+#upload-filename {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--accent);
+  word-break: break-all;
+}
+
+/* Preview thumb */
+#preview-thumb {
+  margin-top: 12px;
+  display: none;
+  justify-content: center;
+}
+#preview-thumb img {
+  max-width: 100%;
+  max-height: 80px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  image-rendering: pixelated;
+}
+
+/* Controls rows */
+.ctrl-row {
+  margin-bottom: 14px;
+}
+.ctrl-row:last-child { margin-bottom: 0; }
+
+.ctrl-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: 12px;
+}
+.ctrl-label .val {
+  color: var(--accent);
+  min-width: 40px;
+  text-align: right;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Toggle switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.toggle-label { font-size: 12px; color: var(--text); }
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle input { display: none; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 3px;
+  width: 14px; height: 14px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::after {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+/* Collapsible */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0;
+}
+.collapsible-header .section-title { margin-bottom: 0; }
+.collapsible-arrow {
+  color: var(--text-dim);
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.collapsible-header.open .collapsible-arrow { transform: rotate(180deg); }
+.collapsible-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+.collapsible-body.open { max-height: 400px; }
+.collapsible-inner { margin-top: 12px; }
+
+/* Sub-section (indented when toggle on) */
+.sub-controls {
+  display: none;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+  margin-top: 8px;
+}
+.sub-controls.visible { display: block; }
+
+/* Color input */
+input[type=color] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 28px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+}
+input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type=color]::-webkit-color-swatch { border: none; border-radius: 2px; }
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.color-row label { font-size: 12px; flex: 1; }
+
+/* Checkbox */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.check-row input[type=checkbox] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg3);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+.check-row input[type=checkbox]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check-row input[type=checkbox]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -1px; left: 2px;
+  font-size: 11px;
+  color: #fff;
+}
+.check-row label { font-size: 12px; }
+
+/* Messages */
+#messages {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.msg {
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--bg3);
+  border-left: 3px solid;
+}
+.msg.warn { border-color: #f5a623; color: #f5a623; }
+.msg.info { border-color: var(--text-dim); color: var(--text-dim); }
+
+/* Download button */
+#btn-download {
+  margin: 0 20px 20px;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  width: calc(100% - 40px);
+}
+#btn-download:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+#btn-download:active:not(:disabled) { transform: translateY(0); }
+#btn-download:disabled {
+  background: var(--bg3);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+/* ── Viewer ── */
+#viewer {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+#viewer canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#viewer-hint {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  text-align: right;
+  line-height: 1.8;
+}
+
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,10,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  display: none;
+}
+#loading-overlay.active { display: flex; }
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  html, body { overflow: auto; }
+  #app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+  #viewer {
+    width: 100%;
+    height: 55vw;
+    min-height: 220px;
+    max-height: 360px;
+    flex: none;
+  }
+  #controls {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    overflow-y: visible;
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+  #btn-download {
+    position: sticky;
+    bottom: 12px;
+    z-index: 10;
+  }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Controls -->
+  <div id="controls">
+    <div id="logo-bar">
+      <div>
+        <div class="brand">Role<span>Figz</span></div>
+        <div class="subtitle">Configuratore Llavero 3D</div>
+      </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="section">
+      <div class="section-title">Immagine</div>
+      <div id="upload-zone">
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/svg+xml">
+        <div id="upload-icon">⬆</div>
+        <div id="upload-label">Trascina un PNG/JPG/SVG<br>o clicca per selezionare</div>
+        <div id="upload-filename"></div>
+      </div>
+      <div id="preview-thumb"><img id="preview-img" src="" alt="preview"></div>
+    </div>
+
+    <!-- Dimensioni -->
+    <div class="section">
+      <div class="section-title">Dimensioni</div>
+      <div class="ctrl-row">
+        <div class="ctrl-label">
+          <span>Larghezza pezzo</span>
+          <span class="val" id="val-width">50mm</span>
+        </div>
+        <input type="range" id="sl-width" min="30" max="120" step="1" value="50">
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-label">
+          <span>Spessore rilievo</span>
+          <span class="val" id="val-thickness">2mm</span>
+        </div>
+        <input type="range" id="sl-thickness" min="0.5" max="5" step="0.5" value="2">
+      </div>
+    </div>
+
+    <!-- Base -->
+    <div class="section">
+      <div class="toggle-row">
+        <span class="toggle-label">Placa base</span>
+        <label class="toggle">
+          <input type="checkbox" id="cb-base" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="sub-controls visible" id="sub-base">
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Spessore base</span>
+            <span class="val" id="val-baseThickness">1.5mm</span>
+          </div>
+          <input type="range" id="sl-baseThickness" min="1" max="4" step="0.5" value="1.5">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Margine</span>
+            <span class="val" id="val-baseMargin">3mm</span>
+          </div>
+          <input type="range" id="sl-baseMargin" min="0" max="8" step="0.5" value="3">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Raggio angoli</span>
+            <span class="val" id="val-baseRadius">3mm</span>
+          </div>
+          <input type="range" id="sl-baseRadius" min="0" max="6" step="0.5" value="3">
+        </div>
+      </div>
+    </div>
+
+    <!-- Anello -->
+    <div class="section">
+      <div class="toggle-row">
+        <span class="toggle-label">Anello portachiavi</span>
+        <label class="toggle">
+          <input type="checkbox" id="cb-ring" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="sub-controls visible" id="sub-ring">
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Ø esterno</span>
+            <span class="val" id="val-ringOuter">6mm</span>
+          </div>
+          <input type="range" id="sl-ringOuter" min="4" max="12" step="0.5" value="6">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Ø foro</span>
+            <span class="val" id="val-ringHole">3mm</span>
+          </div>
+          <input type="range" id="sl-ringHole" min="2" max="8" step="0.5" value="3">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Offset X</span>
+            <span class="val" id="val-ringX">0mm</span>
+          </div>
+          <input type="range" id="sl-ringX" min="-20" max="20" step="1" value="0">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Offset Y</span>
+            <span class="val" id="val-ringY">0mm</span>
+          </div>
+          <input type="range" id="sl-ringY" min="-10" max="20" step="1" value="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Colore -->
+    <div class="section">
+      <div class="section-title">Materiale</div>
+      <div class="color-row">
+        <label for="inp-color">Colore materiale</label>
+        <input type="color" id="inp-color" value="#f0ece4">
+      </div>
+    </div>
+
+    <!-- Dettagli avanzati -->
+    <div class="section">
+      <div class="collapsible-header" id="adv-header">
+        <div class="section-title">Dettagli avanzati</div>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body" id="adv-body">
+        <div class="collapsible-inner">
+          <div class="ctrl-row">
+            <div class="ctrl-label">
+              <span>Soglia binarizzazione</span>
+              <span class="val" id="val-threshold">128</span>
+            </div>
+            <input type="range" id="sl-threshold" min="0" max="255" step="1" value="128">
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="cb-invert">
+            <label for="cb-invert">Inverti bianco/nero</label>
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-label">
+              <span>Epsilon semplificazione</span>
+              <span class="val" id="val-epsilon">0.6</span>
+            </div>
+            <input type="range" id="sl-epsilon" min="0.1" max="2.0" step="0.1" value="0.6">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="messages"></div>
+
+    <!-- Download -->
+    <button id="btn-download" disabled>Scarica STL</button>
+  </div>
+
+  <!-- 3D Viewer -->
+  <div id="viewer">
+    <div id="loading-overlay">Elaborazione…</div>
+    <div id="viewer-hint">
+      Trascina per ruotare<br>
+      Rotella per zoom
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let binaryGrid = null;   // {data: Uint8Array, w, h}
+let loops = null;        // simplified loops after RDP
+let pieceMesh = null;
+let mergedGeometry = null;
+
+const params = {
+  width: 50, thickness: 2,
+  base: true, baseThickness: 1.5, baseMargin: 3, baseRadius: 3,
+  ring: true, ringOuter: 6, ringHole: 3, ringX: 0, ringY: 0,
+  color: '#f0ece4',
+  threshold: 128, invert: false, epsilon: 0.6
+};
+
+// ── Three.js setup ─────────────────────────────────────────────────────────
+const viewer = document.getElementById('viewer');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = false;
+viewer.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0a);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+camera.position.set(0, 0, 150);
+
+// 3-point lighting
+const ambLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambLight);
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+keyLight.position.set(1, 2, 2);
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+fillLight.position.set(-2, -1, 1);
+scene.add(fillLight);
+
+// Manual orbit
+const spherical = { theta: 0.5, phi: 1.0, radius: 150 };
+const target = new THREE.Vector3();
+
+function updateCamera() {
+  const x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+  const y = spherical.radius * Math.cos(spherical.phi);
+  const z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+  camera.position.set(
+    target.x + x,
+    target.y + y,
+    target.z + z
+  );
+  camera.lookAt(target);
+}
+updateCamera();
+
+let isDragging = false;
+let lastX = 0, lastY = 0;
+
+renderer.domElement.addEventListener('pointerdown', e => {
+  isDragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  spherical.theta -= dx * 0.01;
+  spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.01));
+  updateCamera();
+});
+renderer.domElement.addEventListener('pointerup', () => { isDragging = false; });
+renderer.domElement.addEventListener('wheel', e => {
+  e.preventDefault();
+  spherical.radius = Math.max(20, Math.min(800, spherical.radius * (1 + e.deltaY * 0.001)));
+  updateCamera();
+}, { passive: false });
+
+// Touch support
+let lastTouchDist = null;
+renderer.domElement.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    lastTouchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: true });
+renderer.domElement.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && lastTouchDist !== null) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    spherical.radius = Math.max(20, Math.min(800, spherical.radius * (lastTouchDist / d)));
+    lastTouchDist = d;
+    updateCamera();
+  }
+}, { passive: true });
+
+function resizeRenderer() {
+  const w = viewer.clientWidth;
+  const h = viewer.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resizeRenderer();
+new ResizeObserver(resizeRenderer).observe(viewer);
+
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Image pipeline ─────────────────────────────────────────────────────────
+
+// Step 1-3: load, resize, binarize
+function processImage(imgSrc) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      // Step 2: scale to max 240px wide
+      let sw = img.naturalWidth || img.width;
+      let sh = img.naturalHeight || img.height;
+      const MAX = 240;
+      if (sw > MAX) {
+        const ratio = MAX / sw;
+        sw = MAX;
+        sh = Math.round(sh * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, sw, sh);
+      const imgData = ctx.getImageData(0, 0, sw, sh).data;
+
+      // Step 3: binarize
+      const grid = new Uint8Array(sw * sh);
+      for (let i = 0; i < sw * sh; i++) {
+        const r = imgData[i * 4];
+        const g = imgData[i * 4 + 1];
+        const b = imgData[i * 4 + 2];
+        const a = imgData[i * 4 + 3];
+        // Treat transparent as background (white)
+        let luma;
+        if (a < 128) {
+          luma = 255;
+        } else {
+          luma = 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+        let bit = luma < params.threshold ? 1 : 0;
+        if (params.invert) bit = 1 - bit;
+        grid[i] = bit;
+      }
+
+      // Step 4: pad with 1px border of zeros
+      const pw = sw + 2;
+      const ph = sh + 2;
+      const padded = new Uint8Array(pw * ph); // zeros by default
+      for (let y = 0; y < sh; y++) {
+        for (let x = 0; x < sw; x++) {
+          padded[(y + 1) * pw + (x + 1)] = grid[y * sw + x];
+        }
+      }
+
+      binaryGrid = { data: padded, w: pw, h: ph };
+      resolve(binaryGrid);
+    };
+    img.onerror = () => resolve(null);
+    img.src = imgSrc;
+  });
+}
+
+// Step 5: marching squares
+// idx = tl*8 + tr*4 + br*2 + bl
+// Midpoints in integer ×2 space per cell (cx,cy):
+//   T=(2cx+1, 2cy),  R=(2cx+2, 2cy+1),  B=(2cx+1, 2cy+2),  L=(2cx, 2cy+1)
+// Table stores segments as pairs of named midpoints T/R/B/L
+// Spec: 0:[], 1:[L-B], 2:[B-R], 3:[L-R], 4:[T-R], 5:[T-R,L-B], 6:[T-B], 7:[T-L],
+//        8:[T-L], 9:[T-B], 10:[T-L,B-R], 11:[T-R], 12:[L-R], 13:[B-R], 14:[L-B], 15:[]
+// Encoded directly as offsets into pts array below: T=0, R=1, B=2, L=3
+const MS_TABLE = [
+  [],           // 0
+  [[3,2]],      // 1  L-B
+  [[2,1]],      // 2  B-R
+  [[3,1]],      // 3  L-R
+  [[0,1]],      // 4  T-R
+  [[0,1],[3,2]],// 5  T-R, L-B
+  [[0,2]],      // 6  T-B
+  [[0,3]],      // 7  T-L
+  [[0,3]],      // 8  T-L
+  [[0,2]],      // 9  T-B
+  [[0,3],[2,1]],// 10 T-L, B-R
+  [[0,1]],      // 11 T-R
+  [[3,1]],      // 12 L-R
+  [[2,1]],      // 13 B-R
+  [[3,2]],      // 14 L-B
+  []            // 15
+];
+
+// Encode [ix, iy] → string key
+function key(ix, iy) { return ix + ',' + iy; }
+
+function marchingSquares(grid) {
+  const { data, w, h } = grid;
+  const adj = new Map();
+
+  function addEdge(ax, ay, bx, by) {
+    const ka = key(ax, ay);
+    const kb = key(bx, by);
+    if (!adj.has(ka)) adj.set(ka, []);
+    if (!adj.has(kb)) adj.set(kb, []);
+    adj.get(ka).push(kb);
+    adj.get(kb).push(ka);
+  }
+
+  function sample(x, y) {
+    if (x < 0 || y < 0 || x >= w || y >= h) return 0;
+    return data[y * w + x];
+  }
+
+  for (let cy = 0; cy < h - 1; cy++) {
+    for (let cx = 0; cx < w - 1; cx++) {
+      const tl = sample(cx,   cy);
+      const tr = sample(cx+1, cy);
+      const br = sample(cx+1, cy+1);
+      const bl = sample(cx,   cy+1);
+
+      const idx = tl * 8 + tr * 4 + br * 2 + bl;
+      const segs = MS_TABLE[idx];
+      if (!segs || segs.length === 0) continue;
+
+      // pts[0]=T, pts[1]=R, pts[2]=B, pts[3]=L  (×2 integer coords)
+      const pts = [
+        [2*cx+1, 2*cy  ],  // T
+        [2*cx+2, 2*cy+1],  // R
+        [2*cx+1, 2*cy+2],  // B
+        [2*cx,   2*cy+1],  // L
+      ];
+
+      for (const seg of segs) {
+        const pa = pts[seg[0]];
+        const pb = pts[seg[1]];
+        addEdge(pa[0], pa[1], pb[0], pb[1]);
+      }
+    }
+  }
+  return adj;
+}
+
+// Step 6: chain loops
+function chainLoops(adj) {
+  const used = new Set(); // "ka,kb" used edges
+  const result = [];
+
+  function edgeKey(ka, kb) {
+    return ka < kb ? ka + '|' + kb : kb + '|' + ka;
+  }
+
+  for (const [startKey, neighbors] of adj) {
+    for (const nextKey of neighbors) {
+      const ek = edgeKey(startKey, nextKey);
+      if (used.has(ek)) continue;
+      // Try to walk a loop starting here
+      const loop = [];
+      let cur = startKey;
+      let prev = null;
+      let ok = true;
+
+      for (let step = 0; step < 100000; step++) {
+        const [ix, iy] = cur.split(',').map(Number);
+        loop.push({ x: ix / 2, y: iy / 2 });
+        const nbs = adj.get(cur) || [];
+        let moved = false;
+        for (const nb of nbs) {
+          if (nb === prev) continue;
+          const ek2 = edgeKey(cur, nb);
+          if (used.has(ek2)) continue;
+          used.add(ek2);
+          prev = cur;
+          cur = nb;
+          moved = true;
+          break;
+        }
+        if (!moved) { ok = false; break; }
+        if (cur === startKey) break; // closed loop
+      }
+
+      used.add(ek); // mark starting edge used
+      if (ok && loop.length >= 3) {
+        result.push(loop);
+      }
+    }
+  }
+  return result;
+}
+
+// Step 7: RDP simplification
+function rdp(points, epsilon) {
+  if (points.length <= 2) return points;
+  const first = points[0];
+  const last = points[points.length - 1];
+  let maxDist = 0, maxIdx = 0;
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = perpendicularDist(points[i], first, last);
+    if (d > maxDist) { maxDist = d; maxIdx = i; }
+  }
+  if (maxDist > epsilon) {
+    const left = rdp(points.slice(0, maxIdx + 1), epsilon);
+    const right = rdp(points.slice(maxIdx), epsilon);
+    return left.slice(0, -1).concat(right);
+  }
+  return [first, last];
+}
+
+function perpendicularDist(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+// Step 8: hole detection
+function pointInPolygon(pt, polygon) {
+  let inside = false;
+  const n = polygon.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y;
+    const xj = polygon[j].x, yj = polygon[j].y;
+    if (((yi > pt.y) !== (yj > pt.y)) &&
+        (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function detectHoles(simplifiedLoops) {
+  const n = simplifiedLoops.length;
+  // For each loop, count how many others contain its first point
+  const depths = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const testPt = simplifiedLoops[i][0];
+    for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      if (pointInPolygon(testPt, simplifiedLoops[j])) {
+        depths[i]++;
+      }
+    }
+  }
+  // Even depth = solid, odd depth = hole
+  const solids = [];
+  const holes = [];
+  for (let i = 0; i < n; i++) {
+    if (depths[i] % 2 === 0) {
+      solids.push({ loop: simplifiedLoops[i], holes: [], depth: depths[i] });
+    } else {
+      holes.push({ loop: simplifiedLoops[i], depth: depths[i] });
+    }
+  }
+  // Assign each hole to deepest solid containing it
+  for (const hole of holes) {
+    const testPt = hole.loop[0];
+    let bestSolid = null, bestDepth = -1;
+    for (const solid of solids) {
+      if (solid.depth < hole.depth && pointInPolygon(testPt, solid.loop)) {
+        if (solid.depth > bestDepth) {
+          bestDepth = solid.depth;
+          bestSolid = solid;
+        }
+      }
+    }
+    if (bestSolid) bestSolid.holes.push(hole.loop);
+  }
+  return solids;
+}
+
+// Step 9: geometry
+function buildGeometry(solids) {
+  const { w: gridW, h: gridH } = binaryGrid;
+  const scale = params.width / (gridW - 2);
+  const heightMM = (gridH - 2) * scale;
+
+  function toMM(gx, gy) {
+    return {
+      x: (gx - 1) * scale,
+      y: heightMM - (gy - 1) * scale
+    };
+  }
+
+  const geometries = [];
+
+  // --- Silhouette geometry ---
+  for (const solid of solids) {
+    const pts = solid.loop.map(p => {
+      const m = toMM(p.x, p.y);
+      return new THREE.Vector2(m.x, m.y);
+    });
+    if (pts.length < 3) continue;
+
+    const shape = new THREE.Shape(pts);
+
+    for (const holeLoop of solid.holes) {
+      const holePts = holeLoop.map(p => {
+        const m = toMM(p.x, p.y);
+        return new THREE.Vector2(m.x, m.y);
+      });
+      if (holePts.length < 3) continue;
+      const path = new THREE.Path(holePts);
+      shape.holes.push(path);
+    }
+
+    const extGeo = new THREE.ExtrudeGeometry(shape, {
+      depth: params.thickness,
+      bevelEnabled: false
+    });
+
+    // Shift silhouette up by baseThickness if base is on
+    if (params.base) {
+      extGeo.translate(0, 0, params.baseThickness);
+    }
+
+    geometries.push(extGeo);
+  }
+
+  // --- Base geometry ---
+  if (params.base) {
+    const m = params.baseMargin;
+    const r = params.baseRadius;
+    const bw = params.width + 2 * m;
+    const bh = heightMM + 2 * m;
+    const bx = -m;
+    const by = -m;
+
+    const baseShape = roundedRectShape(bx, by, bw, bh, r);
+    const baseGeo = new THREE.ExtrudeGeometry(baseShape, {
+      depth: params.baseThickness,
+      bevelEnabled: false
+    });
+    geometries.push(baseGeo);
+  }
+
+  // --- Ring geometry ---
+  if (params.ring) {
+    const ro = params.ringOuter / 2;
+    const ri = params.ringHole / 2;
+    const totalDepth = params.thickness + (params.base ? params.baseThickness : 0);
+
+    const cx = params.width / 2 + params.ringX;
+    const cy = heightMM + (params.base ? params.baseMargin : 0) + params.ringY;
+
+    const ringShape = new THREE.Shape();
+    // Outer circle
+    ringShape.absarc(cx, cy, ro, 0, Math.PI * 2, false);
+    // Inner circle (hole)
+    const innerPath = new THREE.Path();
+    innerPath.absarc(cx, cy, ri, 0, Math.PI * 2, true);
+    ringShape.holes.push(innerPath);
+
+    const ringGeo = new THREE.ExtrudeGeometry(ringShape, {
+      depth: totalDepth,
+      bevelEnabled: false
+    });
+    geometries.push(ringGeo);
+  }
+
+  if (geometries.length === 0) return null;
+
+  // Merge geometries (own implementation — no BufferGeometryUtils)
+  return mergeBufferGeometries(geometries);
+}
+
+function roundedRectShape(x, y, w, h, r) {
+  const shape = new THREE.Shape();
+  r = Math.min(r, w / 2, h / 2);
+  shape.moveTo(x + r, y);
+  shape.lineTo(x + w - r, y);
+  shape.quadraticCurveTo(x + w, y, x + w, y + r);
+  shape.lineTo(x + w, y + h - r);
+  shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  shape.lineTo(x + r, y + h);
+  shape.quadraticCurveTo(x, y + h, x, y + h - r);
+  shape.lineTo(x, y + r);
+  shape.quadraticCurveTo(x, y, x + r, y);
+  return shape;
+}
+
+function mergeBufferGeometries(geos) {
+  let totalVerts = 0;
+  const nonIndexed = geos.map(g => {
+    const ni = g.toNonIndexed();
+    totalVerts += ni.attributes.position.count;
+    return ni;
+  });
+
+  const positions = new Float32Array(totalVerts * 3);
+  const normals   = new Float32Array(totalVerts * 3);
+  let offset = 0;
+
+  for (const ni of nonIndexed) {
+    const pos = ni.attributes.position.array;
+    const nor = ni.attributes.normal.array;
+    positions.set(pos, offset * 3);
+    normals.set(nor, offset * 3);
+    offset += ni.attributes.position.count;
+  }
+
+  const merged = new THREE.BufferGeometry();
+  merged.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  merged.setAttribute('normal',   new THREE.BufferAttribute(normals, 3));
+  return merged;
+}
+
+// ── Validations ────────────────────────────────────────────────────────────
+function validate() {
+  const msgs = [];
+  if (!binaryGrid) return msgs;
+
+  const { w: gridW, h: gridH } = binaryGrid;
+  const scale = params.width / (gridW - 2);
+
+  // 1. Min edge detection (approximate: smallest segment in any simplified loop)
+  if (loops && loops.length > 0) {
+    let minEdge = Infinity;
+    for (const loop of loops) {
+      for (let i = 0; i < loop.length; i++) {
+        const a = loop[i];
+        const b = loop[(i + 1) % loop.length];
+        const d = Math.hypot((b.x - a.x) * scale, (b.y - a.y) * scale);
+        if (d > 0 && d < minEdge) minEdge = d;
+      }
+    }
+    if (minEdge < 0.8 && minEdge !== Infinity) {
+      msgs.push({ type: 'warn', text: `⚠️ Dettaglio di ${minEdge.toFixed(2)}mm rilevato. Aumenta larghezza o semplifica il logo.` });
+    }
+  }
+
+  // 2. Ring disconnected
+  if (params.ring) {
+    const ro = params.ringOuter / 2;
+    if (params.ringY - ro > 1) {
+      msgs.push({ type: 'warn', text: '⚠️ L\'anello non tocca il pezzo. Diminuisci ringY.' });
+    }
+  }
+
+  // 3. Too many contours
+  if (loops && loops.length > 50) {
+    msgs.push({ type: 'warn', text: `⚠️ Troppi contorni (${loops.length}). Aumenta la soglia.` });
+  }
+
+  // 4. No contours
+  if (loops && loops.length === 0) {
+    msgs.push({ type: 'info', text: 'ℹ️ Nessun contorno. Prova a invertire o cambia soglia.' });
+  }
+
+  return msgs;
+}
+
+function showMessages(msgs) {
+  const el = document.getElementById('messages');
+  el.innerHTML = '';
+  for (const m of msgs) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + m.type;
+    div.textContent = m.text;
+    el.appendChild(div);
+  }
+}
+
+// ── Material ───────────────────────────────────────────────────────────────
+const material = new THREE.MeshStandardMaterial({
+  color: new THREE.Color(params.color),
+  roughness: 0.45,
+  metalness: 0.05,
+  side: THREE.DoubleSide
+});
+
+// ── Rebuild geometry ───────────────────────────────────────────────────────
+function rebuildGeometry() {
+  if (!loops) return;
+
+  const solids = detectHoles(loops);
+
+  // Dispose old
+  if (pieceMesh) {
+    scene.remove(pieceMesh);
+    if (pieceMesh.geometry) pieceMesh.geometry.dispose();
+    pieceMesh = null;
+  }
+  mergedGeometry = null;
+
+  const geo = buildGeometry(solids);
+  if (!geo) {
+    document.getElementById('btn-download').disabled = true;
+    return;
+  }
+
+  mergedGeometry = geo;
+  pieceMesh = new THREE.Mesh(geo, material);
+
+  // Center pivot
+  geo.computeBoundingBox();
+  const box = geo.boundingBox;
+  const cx = (box.min.x + box.max.x) / 2;
+  const cy = (box.min.y + box.max.y) / 2;
+  const cz = (box.min.z + box.max.z) / 2;
+  pieceMesh.position.set(-cx, -cy, -cz);
+  target.set(0, 0, 0);
+
+  scene.add(pieceMesh);
+
+  // Camera auto-fit: bounding sphere → radius so piece fills ~60% of FOV
+  const size = Math.max(
+    box.max.x - box.min.x,
+    box.max.y - box.min.y,
+    box.max.z - box.min.z
+  );
+  const fovRad = camera.fov * Math.PI / 180;
+  spherical.radius = (size / 2) / Math.tan(fovRad / 2) / 0.6;
+  updateCamera();
+
+  document.getElementById('btn-download').disabled = false;
+
+  showMessages(validate());
+}
+
+// ── Full pipeline ──────────────────────────────────────────────────────────
+let currentImgSrc = null;
+
+async function fullPipeline() {
+  if (!currentImgSrc) return;
+
+  const overlay = document.getElementById('loading-overlay');
+  overlay.classList.add('active');
+
+  try {
+    await processImage(currentImgSrc);
+    if (!binaryGrid) {
+      overlay.classList.remove('active');
+      return;
+    }
+
+    // Marching squares
+    const adj = marchingSquares(binaryGrid);
+
+    // Chain loops
+    const rawLoops = chainLoops(adj);
+
+    // RDP simplification
+    loops = rawLoops.map(loop => {
+      // Close the loop for RDP then remove duplicate last point
+      const closed = loop.concat([loop[0]]);
+      const simplified = rdp(closed, params.epsilon);
+      // Remove the duplicated closing point
+      if (simplified.length > 1) simplified.pop();
+      return simplified;
+    }).filter(l => l.length >= 3);
+
+    rebuildGeometry();
+  } catch (err) {
+    console.error('Pipeline error:', err);
+  }
+
+  overlay.classList.remove('active');
+}
+
+// ── Debounce helper ────────────────────────────────────────────────────────
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+const debouncedFull   = debounce(fullPipeline,    150);
+const debouncedRebuild = debounce(rebuildGeometry, 150);
+
+// ── Controls wiring ────────────────────────────────────────────────────────
+
+// Slider helper
+function wireSlider(id, valId, unit, param, mode) {
+  const sl  = document.getElementById(id);
+  const val = document.getElementById(valId);
+  sl.addEventListener('input', () => {
+    const v = parseFloat(sl.value);
+    params[param] = v;
+    val.textContent = v + (unit || '');
+    if (mode === 'full')    debouncedFull();
+    if (mode === 'rebuild') debouncedRebuild();
+  });
+}
+
+wireSlider('sl-width',         'val-width',         'mm', 'width',         'rebuild');
+wireSlider('sl-thickness',     'val-thickness',     'mm', 'thickness',     'rebuild');
+wireSlider('sl-baseThickness', 'val-baseThickness', 'mm', 'baseThickness', 'rebuild');
+wireSlider('sl-baseMargin',    'val-baseMargin',    'mm', 'baseMargin',    'rebuild');
+wireSlider('sl-baseRadius',    'val-baseRadius',    'mm', 'baseRadius',    'rebuild');
+wireSlider('sl-ringOuter',     'val-ringOuter',     'mm', 'ringOuter',     'rebuild');
+wireSlider('sl-ringHole',      'val-ringHole',      'mm', 'ringHole',      'rebuild');
+wireSlider('sl-ringX',         'val-ringX',         'mm', 'ringX',         'rebuild');
+wireSlider('sl-ringY',         'val-ringY',         'mm', 'ringY',         'rebuild');
+wireSlider('sl-threshold',     'val-threshold',     '',   'threshold',     'full');
+wireSlider('sl-epsilon',       'val-epsilon',       '',   'epsilon',       'full');
+
+// Toggle: base
+document.getElementById('cb-base').addEventListener('change', e => {
+  params.base = e.target.checked;
+  document.getElementById('sub-base').classList.toggle('visible', params.base);
+  debouncedRebuild();
+});
+
+// Toggle: ring
+document.getElementById('cb-ring').addEventListener('change', e => {
+  params.ring = e.target.checked;
+  document.getElementById('sub-ring').classList.toggle('visible', params.ring);
+  debouncedRebuild();
+});
+
+// Invert checkbox
+document.getElementById('cb-invert').addEventListener('change', e => {
+  params.invert = e.target.checked;
+  debouncedFull();
+});
+
+// Color
+document.getElementById('inp-color').addEventListener('input', e => {
+  params.color = e.target.value;
+  material.color.set(params.color);
+});
+
+// Collapsible advanced
+document.getElementById('adv-header').addEventListener('click', () => {
+  const header = document.getElementById('adv-header');
+  const body   = document.getElementById('adv-body');
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+});
+
+// ── File upload ────────────────────────────────────────────────────────────
+function handleFile(file) {
+  if (!file) return;
+  const allowed = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowed.includes(file.type)) return;
+
+  document.getElementById('upload-filename').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentImgSrc = e.target.result;
+
+    // Show preview
+    const img = document.getElementById('preview-img');
+    img.src = currentImgSrc;
+    document.getElementById('preview-thumb').style.display = 'flex';
+
+    fullPipeline();
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('file-input').addEventListener('change', e => {
+  handleFile(e.target.files[0]);
+});
+
+// Drag & drop
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('drag-over');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('drag-over');
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  handleFile(file);
+});
+
+// ── STL Export ─────────────────────────────────────────────────────────────
+document.getElementById('btn-download').addEventListener('click', () => {
+  if (!mergedGeometry) return;
+  const blob = exportSTL(mergedGeometry);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'llavero.stl';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function exportSTL(geo) {
+  // Ensure non-indexed
+  const g = geo.index ? geo.toNonIndexed() : geo;
+  const positions = g.attributes.position.array;
+  const triangleCount = positions.length / 9;
+
+  // 80 byte header + 4 byte count + (triangleCount * 50 bytes)
+  const buf = new ArrayBuffer(80 + 4 + triangleCount * 50);
+  const view = new DataView(buf);
+
+  // Header (80 bytes) — leave as zeros
+  let offset = 80;
+
+  // Triangle count
+  view.setUint32(offset, triangleCount, true);
+  offset += 4;
+
+  const vA = new THREE.Vector3();
+  const vB = new THREE.Vector3();
+  const vC = new THREE.Vector3();
+  const n  = new THREE.Vector3();
+  const ab = new THREE.Vector3();
+  const ac = new THREE.Vector3();
+
+  // Get world transform from mesh
+  if (pieceMesh) pieceMesh.updateMatrixWorld();
+  const matrix = pieceMesh ? pieceMesh.matrixWorld : new THREE.Matrix4();
+
+  for (let i = 0; i < triangleCount; i++) {
+    const i9 = i * 9;
+    vA.fromArray(positions, i9 + 0).applyMatrix4(matrix);
+    vB.fromArray(positions, i9 + 3).applyMatrix4(matrix);
+    vC.fromArray(positions, i9 + 6).applyMatrix4(matrix);
+
+    // Compute face normal
+    ab.subVectors(vB, vA);
+    ac.subVectors(vC, vA);
+    n.crossVectors(ab, ac).normalize();
+
+    // Normal
+    view.setFloat32(offset,      n.x, true); offset += 4;
+    view.setFloat32(offset,      n.y, true); offset += 4;
+    view.setFloat32(offset,      n.z, true); offset += 4;
+
+    // Vertex A
+    view.setFloat32(offset, vA.x, true); offset += 4;
+    view.setFloat32(offset, vA.y, true); offset += 4;
+    view.setFloat32(offset, vA.z, true); offset += 4;
+
+    // Vertex B
+    view.setFloat32(offset, vB.x, true); offset += 4;
+    view.setFloat32(offset, vB.y, true); offset += 4;
+    view.setFloat32(offset, vB.z, true); offset += 4;
+
+    // Vertex C
+    view.setFloat32(offset, vC.x, true); offset += 4;
+    view.setFloat32(offset, vC.y, true); offset += 4;
+    view.setFloat32(offset, vC.z, true); offset += 4;
+
+    // Attribute byte count
+    view.setUint16(offset, 0, true); offset += 2;
+  }
+
+  return new Blob([buf], { type: 'application/octet-stream' });
+}
+
+
+</script>
+</body>
+</html>
