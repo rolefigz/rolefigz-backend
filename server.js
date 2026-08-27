@@ -57,6 +57,7 @@ app.use("/",                              sitemapRoutes);
 app.use("/api/telegram", limitAPI,  telegramRoutes);
 
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
+app.get("/blog",       serveApp);
 app.get("/blog/:slug", serveApp);
 app.get("/checkout",   serveApp);
 
