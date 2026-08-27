@@ -2,7 +2,7 @@ const express         = require("express");
 const path            = require("path");
 const cors            = require("cors");
 const helmet          = require("helmet");
-const { sequelize, PuntiTransazione, CodicePromo, Ordine, Impostazione } = require("./src/models");
+const { sequelize } = require("./src/models");
 const { corsOptions, limitGeneral, limitAuth, limitAPI } = require("./src/middleware/sicurezza");
 const authRoutes        = require("./src/routers/authRoutes");
 const prodottiRoutes    = require("./src/routers/prodottiRoutes");
@@ -77,17 +77,29 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || "Errore interno del server" });
 });
 
+// sync({alter:true}) ha causato un deadlock e degli ALTER TABLE falliti
+// contro le tabelle di produzione (vedi incidente del 2026-08-27: due
+// istanze del server puntate alla stessa BD di Railway in contemporanea).
+// syncSicuro() crea solo le tabelle mancanti e non altera mai colonne
+// esistenti; in produzione blocca comunque alter/force anche se qualcuno
+// li reintroduce in una chiamata futura.
+function syncSicuro(target, opzioni = {}) {
+  const opzioniSicure = { ...opzioni };
+  if (process.env.NODE_ENV === "production" && (opzioniSicure.alter || opzioniSicure.force)) {
+    console.warn("sync con alter/force bloccato in produzione: eseguo sync semplice");
+    delete opzioniSicure.alter;
+    delete opzioniSicure.force;
+  }
+  return target.sync(opzioniSicure);
+}
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
+
   sequelize
-    .sync({ alter: true })
+    .authenticate()
+    .then(() => syncSicuro(sequelize))
     .then(() => console.log("db sincronizzato"))
     .catch(err => console.error("errore db sync:", err.message));
-
-  // questi li metto esplicitamente perché il sync generale a volte non aggiunge le colonne nuove
-  PuntiTransazione.sync({ alter: true }).catch(err => console.error("punti_transazioni:", err.message));
-  CodicePromo.sync({ alter: true }).catch(err => console.error("codici_promo:", err.message));
-  Ordine.sync({ alter: true }).catch(err => console.error("ordenes:", err.message));
-  Impostazione.sync({ alter: true }).catch(err => console.error("impostazioni:", err.message));
 });
