@@ -24,25 +24,135 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "OnlineStore",
-    "name": "RoleFigz",
-    "description": "Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.",
-    "url": "https://www.rolefigz.com",
-    "logo": "https://www.rolefigz.com/assets/logo.png",
-    "image": "https://www.rolefigz.com/assets/LogoSfondoNero.png",
-    "email": "rolefigz@gmail.com",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Via Beverora 4",
-      "addressLocality": "Piacenza",
-      "postalCode": "29121",
-      "addressRegion": "PC",
-      "addressCountry": "IT"
-    },
-    "areaServed": "IT",
-    "currenciesAccepted": "EUR",
-    "paymentAccepted": "Credit Card",
-    "priceRange": "€€"
+    "@graph": [
+      {
+        "@type": "OnlineStore",
+        "name": "RoleFigz",
+        "description": "Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.",
+        "url": "https://www.rolefigz.com",
+        "logo": "https://www.rolefigz.com/assets/logo.png",
+        "image": "https://www.rolefigz.com/assets/LogoSfondoNero.png",
+        "email": "rolefigz@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Via Beverora 4",
+          "addressLocality": "Piacenza",
+          "postalCode": "29121",
+          "addressRegion": "PC",
+          "addressCountry": "IT"
+        },
+        "areaServed": "IT",
+        "currenciesAccepted": "EUR",
+        "paymentAccepted": "Credit Card",
+        "priceRange": "€€"
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.rolefigz.com/#organization",
+        "name": "RoleFigz",
+        "url": "https://www.rolefigz.com",
+        "logo": "https://www.rolefigz.com/assets/logo.png",
+        "email": "rolefigz@gmail.com",
+        "sameAs": [
+          "SAMEAS_INSTAGRAM",
+          "SAMEAS_TIKTOK",
+          "SAMEAS_ETSY"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Che materiali usate per la stampa 3D?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Utilizziamo la stampa FDM e SLA, scegliendo il materiale e la tecnica più adatti a resistenza, finitura e uso previsto di ogni oggetto."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quanto tempo ci vuole per ricevere il mio ordine?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "I tempi di produzione variano in base al prodotto; una volta stampato e controllato, l'ordine viene spedito in tutta Italia ed Europa."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Posso personalizzare qualsiasi prodotto del catalogo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sì, la maggior parte dei prodotti può essere personalizzata nel colore, nelle dimensioni o nel design su richiesta."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Realizzate anche progetti su misura non presenti nel catalogo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sì, realizziamo oggetti personalizzati a partire dal tuo design o da un semplice brief, dal logo aziendale alla figura di un personaggio."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Come posso pagare il mio ordine?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "I pagamenti si effettuano online in modo sicuro direttamente al checkout del sito."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Spedite fuori dall'Italia?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sì, spediamo in tutta Italia e in Europa."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Cosa faccio se il prodotto arriva danneggiato?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Contattaci tramite WhatsApp, email o la chat del sito e troveremo insieme una soluzione."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Come posso contattarvi per assistenza?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Puoi scriverci su WhatsApp al 329 822 5406, via email a rolefigz@gmail.com o tramite la chat di supporto del sito."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "Service",
+        "name": "Figurine e Figz personalizzate",
+        "description": "Modelli 3D su misura per privati e aziende.",
+        "provider": { "@id": "https://www.rolefigz.com/#organization" }
+      },
+      {
+        "@type": "Service",
+        "name": "Merchandising e gadget aziendali",
+        "description": "Token, portachiavi e oggetti brandizzati per aziende ed eventi, con produzione a volume.",
+        "provider": { "@id": "https://www.rolefigz.com/#organization" }
+      },
+      {
+        "@type": "Service",
+        "name": "Menù digitali per ristoranti (4ByteMenu)",
+        "description": "Menù digitale con QR code.",
+        "provider": { "@id": "https://www.rolefigz.com/#organization" }
+      },
+      {
+        "@type": "Service",
+        "name": "Progetti personalizzati su richiesta",
+        "description": "Progettazione e stampa 3D su specifica del cliente.",
+        "provider": { "@id": "https://www.rolefigz.com/#organization" }
+      }
+    ]
   }
   </script>
   <link rel="stylesheet" href="/css/shared.css"/>
@@ -302,6 +412,11 @@
         <div class="why-icon"><iconify-icon icon="mdi:handshake-outline" width="32"></iconify-icon></div>
         <div class="why-title">Artigianalità</div>
         <div class="why-desc">Ogni prodotto è fatto a mano da un team appassionato. Non siamo una fabbrica: siamo un atelier di stampa 3D.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><iconify-icon icon="mdi:qrcode" width="32"></iconify-icon></div>
+        <div class="why-title">Menù Digitali</div>
+        <div class="why-desc">Menù digitali per ristoranti con <a href="http://4bytemenu.it/" target="_blank" style="color:var(--accent);text-decoration:underline">4ByteMenu</a>: il tuo menù sempre aggiornato, accessibile con un QR code al tavolo.</div>
       </div>
     </div>
   </div>
