@@ -81,7 +81,7 @@
     <!-- Avatar dropdown -->
     <div class="avatar-wrap" id="avatarWrap" style="display:none">
       <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdownProfilo(event)" aria-label="Profilo">
-        <img id="avatarFoto" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
+        <img id="avatarFoto" src="" alt="Foto profilo" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
         <span id="avatarIniziale">?</span>
       </button>
       <div class="avatar-dropdown" id="avatarDropdown">
@@ -97,7 +97,7 @@
           <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> I miei dati
         </button>
         <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('benchys',document.getElementById('benchysMenuTab'))">
-          <img src="/assets/benchy.png" width="15" style="vertical-align:middle;opacity:.85"/> Benchys <span id="ddBenchySaldo" style="margin-left:auto;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700"></span>
+          <img src="/assets/benchy.png" width="15" alt="Benchy" style="vertical-align:middle;opacity:.85"/> Benchys <span id="ddBenchySaldo" style="margin-left:auto;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700"></span>
         </button>
         <div class="avatar-dd-sep"></div>
         <button class="avatar-dd-item danger" onclick="chiudiDropdownProfilo();disconnetti()">
