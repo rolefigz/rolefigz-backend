@@ -35,7 +35,6 @@ app.post("/api/pagos/webhook", express.raw({ type: "application/json" }), webhoo
 app.use(express.json({ limit: "10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static(path.join(__dirname)));
 
 app.use(limitGeneral);
 app.get("/", (req, res) => res.send("API RoleFigz operativa ✅"));
@@ -63,6 +62,10 @@ app.get("/checkout",   serveApp);
 
 app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/nfc", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "nfc.html"));
 });
 
 app.use((req, res, next) => {
