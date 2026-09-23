@@ -3,7 +3,7 @@ const path            = require("path");
 const cors            = require("cors");
 const helmet          = require("helmet");
 const { sequelize } = require("./src/models");
-const { corsOptions, limitGeneral, limitAuth, limitAPI } = require("./src/middleware/sicurezza");
+const { corsOptions, limitGeneral, limitAuth, limitAPI, limitNfcScan } = require("./src/middleware/sicurezza");
 const authRoutes        = require("./src/routers/authRoutes");
 const prodottiRoutes    = require("./src/routers/prodottiRoutes");
 const categorieRoutes   = require("./src/routers/categorieRoutes");
@@ -21,6 +21,13 @@ const promoRoutes           = require("./src/routers/promoRoutes");
 const impostazioniRoutes    = require("./src/routers/impostazioniRoutes");
 const sitemapRoutes         = require("./src/routers/sitemapRoutes");
 const telegramRoutes     = require("./src/routers/telegramRoutes");
+const nfcAdminRoutes     = require("./src/modules/nfc/routers/adminRoutes");
+const nfcClientRoutes    = require("./src/modules/nfc/routers/clientRoutes");
+const { mostraPagina: mostraPaginaNfc } = require("./src/modules/nfc/controllers/publicPageController");
+const { scansionaTag } = require("./src/modules/nfc/controllers/tagPublicController");
+const { vaiAlLink } = require("./src/modules/nfc/controllers/linkPublicController");
+const { mostraLanding: mostraLandingNfc } = require("./src/modules/nfc/controllers/landingController");
+const { eseguiJobGiornalieroAnalytics } = require("./src/modules/nfc/services/analyticsAggregationService");
 require("dotenv").config();
 
 const app = express();
@@ -54,6 +61,8 @@ app.use("/api/promo",          limitAPI,  promoRoutes);
 app.use("/api/impostazioni",   limitAPI,  impostazioniRoutes);
 app.use("/",                              sitemapRoutes);
 app.use("/api/telegram", limitAPI,  telegramRoutes);
+app.use("/api/admin/nfc", limitAPI, nfcAdminRoutes);
+app.use("/api/nfc",       limitAPI, nfcClientRoutes);
 
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
 app.get("/blog",       serveApp);
@@ -64,9 +73,19 @@ app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.get("/nfc", (req, res) => {
+// Landing del módulo (marketing del servicio, planes reales desde la BD).
+app.get("/nfc", mostraLandingNfc);
+
+// Redirección de tags físicos (QR/NFC) y de clics en enlaces — siempre 302, nunca 301.
+app.get("/nfc/t/:code",       limitNfcScan, scansionaTag);
+app.get("/nfc/go/:linkId",    limitNfcScan, vaiAlLink);
+
+// La tarjeta de contacto personal (antes en /nfc) se movió aquí para liberar
+// /nfc/{slug} como motor de páginas de empresa del módulo NFC.
+app.get("/nfc/rolefigz", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "nfc.html"));
 });
+app.get("/nfc/:slug", mostraPaginaNfc);
 
 app.use((req, res, next) => {
   if (!req.path.startsWith("/api/")) {
@@ -104,5 +123,14 @@ app.listen(PORT, () => {
     .authenticate()
     .then(() => syncSicuro(sequelize))
     .then(() => console.log("db sincronizzato"))
+    .then(() => {
+      // Job giornaliero di analytics (aggregazione + purga retention) nello
+      // stesso processo: niente cron esterno, niente secondo processo che
+      // tocca la BD in contemporanea (vedi incidente del 27/08).
+      eseguiJobGiornalieroAnalytics().catch(err => console.error("Errore job analytics NFC:", err.message));
+      setInterval(() => {
+        eseguiJobGiornalieroAnalytics().catch(err => console.error("Errore job analytics NFC:", err.message));
+      }, 24 * 60 * 60 * 1000);
+    })
     .catch(err => console.error("errore db sync:", err.message));
 });

@@ -269,6 +269,36 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'nfc_aziende') {
+    await adminTabNfcAziende(content);
+    return;
+  }
+
+  if (tab === 'nfc_piani') {
+    await adminTabNfcPiani(content);
+    return;
+  }
+
+  if (tab === 'nfc_tags') {
+    await adminTabNfcTags(content);
+    return;
+  }
+
+  if (tab === 'nfc_prodotti') {
+    await adminTabNfcProdotti(content);
+    return;
+  }
+
+  if (tab === 'nfc_ordini') {
+    await adminTabNfcOrdiniMerch(content);
+    return;
+  }
+
+  if (tab === 'nfc_produzione') {
+    await adminTabNfcProduzione(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;

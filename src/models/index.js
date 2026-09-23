@@ -16,11 +16,13 @@ const RichiestaGadget     = require("./RichiestaGadget");
 const PuntiTransazione    = require("./PuntiTransazione");
 const CodicePromo         = require("./CodicePromo");
 const Impostazione        = require("./Impostazione");
+const nfc                 = require("../modules/nfc/models");
 
 module.exports = {
   sequelize,
   Utente, Categoria, Prodotto, Ordine, DettaglioOrdine,
   VarianteProdotto, ImmagineProdotto, Recensione,
   Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget,
-  PuntiTransazione, CodicePromo, Impostazione
+  PuntiTransazione, CodicePromo, Impostazione,
+  ...nfc
 };

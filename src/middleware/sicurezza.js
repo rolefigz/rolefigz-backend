@@ -45,4 +45,13 @@ const limitAPI = rateLimit({
   message: { error: "Troppe richieste API, riprova tra qualche minuto" },
 });
 
-module.exports = { corsOptions, limitGeneral, limitAuth, limitAPI };
+// Rate limit per gli scan dei tag NFC — piu' permissivo di limitAPI perche'
+// un singolo tag puo' essere scansionato molte volte in poco tempo da persone diverse
+const limitNfcScan = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { corsOptions, limitGeneral, limitAuth, limitAPI, limitNfcScan };

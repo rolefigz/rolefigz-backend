@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoleFigz NFC — Il mio account</title>
+  <link rel="icon" type="image/png" href="/assets/LogoSfondoNero.png"/>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script>
+    (function() {
+      const token = localStorage.getItem('rfToken');
+      if (!token) { window.location.href = '/index.html'; return; }
+      try {
+        const p = JSON.parse(atob(token.split('.')[1]));
+        if (p.exp * 1000 < Date.now()) { window.location.href = '/index.html'; }
+      } catch(e) { window.location.href = '/index.html'; }
+    })();
+  </script>
+  <style>
+    header { border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; background: var(--surface); }
+    .logo-img { height: 30px; cursor: pointer; }
+    .nav-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; letter-spacing: 1px; }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .grid { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    .menu { display: flex; flex-direction: column; gap: 4px; }
+    .menu-item { padding: 10px 14px; border: 1px solid transparent; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; color: var(--muted); }
+    .menu-item:hover, .menu-item.active { border-color: var(--border); background: var(--surface); color: var(--dark); }
+    .card { background: var(--surface); border: 1px solid var(--border); padding: 20px; }
+    .stat { padding: 16px; background: var(--surface); border: 1px solid var(--border); }
+    .stat .num { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 900; color: var(--dark); }
+    .stat .lbl { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 14px; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+    .link-row { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; }
+    .link-row select, .link-row input[type=text] { font-family: 'DM Mono', monospace; font-size: 11px; padding: 8px; border: 1px solid var(--border); background: var(--bg); }
+    .link-row input[type=text] { flex: 1; min-width: 100px; }
+    .prod-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 16px; margin-bottom: 24px; }
+    .prod-card img { width: 100%; height: 120px; object-fit: cover; margin-bottom: 10px; background: var(--surface2); }
+    .cart-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .cart-row input[type=number] { width: 56px; font-family: 'DM Mono', monospace; padding: 6px; border: 1px solid var(--border); background: var(--bg); }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo-img" src="/assets/rolefigztransparente.png" alt="RoleFigz" onclick="window.location.href='/index.html'"/>
+  <nav>
+    <button class="nav-btn" onclick="window.location.href='/index.html'">← TORNA AL SITO</button>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="menu">
+      <div class="menu-item active" onclick="nfcTab('home', this)">Home</div>
+      <div class="menu-item" onclick="nfcTab('pagina', this)">La mia pagina</div>
+      <div class="menu-item" onclick="nfcTab('qr', this)">QR</div>
+      <div class="menu-item" onclick="nfcTab('merch', this)">Merchandising</div>
+      <div class="menu-item" onclick="nfcTab('ordini', this)">Ordini</div>
+      <div class="menu-item" onclick="nfcTab('statistiche', this)">Statistiche</div>
+    </div>
+    <div id="nfcContent"><div class="loading">CARICAMENTO</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/account-nfc.js"></script>
+</body>
+</html>
