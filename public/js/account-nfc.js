@@ -159,6 +159,12 @@ async function tabNfcPagina(content) {
               <span class="val" id="cpBtnOpVal">${opBtn}%</span>
             </div>
           </div>
+
+          <div class="field" style="margin-top:14px">
+            <label>Colore schermata di caricamento</label>
+            <input id="cpLoadingColor" type="color" value="${p.design?.loadingColor || '#0A0A0A'}" style="height:42px;padding:4px;width:100px"/>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Il colore mostrato per un istante mentre la pagina si carica, prima che appaia il logo.</div>
+          </div>
         </div>
       </details>
 
@@ -244,6 +250,7 @@ async function nfcSalvaContenuto() {
       backgroundOpacity: parseInt(document.getElementById('cpBackgroundOpacity')?.value, 10),
       buttonColor:       document.getElementById('cpButtonColor')?.value,
       buttonOpacity:     parseInt(document.getElementById('cpButtonOpacity')?.value, 10),
+      loadingColor:      document.getElementById('cpLoadingColor')?.value,
     },
   };
   try {

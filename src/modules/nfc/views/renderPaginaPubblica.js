@@ -73,6 +73,7 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   const opacitaFoto = Math.max(10, Math.min(100, parseInt(d.backgroundOpacity, 10) || 70)) / 100;
   const coloreBottoni = colorEsadecimaleValido(d.buttonColor) ? d.buttonColor : "#F4F1EA";
   const opacitaBottoni = d.buttonOpacity !== undefined ? d.buttonOpacity : 5;
+  const coloreCaricamento = colorEsadecimaleValido(d.loadingColor) ? d.loadingColor : "#0A0A0A";
 
   const usaFoto = tipoSfondo === "foto" && pagina?.background_url;
   const coloreFondoBase = tipoSfondo === "colore" ? coloreSfondo : "#0A0A0A";
@@ -127,6 +128,7 @@ ${jsonLd}
 :root{
   --ink:${coloreInk}; --ink-dim:${coloreInkDim}; --void:${coloreFondoBase};
   --accent:${coloreAccento}; --line:${coloreLinea}; --card-w:440px; --btn-bg:${sfondoBottoni};
+  --loading-bg:${coloreCaricamento};
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;min-height:100%;background:var(--void);color:var(--ink);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -140,10 +142,14 @@ body.revealed .scene__photo{opacity:${opacitaFoto};animation-play-state:running}
 @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07) translate(-1%,0%)}}
 ` : ""}
 
-.intro{position:fixed;inset:0;background:var(--void);z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity 1.4s cubic-bezier(.22,.61,.36,1)}
+.intro{position:fixed;inset:0;background:var(--loading-bg);z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity 1.4s cubic-bezier(.22,.61,.36,1)}
 body.revealed .intro{opacity:0;pointer-events:none}
 
 .logo-wrap{position:fixed;top:50%;left:50%;width:${dimensioneLogo.centro}px;height:${dimensioneLogo.centro}px;transform:translate(-50%,-50%) scale(.86);opacity:0;z-index:21;transition:top 1.5s cubic-bezier(.22,.61,.36,1),width 1.5s cubic-bezier(.22,.61,.36,1),height 1.5s cubic-bezier(.22,.61,.36,1),transform 1.5s cubic-bezier(.22,.61,.36,1),opacity 1s ease}
+/* dopo che l'animazione si e' assestata, passa da "fixed" (ancorato allo
+   schermo) ad "assoluto" (ancorato alla pagina) cosi' scorre col contenuto
+   invece di restare incollato durante lo scroll */
+body.assestato .logo-wrap{position:absolute}
 .logo-wrap img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 0 40px rgba(255,106,44,.12))}
 .logo-fallback{width:100%;height:100%;border-radius:24px;background:var(--accent);color:var(--void);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:${(dimensioneLogo.centro * 0.02).toFixed(2)}rem}
 body.logo-in .logo-wrap{opacity:1;transform:translate(-50%,-50%) scale(1);animation:breathe 2.6s ease-in-out .2s 1}
@@ -202,6 +208,7 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
   setTimeout(function(){ body.classList.add('logo-in'); }, 300);
   setTimeout(function(){ body.classList.add('revealed'); }, 2200);
   setTimeout(function(){ body.classList.add('content-in'); }, 2200 + 1500);
+  setTimeout(function(){ body.classList.add('assestato'); }, 2200 + 1500 + 50);
 </script>
 </body></html>`;
 }

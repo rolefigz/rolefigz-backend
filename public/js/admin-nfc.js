@@ -326,6 +326,11 @@ async function adminTabNfcAziendaDettaglio(id) {
                 <span class="val" id="pgBtnOpVal">${nfcPgOpBtn}%</span>
               </div>
             </div>
+
+            <div class="field" style="margin-top:14px">
+              <label>Colore schermata di caricamento</label>
+              <input id="pgLoadingColor" type="color" value="${pagina.design?.loadingColor || '#0A0A0A'}" style="height:42px;padding:4px;width:100px"/>
+            </div>
           </div>
         </details>
 
@@ -422,6 +427,7 @@ async function nfcPgSalvaContenuto(id) {
       backgroundOpacity: parseInt(document.getElementById('pgBackgroundOpacity')?.value, 10),
       buttonColor:       document.getElementById('pgButtonColor')?.value,
       buttonOpacity:     parseInt(document.getElementById('pgButtonOpacity')?.value, 10),
+      loadingColor:      document.getElementById('pgLoadingColor')?.value,
     },
   };
   try {
