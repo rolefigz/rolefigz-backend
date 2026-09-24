@@ -42,6 +42,16 @@
     .prod-card img { width: 100%; height: 120px; object-fit: cover; margin-bottom: 10px; background: var(--surface2); }
     .cart-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
     .cart-row input[type=number] { width: 56px; font-family: 'DM Mono', monospace; padding: 6px; border: 1px solid var(--border); background: var(--bg); }
+    .pg-sezione { border: 1px solid var(--border); background: var(--surface); margin-bottom: 14px; }
+    .pg-sezione summary { list-style: none; cursor: pointer; padding: 14px 18px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+    .pg-sezione summary::-webkit-details-marker { display: none; }
+    .pg-sezione summary::after { content: "+"; color: var(--accent); font-size: 14px; }
+    .pg-sezione[open] summary::after { content: "–"; }
+    .pg-sezione summary:hover { color: var(--dark); }
+    .pg-sezione-body { padding: 4px 18px 18px; }
+    .range-row { display: flex; align-items: center; gap: 10px; }
+    .range-row input[type=range] { flex: 1; }
+    .range-row .val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 34px; text-align: right; }
   </style>
 </head>
 <body>

@@ -79,6 +79,10 @@ async function tabNfcPagina(content) {
     const p = d.pagina || {};
     nfcLinksCorrenti = d.links || [];
 
+    const tipoSfondo = p.design?.backgroundType || (p.background_url ? 'foto' : 'nessuno');
+    const opFoto = p.design?.backgroundOpacity ?? 70;
+    const opBtn = p.design?.buttonOpacity ?? 5;
+
     content.innerHTML = `
       <div class="card" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <button class="action-btn" onclick="nfcAnteprimaPagina()">👁 ANTEPRIMA</button>
@@ -87,56 +91,103 @@ async function tabNfcPagina(content) {
         <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${p.is_published ? 'Attualmente pubblicata' : 'Non ancora pubblicata'}</span>
       </div>
 
-      <div class="card" style="margin-bottom:20px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">CONTENUTO</div>
-
-        <div class="field">
-          <label>Logo</label>
-          ${p.logo_url ? `<img src="${p.logo_url}" style="width:64px;height:64px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px"/>` : ''}
-          <input type="file" id="cpLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaLogo()"/>
-        </div>
-
-        <div class="field">
-          <label>Immagine di sfondo (facoltativa)</label>
-          ${p.background_url ? `<img src="${p.background_url}" style="width:100%;max-width:260px;height:110px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px;filter:grayscale(60%) brightness(.55)"/>` : ''}
-          <input type="file" id="cpSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaSfondo()"/>
-          ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">RIMUOVI SFONDO</button>` : ''}
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px">
-            Se carichi uno sfondo, la pagina passa alla versione animata (come una scheda di contatto): un po' più pesante da caricare, ma più d'impatto.
+      <details class="pg-sezione" open>
+        <summary>📝 CONTENUTO</summary>
+        <div class="pg-sezione-body">
+          <div class="field">
+            <label>Logo</label>
+            ${p.logo_url ? `<img src="${p.logo_url}" style="width:64px;height:64px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px"/>` : ''}
+            <input type="file" id="cpLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaLogo()"/>
+          </div>
+          <div class="field"><label>Descrizione</label><textarea id="cpDescrizione" maxlength="2000">${p.description || ''}</textarea></div>
+          <div class="field"><label>Orario</label><input id="cpOrario" type="text" maxlength="160" placeholder="Lun-Ven 9:00-19:00" value="${p.hours || ''}"/></div>
+          <div class="form-row">
+            <div class="field"><label>Titolo SEO</label><input id="cpSeoTitolo" type="text" maxlength="160" value="${p.seo_title || ''}"/></div>
+            <div class="field"><label>Descrizione SEO</label><input id="cpSeoDescrizione" type="text" maxlength="300" value="${p.seo_description || ''}"/></div>
           </div>
         </div>
+      </details>
 
-        <div class="field"><label>Descrizione</label><textarea id="cpDescrizione" maxlength="2000">${p.description || ''}</textarea></div>
-        <div class="field"><label>Orario</label><input id="cpOrario" type="text" maxlength="160" placeholder="Lun-Ven 9:00-19:00" value="${p.hours || ''}"/></div>
+      <details class="pg-sezione">
+        <summary>🎨 ASPETTO</summary>
+        <div class="pg-sezione-body">
+          <div class="form-row">
+            <div class="field"><label>Colore principale</label><input id="cpColore" type="color" value="${p.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
+            <div class="field"><label>Dimensione logo</label>
+              <select id="cpLogoSize">
+                <option value="piccolo" ${p.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
+                <option value="medio" ${!p.design?.logoSize || p.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
+                <option value="grande" ${p.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
+              </select>
+            </div>
+          </div>
 
-        <div class="form-row">
-          <div class="field"><label>Titolo SEO</label><input id="cpSeoTitolo" type="text" maxlength="160" value="${p.seo_title || ''}"/></div>
-          <div class="field"><label>Descrizione SEO</label><input id="cpSeoDescrizione" type="text" maxlength="300" value="${p.seo_description || ''}"/></div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label>Colore principale</label><input id="cpColore" type="color" value="${p.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
-          <div class="field"><label>Dimensione logo</label>
-            <select id="cpLogoSize">
-              <option value="piccolo" ${p.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
-              <option value="medio" ${!p.design?.logoSize || p.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
-              <option value="grande" ${p.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
+          <div class="field">
+            <label>Sfondo pagina</label>
+            <select id="cpBackgroundType" onchange="nfcAggiornaTipoSfondo()">
+              <option value="nessuno" ${tipoSfondo === 'nessuno' ? 'selected' : ''}>Nessuno (pagina più leggera)</option>
+              <option value="colore" ${tipoSfondo === 'colore' ? 'selected' : ''}>Colore pieno</option>
+              <option value="foto" ${tipoSfondo === 'foto' ? 'selected' : ''}>Foto</option>
             </select>
           </div>
-        </div>
 
-        <button class="btn-submit" onclick="nfcSalvaContenuto()">SALVA CONTENUTO</button>
-        <div id="nfcContenutoMsg"></div>
-      </div>
+          <div id="cpBgColoreWrap" class="field" style="display:${tipoSfondo === 'colore' ? '' : 'none'}">
+            <label>Colore di sfondo</label>
+            <input id="cpBackgroundColor" type="color" value="${p.design?.backgroundColor || '#0A0A0A'}" style="height:42px;padding:4px;width:100px"/>
+          </div>
 
-      <div class="card">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">
-          LINK — se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui
+          <div id="cpBgFotoWrap" class="field" style="display:${tipoSfondo === 'foto' ? '' : 'none'}">
+            <label>Immagine di sfondo</label>
+            ${p.background_url ? `<img src="${p.background_url}" style="width:100%;max-width:260px;height:110px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px;filter:grayscale(60%) brightness(.55)"/>` : ''}
+            <input type="file" id="cpSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaSfondo()"/>
+            ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">RIMUOVI SFONDO</button>` : ''}
+            <label style="margin-top:12px">Opacità della foto</label>
+            <div class="range-row">
+              <input type="range" id="cpBackgroundOpacity" min="10" max="100" value="${opFoto}" oninput="document.getElementById('cpBgOpVal').textContent=this.value+'%'"/>
+              <span class="val" id="cpBgOpVal">${opFoto}%</span>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label>Colore dei pulsanti</label>
+            <input id="cpButtonColor" type="color" value="${p.design?.buttonColor || '#F4F1EA'}" style="height:42px;padding:4px;width:100px"/>
+          </div>
+          <div class="field">
+            <label>Opacità dei pulsanti</label>
+            <div class="range-row">
+              <input type="range" id="cpButtonOpacity" min="0" max="100" value="${opBtn}" oninput="document.getElementById('cpBtnOpVal').textContent=this.value+'%'"/>
+              <span class="val" id="cpBtnOpVal">${opBtn}%</span>
+            </div>
+          </div>
         </div>
-        <div id="nfcLinksLista"></div>
-        <button class="action-btn" onclick="nfcAggiungiLink()">+ AGGIUNGI LINK</button>
-        <button class="btn-submit" onclick="nfcSalvaLinks()" style="margin-left:8px">SALVA LINK</button>
-        <div id="nfcLinksMsg"></div>
-      </div>`;
+      </details>
+
+      <details class="pg-sezione">
+        <summary>📍 MAPPA</summary>
+        <div class="pg-sezione-body">
+          <div class="field">
+            <label>Google Maps o OpenStreetMap</label>
+            <textarea id="cpMappa" rows="2" placeholder="Incolla qui il link o il codice <iframe> di 'Incorpora una mappa'">${p.map_embed_url || ''}</textarea>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Su Google Maps: Condividi → Incorpora una mappa → copia e incolla qui.</div>
+          </div>
+        </div>
+      </details>
+
+      <button class="btn-submit" onclick="nfcSalvaContenuto()">SALVA MODIFICHE</button>
+      <div id="nfcContenutoMsg" style="margin-bottom:20px"></div>
+
+      <details class="pg-sezione" open>
+        <summary>🔗 LINK</summary>
+        <div class="pg-sezione-body">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px">
+            Se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui.
+          </div>
+          <div id="nfcLinksLista"></div>
+          <button class="action-btn" onclick="nfcAggiungiLink()">+ AGGIUNGI LINK</button>
+          <button class="btn-submit" onclick="nfcSalvaLinks()" style="margin-left:8px">SALVA LINK</button>
+          <div id="nfcLinksMsg"></div>
+        </div>
+      </details>`;
 
     nfcRenderLinks();
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
@@ -169,13 +220,30 @@ function nfcRimuoviLink(i) {
   nfcRenderLinks();
 }
 
+function nfcAggiornaTipoSfondo() {
+  const tipo = document.getElementById('cpBackgroundType')?.value;
+  const coloreWrap = document.getElementById('cpBgColoreWrap');
+  const fotoWrap = document.getElementById('cpBgFotoWrap');
+  if (coloreWrap) coloreWrap.style.display = tipo === 'colore' ? '' : 'none';
+  if (fotoWrap) fotoWrap.style.display = tipo === 'foto' ? '' : 'none';
+}
+
 async function nfcSalvaContenuto() {
   const body = {
     description:     document.getElementById('cpDescrizione')?.value,
     hours:            document.getElementById('cpOrario')?.value,
     seo_title:        document.getElementById('cpSeoTitolo')?.value,
     seo_description:  document.getElementById('cpSeoDescrizione')?.value,
-    design:           { primaryColor: document.getElementById('cpColore')?.value, logoSize: document.getElementById('cpLogoSize')?.value },
+    map_embed_url:    document.getElementById('cpMappa')?.value.trim() || null,
+    design: {
+      primaryColor:      document.getElementById('cpColore')?.value,
+      logoSize:          document.getElementById('cpLogoSize')?.value,
+      backgroundType:    document.getElementById('cpBackgroundType')?.value,
+      backgroundColor:   document.getElementById('cpBackgroundColor')?.value,
+      backgroundOpacity: parseInt(document.getElementById('cpBackgroundOpacity')?.value, 10),
+      buttonColor:       document.getElementById('cpButtonColor')?.value,
+      buttonOpacity:     parseInt(document.getElementById('cpButtonOpacity')?.value, 10),
+    },
   };
   try {
     const r = await fetch(`${API_NFC_CLIENT}/pagina`, {
@@ -183,7 +251,7 @@ async function nfcSalvaContenuto() {
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || (d.dettagli && d.dettagli.map(x => x.messaggio).join(', ')));
-    showMsg('nfcContenutoMsg', '✅ Contenuto salvato', 'ok');
+    showMsg('nfcContenutoMsg', '✅ Modifiche salvate', 'ok');
   } catch(e) { showMsg('nfcContenutoMsg', e.message, 'err'); }
 }
 

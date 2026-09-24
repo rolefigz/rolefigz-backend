@@ -46,6 +46,7 @@ const validaPaginaContenuto = [
   body("hours").optional({ checkFalsy: true }).isLength({ max: 160 }).withMessage("Orario troppo lungo"),
   body("seo_title").optional({ checkFalsy: true }).isLength({ max: 160 }).withMessage("Titolo SEO troppo lungo"),
   body("seo_description").optional({ checkFalsy: true }).isLength({ max: 300 }).withMessage("Descrizione SEO troppo lunga"),
+  body("map_embed_url").optional({ checkFalsy: true, nullable: true }).isLength({ max: 4000 }).withMessage("Link mappa troppo lungo"),
   valida,
 ];
 

@@ -163,6 +163,9 @@ async function adminTabNfcAziendaDettaglio(id) {
     const datiPagina = await rPagina.json();
     const pagina = datiPagina.pagina || {};
     nfcPgLinksCorrenti = datiPagina.links || [];
+    const nfcPgTipoSfondo = pagina.design?.backgroundType || (pagina.background_url ? 'foto' : 'nessuno');
+    const nfcPgOpFoto = pagina.design?.backgroundOpacity ?? 70;
+    const nfcPgOpBtn = pagina.design?.buttonOpacity ?? 5;
 
     if (!nfcPianiCache.length) {
       nfcPianiCache = await (await fetch(`${API_NFC}/piani`, { headers: { Authorization: `Bearer ${token}` } })).json();
@@ -242,8 +245,8 @@ async function adminTabNfcAziendaDettaglio(id) {
         </div>
       </div>
 
-      <div style="background:var(--surface);border:1px solid var(--border);padding:20px;margin-top:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted)">PAGINA PUBBLICA — /nfc/${azienda.slug}</div>
           <div>
             <button class="action-btn" onclick="nfcPgAnteprima(${azienda.id})">👁 ANTEPRIMA</button>
@@ -253,46 +256,102 @@ async function adminTabNfcAziendaDettaglio(id) {
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="field">
-            <label>Logo</label>
-            ${pagina.logo_url ? `<img src="${pagina.logo_url}" style="width:56px;height:56px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px"/>` : ''}
-            <input type="file" id="pgLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaLogo(${azienda.id})"/>
+        <details class="pg-sezione" open>
+          <summary>📝 CONTENUTO</summary>
+          <div class="pg-sezione-body">
+            <div class="field">
+              <label>Logo</label>
+              ${pagina.logo_url ? `<img src="${pagina.logo_url}" style="width:56px;height:56px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px"/>` : ''}
+              <input type="file" id="pgLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaLogo(${azienda.id})"/>
+            </div>
+            <div class="field"><label>Descrizione</label><textarea id="pgDescrizione">${pagina.description || ''}</textarea></div>
+            <div class="form-row">
+              <div class="field"><label>Orario</label><input id="pgOrario" type="text" placeholder="Lun-Ven 9:00-19:00" value="${pagina.hours || ''}"/></div>
+            </div>
+            <div class="form-row">
+              <div class="field"><label>Titolo SEO</label><input id="pgSeoTitolo" type="text" value="${pagina.seo_title || ''}"/></div>
+              <div class="field"><label>Descrizione SEO</label><input id="pgSeoDescrizione" type="text" value="${pagina.seo_description || ''}"/></div>
+            </div>
           </div>
-          <div class="field">
-            <label>Sfondo (attiva la pagina animata)</label>
-            ${pagina.background_url ? `<img src="${pagina.background_url}" style="width:100%;max-width:180px;height:76px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px;filter:grayscale(60%) brightness(.55)"/>` : ''}
-            <input type="file" id="pgSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaSfondo(${azienda.id})"/>
-            ${pagina.background_url ? `<button class="action-btn danger" style="margin-top:6px" onclick="nfcPgRimuoviSfondo(${azienda.id})">RIMUOVI SFONDO</button>` : ''}
-          </div>
-        </div>
+        </details>
 
-        <div class="field"><label>Descrizione</label><textarea id="pgDescrizione">${pagina.description || ''}</textarea></div>
-        <div class="form-row">
-          <div class="field"><label>Orario</label><input id="pgOrario" type="text" placeholder="Lun-Ven 9:00-19:00" value="${pagina.hours || ''}"/></div>
-          <div class="field"><label>Colore principale</label><input id="pgColore" type="color" value="${pagina.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label>Dimensione logo</label>
-            <select id="pgLogoSize">
-              <option value="piccolo" ${pagina.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
-              <option value="medio" ${!pagina.design?.logoSize || pagina.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
-              <option value="grande" ${pagina.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label>Titolo SEO</label><input id="pgSeoTitolo" type="text" value="${pagina.seo_title || ''}"/></div>
-          <div class="field"><label>Descrizione SEO</label><input id="pgSeoDescrizione" type="text" value="${pagina.seo_description || ''}"/></div>
-        </div>
-        <button class="btn-submit" onclick="nfcPgSalvaContenuto(${azienda.id})">SALVA CONTENUTO</button>
-        <div id="nfcPgContenutoMsg"></div>
+        <details class="pg-sezione">
+          <summary>🎨 ASPETTO</summary>
+          <div class="pg-sezione-body">
+            <div class="form-row">
+              <div class="field"><label>Colore principale</label><input id="pgColore" type="color" value="${pagina.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
+              <div class="field"><label>Dimensione logo</label>
+                <select id="pgLogoSize">
+                  <option value="piccolo" ${pagina.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
+                  <option value="medio" ${!pagina.design?.logoSize || pagina.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
+                  <option value="grande" ${pagina.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
+                </select>
+              </div>
+            </div>
 
-        <div style="border-top:1px solid var(--border);margin:18px 0 14px;padding-top:14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted)">LINK / RETI SOCIALI</div>
-        <div id="nfcPgLinksLista"></div>
-        <button class="action-btn" onclick="nfcPgAggiungiLink()">+ AGGIUNGI LINK</button>
-        <button class="btn-submit" onclick="nfcPgSalvaLinks(${azienda.id})" style="margin-left:8px">SALVA LINK</button>
-        <div id="nfcPgLinksMsg"></div>
+            <div class="field">
+              <label>Sfondo pagina</label>
+              <select id="pgBackgroundType" onchange="nfcPgAggiornaTipoSfondo()">
+                <option value="nessuno" ${nfcPgTipoSfondo === 'nessuno' ? 'selected' : ''}>Nessuno (pagina più leggera)</option>
+                <option value="colore" ${nfcPgTipoSfondo === 'colore' ? 'selected' : ''}>Colore pieno</option>
+                <option value="foto" ${nfcPgTipoSfondo === 'foto' ? 'selected' : ''}>Foto</option>
+              </select>
+            </div>
+
+            <div id="pgBgColoreWrap" class="field" style="display:${nfcPgTipoSfondo === 'colore' ? '' : 'none'}">
+              <label>Colore di sfondo</label>
+              <input id="pgBackgroundColor" type="color" value="${pagina.design?.backgroundColor || '#0A0A0A'}" style="height:42px;padding:4px;width:100px"/>
+            </div>
+
+            <div id="pgBgFotoWrap" class="field" style="display:${nfcPgTipoSfondo === 'foto' ? '' : 'none'}">
+              <label>Immagine di sfondo</label>
+              ${pagina.background_url ? `<img src="${pagina.background_url}" style="width:100%;max-width:180px;height:76px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px;filter:grayscale(60%) brightness(.55)"/>` : ''}
+              <input type="file" id="pgSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaSfondo(${azienda.id})"/>
+              ${pagina.background_url ? `<button class="action-btn danger" style="margin-top:6px" onclick="nfcPgRimuoviSfondo(${azienda.id})">RIMUOVI SFONDO</button>` : ''}
+              <label style="margin-top:12px">Opacità della foto</label>
+              <div class="range-row">
+                <input type="range" id="pgBackgroundOpacity" min="10" max="100" value="${nfcPgOpFoto}" oninput="document.getElementById('pgBgOpVal').textContent=this.value+'%'"/>
+                <span class="val" id="pgBgOpVal">${nfcPgOpFoto}%</span>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:14px">
+              <label>Colore dei pulsanti</label>
+              <input id="pgButtonColor" type="color" value="${pagina.design?.buttonColor || '#F4F1EA'}" style="height:42px;padding:4px;width:100px"/>
+            </div>
+            <div class="field">
+              <label>Opacità dei pulsanti</label>
+              <div class="range-row">
+                <input type="range" id="pgButtonOpacity" min="0" max="100" value="${nfcPgOpBtn}" oninput="document.getElementById('pgBtnOpVal').textContent=this.value+'%'"/>
+                <span class="val" id="pgBtnOpVal">${nfcPgOpBtn}%</span>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="pg-sezione">
+          <summary>📍 MAPPA</summary>
+          <div class="pg-sezione-body">
+            <div class="field">
+              <label>Google Maps o OpenStreetMap</label>
+              <textarea id="pgMappa" rows="2" placeholder="Incolla qui il link o il codice <iframe> di 'Incorpora una mappa'">${pagina.map_embed_url || ''}</textarea>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Su Google Maps: Condividi → Incorpora una mappa → copia e incolla qui.</div>
+            </div>
+          </div>
+        </details>
+
+        <button class="btn-submit" onclick="nfcPgSalvaContenuto(${azienda.id})">SALVA MODIFICHE</button>
+        <div id="nfcPgContenutoMsg" style="margin-bottom:14px"></div>
+
+        <details class="pg-sezione" open>
+          <summary>🔗 LINK / RETI SOCIALI</summary>
+          <div class="pg-sezione-body">
+            <div id="nfcPgLinksLista"></div>
+            <button class="action-btn" onclick="nfcPgAggiungiLink()">+ AGGIUNGI LINK</button>
+            <button class="btn-submit" onclick="nfcPgSalvaLinks(${azienda.id})" style="margin-left:8px">SALVA LINK</button>
+            <div id="nfcPgLinksMsg"></div>
+          </div>
+        </details>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
@@ -337,13 +396,30 @@ function nfcPgRimuoviLink(i) {
   nfcPgRenderLinks();
 }
 
+function nfcPgAggiornaTipoSfondo() {
+  const tipo = document.getElementById('pgBackgroundType')?.value;
+  const coloreWrap = document.getElementById('pgBgColoreWrap');
+  const fotoWrap = document.getElementById('pgBgFotoWrap');
+  if (coloreWrap) coloreWrap.style.display = tipo === 'colore' ? '' : 'none';
+  if (fotoWrap) fotoWrap.style.display = tipo === 'foto' ? '' : 'none';
+}
+
 async function nfcPgSalvaContenuto(id) {
   const body = {
     description:      document.getElementById('pgDescrizione')?.value,
     hours:             document.getElementById('pgOrario')?.value,
     seo_title:         document.getElementById('pgSeoTitolo')?.value,
     seo_description:   document.getElementById('pgSeoDescrizione')?.value,
-    design:            { primaryColor: document.getElementById('pgColore')?.value, logoSize: document.getElementById('pgLogoSize')?.value },
+    map_embed_url:     document.getElementById('pgMappa')?.value.trim() || null,
+    design: {
+      primaryColor:      document.getElementById('pgColore')?.value,
+      logoSize:          document.getElementById('pgLogoSize')?.value,
+      backgroundType:    document.getElementById('pgBackgroundType')?.value,
+      backgroundColor:   document.getElementById('pgBackgroundColor')?.value,
+      backgroundOpacity: parseInt(document.getElementById('pgBackgroundOpacity')?.value, 10),
+      buttonColor:       document.getElementById('pgButtonColor')?.value,
+      buttonOpacity:     parseInt(document.getElementById('pgButtonOpacity')?.value, 10),
+    },
   };
   try {
     const r = await fetch(`${API_NFC}/aziende/${id}/pagina`, {
@@ -351,7 +427,7 @@ async function nfcPgSalvaContenuto(id) {
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || (d.dettagli && d.dettagli.map(x => x.messaggio).join(', ')));
-    showMsg('nfcPgContenutoMsg', '✅ Contenuto salvato', 'ok');
+    showMsg('nfcPgContenutoMsg', '✅ Modifiche salvate', 'ok');
   } catch(e) { showMsg('nfcPgContenutoMsg', e.message, 'err'); }
 }
 

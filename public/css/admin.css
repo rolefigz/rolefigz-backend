@@ -81,3 +81,15 @@ nav { display: flex; gap: 6px; align-items: center; }
   /* Tabelle scrollabili */
   .admin-content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
+
+/* ── Apartados collassabili (editor pagina NFC) ── */
+.pg-sezione { border: 1px solid var(--border); background: var(--surface); margin-bottom: 14px; }
+.pg-sezione summary { list-style: none; cursor: pointer; padding: 12px 18px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.pg-sezione summary::-webkit-details-marker { display: none; }
+.pg-sezione summary::after { content: "+"; color: var(--accent); font-size: 13px; }
+.pg-sezione[open] summary::after { content: "–"; }
+.pg-sezione summary:hover { color: var(--dark); }
+.pg-sezione-body { padding: 2px 18px 18px; }
+.range-row { display: flex; align-items: center; gap: 10px; }
+.range-row input[type=range] { flex: 1; }
+.range-row .val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 34px; text-align: right; }

@@ -1,5 +1,5 @@
 const { sequelize, CompanyPage, PageLink } = require("../../../models");
-const { costruisciUrlLink } = require("../utils/urlSicuro");
+const { costruisciUrlLink, validaUrlMappa } = require("../utils/urlSicuro");
 const { TIPI_LINK } = require("../models/PageLink");
 const { renderPaginaPubblica } = require("../views/renderPaginaPubblica");
 const pageCache = require("../utils/pageCache");
@@ -17,9 +17,13 @@ async function ottieniPaginaEModifica(companyId) {
   return { pagina, links };
 }
 
-async function salvaContenuto(companyId, slug, { description, hours, seo_title, seo_description, design } = {}) {
+async function salvaContenuto(companyId, slug, { description, hours, seo_title, seo_description, design, map_embed_url } = {}) {
   let pagina = await CompanyPage.findOne({ where: { company_id: companyId } });
   if (!pagina) pagina = await CompanyPage.create({ company_id: companyId });
+
+  const mappaValidata = map_embed_url !== undefined
+    ? (map_embed_url ? validaUrlMappa(map_embed_url) : null)
+    : undefined;
 
   await pagina.update({
     ...(description !== undefined && { description }),
@@ -27,6 +31,7 @@ async function salvaContenuto(companyId, slug, { description, hours, seo_title, 
     ...(seo_title !== undefined && { seo_title }),
     ...(seo_description !== undefined && { seo_description }),
     ...(design !== undefined && { design }),
+    ...(mappaValidata !== undefined && { map_embed_url: mappaValidata }),
   });
 
   if (pagina.is_published) pageCache.invalidate(slug);
