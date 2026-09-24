@@ -96,6 +96,16 @@ async function tabNfcPagina(content) {
           <input type="file" id="cpLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaLogo()"/>
         </div>
 
+        <div class="field">
+          <label>Immagine di sfondo (facoltativa)</label>
+          ${p.background_url ? `<img src="${p.background_url}" style="width:100%;max-width:260px;height:110px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px;filter:grayscale(60%) brightness(.55)"/>` : ''}
+          <input type="file" id="cpSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaSfondo()"/>
+          ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">RIMUOVI SFONDO</button>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px">
+            Se carichi uno sfondo, la pagina passa alla versione animata (come una scheda di contatto): un po' più pesante da caricare, ma più d'impatto.
+          </div>
+        </div>
+
         <div class="field"><label>Descrizione</label><textarea id="cpDescrizione" maxlength="2000">${p.description || ''}</textarea></div>
         <div class="field"><label>Orario</label><input id="cpOrario" type="text" maxlength="160" placeholder="Lun-Ven 9:00-19:00" value="${p.hours || ''}"/></div>
 
@@ -193,6 +203,30 @@ async function nfcCaricaLogo() {
     if (!r.ok) throw new Error(d.error);
     showMsg('nfcContenutoMsg', '✅ Logo caricato', 'ok');
   } catch(e) { showMsg('nfcContenutoMsg', e.message, 'err'); }
+}
+
+async function nfcCaricaSfondo() {
+  const file = document.getElementById('cpSfondo')?.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('background', file);
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/pagina/sfondo`, { method: 'POST', headers: authHeaders(), body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    showMsg('nfcContenutoMsg', '✅ Sfondo caricato', 'ok');
+    tabNfcPagina(document.getElementById('nfcContent'));
+  } catch(e) { showMsg('nfcContenutoMsg', e.message, 'err'); }
+}
+
+async function nfcRimuoviSfondo() {
+  if (!confirm('Rimuovere lo sfondo? La pagina tornerà alla versione leggera.')) return;
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/pagina/sfondo`, { method: 'DELETE', headers: authHeaders() });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    tabNfcPagina(document.getElementById('nfcContent'));
+  } catch(e) { alert('Errore: ' + e.message); }
 }
 
 async function nfcAnteprimaPagina() {

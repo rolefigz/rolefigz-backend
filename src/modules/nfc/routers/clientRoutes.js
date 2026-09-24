@@ -20,6 +20,8 @@ router.post("/pagina/pubblica",  pagina.pubblicaPagina);
 router.post("/pagina/nascondi",  pagina.nascondiPagina);
 router.get("/pagina/anteprima",  pagina.anteprimaPagina);
 router.post("/pagina/logo",      upload.single("logo"), pagina.caricaLogo);
+router.post("/pagina/sfondo",    upload.single("background"), pagina.caricaSfondo);
+router.delete("/pagina/sfondo",  pagina.rimuoviSfondo);
 
 router.get("/tags",              tagClient.listaMieiTag);
 router.get("/tags/:id/qr.png",   tagClient.scaricaQrPng);

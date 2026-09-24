@@ -10,6 +10,7 @@ const CompanyPage = sequelize.define("CompanyPage", {
   published_at:     { type: DataTypes.DATE },
   design:           { type: DataTypes.JSON },
   logo_url:         { type: DataTypes.STRING },
+  background_url:   { type: DataTypes.STRING },
   description:      { type: DataTypes.TEXT },
   hours:            { type: DataTypes.STRING(160) },
   seo_title:        { type: DataTypes.STRING(160) },

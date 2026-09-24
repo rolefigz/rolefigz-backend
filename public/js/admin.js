@@ -1859,10 +1859,41 @@ async function adminTabImpostazioni(content) {
           </button>
         </div>
       </div>
-      <div id="impostazioniMsg" style="margin-top:12px"></div>`;
+      <div id="impostazioniMsg" style="margin-top:12px"></div>
+
+      <div style="border:1px solid var(--border);padding:24px;max-width:480px;margin-top:24px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:4px">Bonus fedeltà NFC</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:16px;letter-spacing:1px">
+          Crediti extra quando un'azienda paga mesi consecutivi senza buchi di copertura
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Soglia (mesi consecutivi)</label><input id="nfcBonusSoglia" type="number" min="1" value="${cfg.nfc_bonus_meses_soglia || '6'}"/></div>
+          <div class="field"><label>Bonus (% crediti extra)</label><input id="nfcBonusPercentuale" type="number" min="0" step="0.1" value="${cfg.nfc_bonus_percentuale || '10'}"/></div>
+        </div>
+        <button class="btn-submit" onclick="salvaBonusFedeltaNfc()">SALVA</button>
+        <div id="nfcBonusMsg" style="margin-top:12px"></div>
+      </div>`;
   } catch(e) {
     content.innerHTML = '<div class="msg err">Errore caricamento impostazioni</div>';
   }
+}
+
+async function salvaBonusFedeltaNfc() {
+  const soglia = document.getElementById('nfcBonusSoglia')?.value;
+  const percentuale = document.getElementById('nfcBonusPercentuale')?.value;
+  try {
+    await fetch(`${API}/impostazioni`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ chiave: 'nfc_bonus_meses_soglia', valore: soglia })
+    });
+    await fetch(`${API}/impostazioni`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ chiave: 'nfc_bonus_percentuale', valore: percentuale })
+    });
+    showMsg('nfcBonusMsg', '✅ Salvato', 'ok');
+  } catch(e) { showMsg('nfcBonusMsg', e.message, 'err'); }
 }
 
 async function toggleStripe(attivoOra) {

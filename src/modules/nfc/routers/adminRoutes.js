@@ -6,10 +6,12 @@ const piani        = require("../controllers/planiController");
 const tags         = require("../controllers/tagController");
 const merchProdotti = require("../controllers/merchProductController");
 const merchOrdini   = require("../controllers/merchOrderAdminController");
+const paginaAdmin   = require("../controllers/paginaAdminController");
 const upload = require("../../../utils/upload");
 const {
   validaCreaAzienda, validaAggiornaAzienda, validaPagamento, validaAggiustaCrediti, validaPiano,
   validaCreaTag, validaAggiornaTag, validaCreaProdottoMerch, validaCambiaStatoOrdineMerch,
+  validaPaginaContenuto,
 } = require("../middleware/validazioniNfc");
 
 router.get("/piani",     verifyToken, soloAdmin, piani.listaPiani);
@@ -26,6 +28,16 @@ router.delete("/aziende/:id",      verifyToken, soloAdmin, aziende.eliminaAziend
 router.post("/aziende/:id/pagamenti",        verifyToken, soloAdmin, validaPagamento, aziende.registraPagamento);
 router.post("/aziende/:id/prova",            verifyToken, soloAdmin, aziende.attivaProvaController);
 router.post("/aziende/:id/crediti/aggiusta", verifyToken, soloAdmin, validaAggiustaCrediti, aziende.aggiustaCreditiController);
+
+router.get("/aziende/:id/pagina",            verifyToken, soloAdmin, paginaAdmin.ottieniPagina);
+router.put("/aziende/:id/pagina",            verifyToken, soloAdmin, validaPaginaContenuto, paginaAdmin.salvaPagina);
+router.put("/aziende/:id/pagina/link",       verifyToken, soloAdmin, paginaAdmin.salvaLinks);
+router.post("/aziende/:id/pagina/pubblica",  verifyToken, soloAdmin, paginaAdmin.pubblicaPagina);
+router.post("/aziende/:id/pagina/nascondi",  verifyToken, soloAdmin, paginaAdmin.nascondiPagina);
+router.get("/aziende/:id/pagina/anteprima",  verifyToken, soloAdmin, paginaAdmin.anteprimaPagina);
+router.post("/aziende/:id/pagina/logo",      verifyToken, soloAdmin, upload.single("logo"), paginaAdmin.caricaLogo);
+router.post("/aziende/:id/pagina/sfondo",    verifyToken, soloAdmin, upload.single("background"), paginaAdmin.caricaSfondo);
+router.delete("/aziende/:id/pagina/sfondo",  verifyToken, soloAdmin, paginaAdmin.rimuoviSfondo);
 
 router.get("/tags",     verifyToken, soloAdmin, tags.listaTag);
 router.post("/tags",    verifyToken, soloAdmin, validaCreaTag, tags.creaTag);

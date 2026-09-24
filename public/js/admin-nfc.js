@@ -13,6 +13,15 @@ const STATO_COLORE_NFC = {
 };
 
 let nfcPianiCache = [];
+let nfcPgLinksCorrenti = [];
+
+const TIPI_LINK_NFC_ADMIN = [
+  ['whatsapp', 'WhatsApp'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
+  ['tiktok', 'TikTok'], ['linkedin', 'LinkedIn'], ['youtube', 'YouTube'],
+  ['website', 'Sito web'], ['menu', 'Menu'], ['booking', 'Prenotazioni'],
+  ['maps', 'Come arrivare'], ['tripadvisor', 'TripAdvisor'], ['phone', 'Telefono'],
+  ['email', 'Email'], ['custom', 'Altro'],
+];
 
 // ══════════════════════════════ AZIENDE ══════════════════════════════
 
@@ -140,13 +149,20 @@ async function adminTabNfcAziendaDettaglio(id) {
   const content = document.getElementById('adminContent');
   content.innerHTML = '<div class="loading">CARICAMENTO</div>';
   try {
-    const r = await fetch(`${API_NFC}/aziende/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    const [r, rPagina] = await Promise.all([
+      fetch(`${API_NFC}/aziende/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API_NFC}/aziende/${id}/pagina`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     const { azienda, creditiSaldo, movimenti, pagamenti } = data;
     const sub = azienda.Subscription || {};
     const stato = sub.status || 'inactive';
     const puoAttivareProva = !sub.paid_until;
+
+    const datiPagina = await rPagina.json();
+    const pagina = datiPagina.pagina || {};
+    nfcPgLinksCorrenti = datiPagina.links || [];
 
     if (!nfcPianiCache.length) {
       nfcPianiCache = await (await fetch(`${API_NFC}/piani`, { headers: { Authorization: `Bearer ${token}` } })).json();
@@ -226,6 +242,50 @@ async function adminTabNfcAziendaDettaglio(id) {
         </div>
       </div>
 
+      <div style="background:var(--surface);border:1px solid var(--border);padding:20px;margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted)">PAGINA PUBBLICA — /nfc/${azienda.slug}</div>
+          <div>
+            <button class="action-btn" onclick="nfcPgAnteprima(${azienda.id})">👁 ANTEPRIMA</button>
+            <button class="action-btn" style="border-color:var(--green);color:var(--green)" onclick="nfcPgPubblica(${azienda.id})">PUBBLICA</button>
+            <button class="action-btn" style="border-color:var(--red);color:var(--red)" onclick="nfcPgNascondi(${azienda.id})">NASCONDI</button>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${pagina.is_published ? 'Pubblicata' : 'Non pubblicata'}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Logo</label>
+            ${pagina.logo_url ? `<img src="${pagina.logo_url}" style="width:56px;height:56px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px"/>` : ''}
+            <input type="file" id="pgLogo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaLogo(${azienda.id})"/>
+          </div>
+          <div class="field">
+            <label>Sfondo (attiva la pagina animata)</label>
+            ${pagina.background_url ? `<img src="${pagina.background_url}" style="width:100%;max-width:180px;height:76px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px;filter:grayscale(60%) brightness(.55)"/>` : ''}
+            <input type="file" id="pgSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaSfondo(${azienda.id})"/>
+            ${pagina.background_url ? `<button class="action-btn danger" style="margin-top:6px" onclick="nfcPgRimuoviSfondo(${azienda.id})">RIMUOVI SFONDO</button>` : ''}
+          </div>
+        </div>
+
+        <div class="field"><label>Descrizione</label><textarea id="pgDescrizione">${pagina.description || ''}</textarea></div>
+        <div class="form-row">
+          <div class="field"><label>Orario</label><input id="pgOrario" type="text" placeholder="Lun-Ven 9:00-19:00" value="${pagina.hours || ''}"/></div>
+          <div class="field"><label>Colore principale</label><input id="pgColore" type="color" value="${pagina.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Titolo SEO</label><input id="pgSeoTitolo" type="text" value="${pagina.seo_title || ''}"/></div>
+          <div class="field"><label>Descrizione SEO</label><input id="pgSeoDescrizione" type="text" value="${pagina.seo_description || ''}"/></div>
+        </div>
+        <button class="btn-submit" onclick="nfcPgSalvaContenuto(${azienda.id})">SALVA CONTENUTO</button>
+        <div id="nfcPgContenutoMsg"></div>
+
+        <div style="border-top:1px solid var(--border);margin:18px 0 14px;padding-top:14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted)">LINK / RETI SOCIALI</div>
+        <div id="nfcPgLinksLista"></div>
+        <button class="action-btn" onclick="nfcPgAggiungiLink()">+ AGGIUNGI LINK</button>
+        <button class="btn-submit" onclick="nfcPgSalvaLinks(${azienda.id})" style="margin-left:8px">SALVA LINK</button>
+        <div id="nfcPgLinksMsg"></div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
         <div>
           <div class="admin-form-title" style="font-size:14px">MOVIMENTI CREDITI</div>
@@ -236,7 +296,131 @@ async function adminTabNfcAziendaDettaglio(id) {
           <table><thead><tr><th>Data</th><th>Importo</th><th>Mesi</th><th>Nota</th></tr></thead><tbody>${righePagamenti}</tbody></table>
         </div>
       </div>`;
+
+    nfcPgRenderLinks();
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+function nfcPgRenderLinks() {
+  const wrap = document.getElementById('nfcPgLinksLista');
+  if (!wrap) return;
+  wrap.innerHTML = nfcPgLinksCorrenti.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);padding:8px;margin-bottom:6px;flex-wrap:wrap">
+      <select onchange="nfcPgLinksCorrenti[${i}].type=this.value" style="font-family:'DM Mono',monospace;font-size:10px">
+        ${TIPI_LINK_NFC_ADMIN.map(([v, lbl]) => `<option value="${v}" ${l.type === v ? 'selected' : ''}>${lbl}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="Etichetta" value="${l.label || ''}" oninput="nfcPgLinksCorrenti[${i}].label=this.value" style="flex:1;min-width:100px;font-family:'DM Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--border)"/>
+      <input type="text" placeholder="URL o numero" value="${l.url || ''}" oninput="nfcPgLinksCorrenti[${i}].url=this.value" style="flex:1;min-width:100px;font-family:'DM Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--border)"/>
+      <label style="font-size:9px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;white-space:nowrap">
+        <input type="checkbox" style="width:auto" ${l.is_visible !== false ? 'checked' : ''} onchange="nfcPgLinksCorrenti[${i}].is_visible=this.checked"/> visibile
+      </label>
+      <button class="action-btn danger" onclick="nfcPgRimuoviLink(${i})">✕</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:12px">Nessun link ancora.</p>';
+}
+
+function nfcPgAggiungiLink() {
+  nfcPgLinksCorrenti.push({ type: 'whatsapp', label: '', url: '', is_visible: true });
+  nfcPgRenderLinks();
+}
+
+function nfcPgRimuoviLink(i) {
+  nfcPgLinksCorrenti.splice(i, 1);
+  nfcPgRenderLinks();
+}
+
+async function nfcPgSalvaContenuto(id) {
+  const body = {
+    description:      document.getElementById('pgDescrizione')?.value,
+    hours:             document.getElementById('pgOrario')?.value,
+    seo_title:         document.getElementById('pgSeoTitolo')?.value,
+    seo_description:   document.getElementById('pgSeoDescrizione')?.value,
+    design:            { primaryColor: document.getElementById('pgColore')?.value },
+  };
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || (d.dettagli && d.dettagli.map(x => x.messaggio).join(', ')));
+    showMsg('nfcPgContenutoMsg', '✅ Contenuto salvato', 'ok');
+  } catch(e) { showMsg('nfcPgContenutoMsg', e.message, 'err'); }
+}
+
+async function nfcPgSalvaLinks(id) {
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/link`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ links: nfcPgLinksCorrenti }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    nfcPgLinksCorrenti = d;
+    nfcPgRenderLinks();
+    showMsg('nfcPgLinksMsg', '✅ Link salvati', 'ok');
+  } catch(e) { showMsg('nfcPgLinksMsg', e.message, 'err'); }
+}
+
+async function nfcPgCaricaLogo(id) {
+  const file = document.getElementById('pgLogo')?.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('logo', file);
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/logo`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminTabNfcAziendaDettaglio(id);
+  } catch(e) { showMsg('nfcPgContenutoMsg', e.message, 'err'); }
+}
+
+async function nfcPgCaricaSfondo(id) {
+  const file = document.getElementById('pgSfondo')?.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('background', file);
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/sfondo`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminTabNfcAziendaDettaglio(id);
+  } catch(e) { showMsg('nfcPgContenutoMsg', e.message, 'err'); }
+}
+
+async function nfcPgRimuoviSfondo(id) {
+  if (!confirm('Rimuovere lo sfondo? La pagina tornerà alla versione leggera.')) return;
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/sfondo`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error((await r.json()).error);
+    adminTabNfcAziendaDettaglio(id);
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function nfcPgPubblica(id) {
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/pubblica`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminTabNfcAziendaDettaglio(id);
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function nfcPgNascondi(id) {
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/nascondi`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminTabNfcAziendaDettaglio(id);
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function nfcPgAnteprima(id) {
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/pagina/anteprima`, { headers: { Authorization: `Bearer ${token}` } });
+    const html = await r.text();
+    if (!r.ok) throw new Error('Errore anteprima');
+    const blob = new Blob([html], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
+  } catch(e) { alert('Errore: ' + e.message); }
 }
 
 async function nfcSalvaAzienda(id) {

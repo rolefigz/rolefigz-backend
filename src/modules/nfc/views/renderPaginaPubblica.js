@@ -1,4 +1,5 @@
 const { validaUrlSicuro } = require("../utils/urlSicuro");
+const { renderPaginaAnimata } = require("./renderPaginaAnimata");
 
 const ICONA_LINK = {
   whatsapp: "💬", phone: "📞", email: "✉️", website: "🌐", instagram: "📷",
@@ -38,6 +39,13 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
 .box{max-width:420px}h1{font-size:1.2rem;margin-bottom:10px}p{color:#B9B6AE;font-size:.9rem;line-height:1.5}</style></head>
 <body><div class="box"><h1>Pagina momentaneamente non disponibile</h1>
 <p>Contatta RoleFigz per riattivare la pagina: <a href="mailto:${escapeAttr(contatto)}" style="color:#FF6A2C">${escapeHtml(contatto)}</a></p></div></body></html>`;
+  }
+
+  // Un'azienda che ha caricato un'immagine di sfondo ottiene la versione
+  // animata (stesso linguaggio visivo di /nfc/rolefigz); senza sfondo resta
+  // la versione leggera, coerente con l'obiettivo di caricamento <1s.
+  if (pagina?.background_url) {
+    return renderPaginaAnimata(azienda, pagina, links, opts);
   }
 
   const righeLink = links.map(l => {
