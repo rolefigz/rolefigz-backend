@@ -14,9 +14,10 @@ const AnalyticsEvent  = require("./AnalyticsEvent");
 const AnalyticsDaily  = require("./AnalyticsDaily");
 const AuditLog        = require("./AuditLog");
 const Notification    = require("./Notification");
+const Lead             = require("./Lead");
 
 module.exports = {
   Company, Template, Plan, CompanyPage, PageLink, Subscription, Payment,
   CreditLedger, MerchProduct, MerchOrder, MerchOrderItem, Tag,
-  AnalyticsEvent, AnalyticsDaily, AuditLog, Notification,
+  AnalyticsEvent, AnalyticsDaily, AuditLog, Notification, Lead,
 };

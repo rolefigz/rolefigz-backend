@@ -36,6 +36,8 @@ function renderLandingNfc(piani) {
 
   const pianiOrdinati = [...piani].sort((a, b) => (a.position || 0) - (b.position || 0));
   const pianoEvidenza = pianiOrdinati[Math.min(1, pianiOrdinati.length - 1)];
+  const pianiPrincipali = pianiOrdinati.slice(0, 3);
+  const pianiExtra = pianiOrdinati.slice(3);
 
   const faq = [
     ["Si paga con carta o addebito automatico?", "No. Si paga solo in contanti, di persona. Nessuna carta salvata, nessun addebito a sorpresa."],
@@ -161,6 +163,14 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .piano-features li::before{content:"• ";color:var(--accent)}
 .piano-cta{display:block;text-align:center;border-radius:var(--pill);padding:12px;font-size:.85rem;font-weight:600;text-decoration:none;background:rgba(0,0,0,.05);transition:background .2s ease}
 .piano-cta:hover{background:rgba(0,0,0,.08)}
+.piani-extra{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1)}
+.piani-extra>div{overflow:hidden}
+.piani-extra.in{grid-template-rows:1fr}
+.piani-extra .piani{margin-top:20px}
+.piani-toggle{display:flex;align-items:center;gap:8px;margin:28px auto 0;cursor:pointer;border:none;font-family:inherit}
+.piani-toggle svg{width:15px;height:15px;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.piani-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+@media (prefers-reduced-motion: reduce){ .piani-extra,.piani-toggle svg{transition:none} }
 
 /* FAQ */
 details{border-top:1px solid var(--line);padding:20px 0}
@@ -175,6 +185,17 @@ details p{color:var(--ink-dim);font-size:.88rem;line-height:1.6;margin:12px 0 0;
 .contatti{text-align:center}
 .contatti p{color:var(--ink-dim);max-width:44ch;margin:0 auto 30px;line-height:1.6}
 .hero-cta.centro{justify-content:center;opacity:1;animation:none}
+.lead-form{max-width:520px;margin:18px auto 0;text-align:left;display:flex;flex-direction:column;gap:12px}
+.lead-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.lead-form-row{grid-template-columns:1fr}}
+.lead-form input,.lead-form textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 16px;font:inherit;font-size:.92rem;color:var(--ink);background:var(--surface);transition:border-color .2s ease}
+.lead-form input:focus,.lead-form textarea:focus{outline:none;border-color:var(--accent)}
+.lead-form textarea{resize:vertical;min-height:80px}
+.lead-form button{align-self:flex-start}
+.lead-form button:disabled{opacity:.6;pointer-events:none}
+.lead-form-esito{font-size:.85rem;min-height:1.2em;margin:0}
+.lead-form-esito.ok{color:#1a7f4b}
+.lead-form-esito.err{color:#c0392b}
 
 footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-size:.72rem;color:var(--ink-dim)}
 </style>
@@ -249,8 +270,16 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
   <h2 class="reveal" style="font-size:1.7rem;margin-bottom:10px">Un abbonamento mensile, pagato in contanti</h2>
   <p class="reveal" style="color:var(--ink-dim);margin-bottom:36px;max-width:50ch">Nessuna carta, nessun addebito automatico. Paghi di persona quando passi in negozio.</p>
   <div class="piani">
-    ${piani.length ? piani.map(p => cardPiano(p, p.id === pianoEvidenza?.id)).join("") : '<p style="color:var(--ink-dim)">I piani saranno disponibili a breve. Contattaci per saperne di piu\'.</p>'}
+    ${pianiPrincipali.length ? pianiPrincipali.map(p => cardPiano(p, p.id === pianoEvidenza?.id)).join("") : '<p style="color:var(--ink-dim)">I piani saranno disponibili a breve. Contattaci per saperne di piu\'.</p>'}
   </div>
+  ${pianiExtra.length ? `
+  <div class="piani-extra" id="piani-extra">
+    <div><div class="piani">${pianiExtra.map(p => cardPiano(p, p.id === pianoEvidenza?.id)).join("")}</div></div>
+  </div>
+  <button type="button" class="btn btn--ghost piani-toggle" id="piani-toggle" aria-expanded="false" aria-controls="piani-extra">
+    <span>Hai bisogno di piu'?</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+  </button>` : ""}
 </section>
 
 <section class="wrap" style="border-top:1px solid var(--line);max-width:760px">
@@ -265,6 +294,21 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
     ${telefonoWa ? `<a class="btn btn--primary" href="https://wa.me/${escapeHtml(telefonoWa)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}
     <a class="btn btn--ghost" href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>
   </div>
+
+  <p class="reveal" style="color:var(--ink-dim);font-size:.82rem;margin:34px 0 0">Oppure lascia i tuoi dati, ti richiamiamo noi</p>
+  <form id="lead-form" class="lead-form reveal" novalidate>
+    <div class="lead-form-row">
+      <input type="text" name="company_name" placeholder="Nome azienda" maxlength="160" required>
+      <input type="text" name="contact_name" placeholder="Il tuo nome" maxlength="160" required>
+    </div>
+    <div class="lead-form-row">
+      <input type="email" name="email" placeholder="Email" maxlength="160" required>
+      <input type="tel" name="phone" placeholder="Telefono (facoltativo)" maxlength="30">
+    </div>
+    <textarea name="message" placeholder="Raccontaci qualcosa sulla tua attivita' (facoltativo)" maxlength="1000" rows="3"></textarea>
+    <button type="submit" class="btn btn--primary" id="lead-form-submit">Richiedi informazioni</button>
+    <p class="lead-form-esito" id="lead-form-esito" role="status" aria-live="polite"></p>
+  </form>
 </section>
 
 <footer>${escapeHtml(nomeAzienda)} © ${new Date().getFullYear()} · RoleFigz NFC</footer>
@@ -280,6 +324,61 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
       });
     }, { threshold: .15, rootMargin: '0px 0px -40px 0px' });
     els.forEach(function(el){ obs.observe(el); });
+  } catch(e) {}
+
+  try {
+    var toggle = document.getElementById('piani-toggle');
+    var extra = document.getElementById('piani-extra');
+    if (toggle && extra) {
+      toggle.addEventListener('click', function(){
+        var aperto = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!aperto));
+        extra.classList.toggle('in', !aperto);
+        toggle.querySelector('span').textContent = aperto ? "Hai bisogno di piu'?" : 'Mostra meno piani';
+      });
+    }
+  } catch(e) {}
+
+  try {
+    var form = document.getElementById('lead-form');
+    if (form) {
+      var esito = document.getElementById('lead-form-esito');
+      var submitBtn = document.getElementById('lead-form-submit');
+      form.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        esito.textContent = '';
+        esito.className = 'lead-form-esito';
+        submitBtn.disabled = true;
+        var dati = {
+          company_name: form.company_name.value,
+          contact_name: form.contact_name.value,
+          email: form.email.value,
+          phone: form.phone.value,
+          message: form.message.value,
+        };
+        fetch('/api/nfc-leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dati),
+        }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, dati: d }; }); })
+          .then(function(res){
+            submitBtn.disabled = false;
+            if (res.ok) {
+              esito.textContent = res.dati.mensaje || 'Richiesta inviata. Ti contatteremo presto.';
+              esito.className = 'lead-form-esito ok';
+              form.reset();
+            } else {
+              esito.textContent = (res.dati.dettagli && res.dati.dettagli[0] && res.dati.dettagli[0].messaggio) || res.dati.error || 'Errore, riprova.';
+              esito.className = 'lead-form-esito err';
+            }
+          })
+          .catch(function(){
+            submitBtn.disabled = false;
+            esito.textContent = 'Errore di connessione, riprova.';
+            esito.className = 'lead-form-esito err';
+          });
+      });
+    }
   } catch(e) {}
 })();
 </script>

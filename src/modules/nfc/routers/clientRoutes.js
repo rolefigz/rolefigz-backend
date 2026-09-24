@@ -7,11 +7,15 @@ const pagina = require("../controllers/paginaController");
 const tagClient = require("../controllers/tagClientController");
 const merch = require("../controllers/merchClientController");
 const stats = require("../controllers/statsClientController");
-const { validaPaginaContenuto, validaCreaOrdineMerch } = require("../middleware/validazioniNfc");
+const aziendaClient = require("../controllers/aziendaClientController");
+const { validaPaginaContenuto, validaCreaOrdineMerch, validaAggiornaAziendaCliente } = require("../middleware/validazioniNfc");
 
 router.use(verifyToken, conAzienda);
 
 router.get("/home", pagina.home);
+
+router.get("/azienda", aziendaClient.ottieniAzienda);
+router.put("/azienda", validaAggiornaAziendaCliente, aziendaClient.aggiornaAzienda);
 
 router.get("/pagina",            pagina.ottieniPagina);
 router.put("/pagina",            validaPaginaContenuto, pagina.salvaPagina);

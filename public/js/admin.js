@@ -299,6 +299,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'nfc_leads') {
+    await adminTabNfcLeads(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;

@@ -217,6 +217,7 @@ async function adminTabNfcAziendaDettaglio(id) {
             Mesi consecutivi pagati: ${sub.consecutive_paid_months || 0}<br/>
             Prova fino al: ${sub.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('it-IT') : '—'}
           </div>
+          <button class="action-btn" style="margin-top:10px" onclick="nfcReimpostaPassword(${azienda.id})">REIMPOSTA PASSWORD CLIENTE</button>
         </div>
 
         <div style="background:var(--surface);border:1px solid var(--border);padding:20px">
@@ -537,6 +538,19 @@ async function nfcSalvaAzienda(id) {
     if (!r.ok) throw new Error(data.error);
     showMsg('nfcDettaglioMsg', '✅ Salvato', 'ok');
   } catch(e) { showMsg('nfcDettaglioMsg', e.message, 'err'); }
+}
+
+async function nfcReimpostaPassword(id) {
+  if (!confirm('Generare una nuova password per l\'account cliente? La vecchia smettera\' di funzionare.')) return;
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/reset-password`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    alert(`Nuova password generata:\n\n${data.passwordGenerata}\n\nComunicala al cliente, non verra' mostrata di nuovo.`);
+  } catch(e) { alert('Errore: ' + e.message); }
 }
 
 async function nfcAggiustaCrediti(id) {
@@ -946,4 +960,62 @@ async function adminTabNfcProduzione(content) {
             ${righe.map(x => `<tr><td><strong>${x.name}</strong></td><td class="price-cell">${x.quantity}</td><td>${x.production_days ?? '—'} gg</td></tr>`).join('')}
           </tbody></table>`}`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+// ══════════════════════════════ RICHIESTE (LEAD) ══════════════════════════════
+
+const STATI_LEAD = ['nuova', 'contattata', 'convertita', 'scartata'];
+
+// I lead arrivano dal form pubblico senza autenticazione: a differenza del
+// resto del pannello, questi campi non sono fidati e vanno sempre escapati.
+function escapeHtmlLead(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+async function adminTabNfcLeads(content, filtroStato) {
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const url = filtroStato ? `${API_NFC}/leads?status=${filtroStato}` : `${API_NFC}/leads`;
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const leads = await r.json();
+    if (!Array.isArray(leads)) throw new Error(leads?.error || 'Errore caricamento richieste');
+
+    const righe = leads.map(l => `
+      <tr>
+        <td>${new Date(l.createdAt).toLocaleDateString('it-IT')}</td>
+        <td><strong>${escapeHtmlLead(l.company_name)}</strong></td>
+        <td>${escapeHtmlLead(l.contact_name)}</td>
+        <td><a href="mailto:${escapeHtmlLead(l.email)}">${escapeHtmlLead(l.email)}</a>${l.phone ? `<br/><span style="color:var(--muted);font-size:10px">${escapeHtmlLead(l.phone)}</span>` : ''}</td>
+        <td style="max-width:240px;white-space:normal;font-size:11px;color:var(--muted)">${escapeHtmlLead(l.message) || '—'}</td>
+        <td>
+          <select onchange="nfcCambiaStatoLead(${l.id}, this.value, '${filtroStato || ''}')">
+            ${STATI_LEAD.map(s => `<option value="${s}" ${l.status === s ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('')}
+          </select>
+        </td>
+      </tr>`).join('');
+
+    content.innerHTML = `
+      <div class="admin-form-title">RICHIESTE DAL SITO</div>
+      <div style="margin-bottom:16px">
+        <select onchange="adminTabNfcLeads(document.getElementById('adminContent'), this.value)">
+          <option value="" ${!filtroStato ? 'selected' : ''}>TUTTE</option>
+          ${STATI_LEAD.map(s => `<option value="${s}" ${filtroStato === s ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('')}
+        </select>
+      </div>
+      ${!leads.length
+        ? '<div class="empty-state"><div class="ei">📭</div><h3>NESSUNA RICHIESTA</h3></div>'
+        : `<table><thead><tr><th>Data</th><th>Azienda</th><th>Referente</th><th>Contatti</th><th>Messaggio</th><th>Stato</th></tr></thead><tbody>${righe}</tbody></table>`}`;
+  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+async function nfcCambiaStatoLead(id, status, filtroStato) {
+  try {
+    const r = await fetch(`${API_NFC}/leads/${id}/stato`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error);
+    adminTabNfcLeads(document.getElementById('adminContent'), filtroStato);
+  } catch(e) { alert('Errore: ' + e.message); adminTabNfcLeads(document.getElementById('adminContent'), filtroStato); }
 }

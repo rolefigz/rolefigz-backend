@@ -52,6 +52,35 @@
     .range-row { display: flex; align-items: center; gap: 10px; }
     .range-row input[type=range] { flex: 1; }
     .range-row .val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 34px; text-align: right; }
+
+    /* Stile "vetro liquido" (approssimazione via backdrop-filter, non e' il
+       Liquid Glass nativo Apple) usato SOLO nella tab "La mia azienda" per
+       distinguerla visivamente dal resto del pannello, piatto. */
+    .glass-wrap { position: relative; border-radius: 28px; padding: 30px 26px; overflow: hidden; isolation: isolate;
+      background: linear-gradient(135deg, #dceaff 0%, #ecdcff 48%, #ffe1ef 100%); }
+    .glass-wrap::before, .glass-wrap::after { content: ""; position: absolute; border-radius: 50%; filter: blur(70px); z-index: -1; }
+    .glass-wrap::before { width: 300px; height: 300px; background: #85a8ff; opacity: .55; top: -90px; left: -70px; }
+    .glass-wrap::after { width: 280px; height: 280px; background: #ff9dcf; opacity: .45; bottom: -90px; right: -50px; }
+    .glass-card { background: rgba(255,255,255,.5); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border: 1px solid rgba(255,255,255,.65); border-radius: 20px; padding: 24px; margin-bottom: 18px;
+      box-shadow: 0 8px 32px rgba(31,38,135,.14), inset 0 1px 0 rgba(255,255,255,.65); }
+    .glass-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 800; margin-bottom: 16px; color: #1d1d3a; }
+    .glass-field { margin-bottom: 14px; }
+    .glass-field label { display: block; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: rgba(29,29,58,.55); margin-bottom: 6px; }
+    .glass-field input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.75);
+      background: rgba(255,255,255,.5); font-size: 13px; color: #1d1d3a; transition: background .2s ease, border-color .2s ease; }
+    .glass-field input:focus { outline: none; background: rgba(255,255,255,.78); border-color: rgba(120,140,255,.65); }
+    .glass-field input:disabled { color: rgba(29,29,58,.45); cursor: not-allowed; }
+    .glass-btn { background: rgba(255,255,255,.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.8); color: #1d1d3a; font-weight: 700; font-size: 13px; padding: 12px 28px;
+      border-radius: 999px; cursor: pointer; box-shadow: 0 4px 14px rgba(31,38,135,.14); transition: transform .2s ease, background .2s ease; }
+    .glass-btn:hover { background: rgba(255,255,255,.88); }
+    .glass-btn:active { transform: scale(.97); }
+    .glass-note { font-size: 11px; color: rgba(29,29,58,.6); margin-top: 14px; line-height: 1.6; }
+    @media (max-width: 560px) { .glass-wrap { padding: 22px 16px; border-radius: 20px; } }
+    @media (prefers-reduced-transparency: reduce) {
+      .glass-card, .glass-btn { backdrop-filter: none; -webkit-backdrop-filter: none; background: #fff; }
+    }
   </style>
 </head>
 <body>
@@ -67,6 +96,7 @@
   <div class="grid">
     <div class="menu">
       <div class="menu-item active" onclick="nfcTab('home', this)">Home</div>
+      <div class="menu-item" onclick="nfcTab('azienda', this)">La mia azienda</div>
       <div class="menu-item" onclick="nfcTab('pagina', this)">La mia pagina</div>
       <div class="menu-item" onclick="nfcTab('qr', this)">QR</div>
       <div class="menu-item" onclick="nfcTab('merch', this)">Merchandising</div>

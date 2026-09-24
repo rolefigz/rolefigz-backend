@@ -7,11 +7,12 @@ const tags         = require("../controllers/tagController");
 const merchProdotti = require("../controllers/merchProductController");
 const merchOrdini   = require("../controllers/merchOrderAdminController");
 const paginaAdmin   = require("../controllers/paginaAdminController");
+const leadAdmin      = require("../controllers/leadAdminController");
 const upload = require("../../../utils/upload");
 const {
   validaCreaAzienda, validaAggiornaAzienda, validaPagamento, validaAggiustaCrediti, validaPiano,
   validaCreaTag, validaAggiornaTag, validaCreaProdottoMerch, validaCambiaStatoOrdineMerch,
-  validaPaginaContenuto,
+  validaPaginaContenuto, validaCambiaStatoLead,
 } = require("../middleware/validazioniNfc");
 
 router.get("/piani",     verifyToken, soloAdmin, piani.listaPiani);
@@ -28,6 +29,7 @@ router.delete("/aziende/:id",      verifyToken, soloAdmin, aziende.eliminaAziend
 router.post("/aziende/:id/pagamenti",        verifyToken, soloAdmin, validaPagamento, aziende.registraPagamento);
 router.post("/aziende/:id/prova",            verifyToken, soloAdmin, aziende.attivaProvaController);
 router.post("/aziende/:id/crediti/aggiusta", verifyToken, soloAdmin, validaAggiustaCrediti, aziende.aggiustaCreditiController);
+router.post("/aziende/:id/reset-password",   verifyToken, soloAdmin, aziende.reimpostaPasswordController);
 
 router.get("/aziende/:id/pagina",            verifyToken, soloAdmin, paginaAdmin.ottieniPagina);
 router.put("/aziende/:id/pagina",            verifyToken, soloAdmin, validaPaginaContenuto, paginaAdmin.salvaPagina);
@@ -50,5 +52,8 @@ router.put("/prodotti/:id", verifyToken, soloAdmin, upload.single("image"), merc
 router.get("/ordini",              verifyToken, soloAdmin, merchOrdini.listaOrdini);
 router.patch("/ordini/:id/stato",  verifyToken, soloAdmin, validaCambiaStatoOrdineMerch, merchOrdini.cambiaStato);
 router.get("/produzione",          verifyToken, soloAdmin, merchOrdini.riepilogoProduzione);
+
+router.get("/leads",              verifyToken, soloAdmin, leadAdmin.listaLeads);
+router.patch("/leads/:id/stato",  verifyToken, soloAdmin, validaCambiaStatoLead, leadAdmin.cambiaStatoLead);
 
 module.exports = router;

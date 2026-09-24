@@ -23,6 +23,7 @@ const sitemapRoutes         = require("./src/routers/sitemapRoutes");
 const telegramRoutes     = require("./src/routers/telegramRoutes");
 const nfcAdminRoutes     = require("./src/modules/nfc/routers/adminRoutes");
 const nfcClientRoutes    = require("./src/modules/nfc/routers/clientRoutes");
+const nfcLeadRoutes      = require("./src/modules/nfc/routers/leadPublicRoutes");
 const { mostraPagina: mostraPaginaNfc } = require("./src/modules/nfc/controllers/publicPageController");
 const { scansionaTag } = require("./src/modules/nfc/controllers/tagPublicController");
 const { vaiAlLink } = require("./src/modules/nfc/controllers/linkPublicController");
@@ -63,6 +64,7 @@ app.use("/",                              sitemapRoutes);
 app.use("/api/telegram", limitAPI,  telegramRoutes);
 app.use("/api/admin/nfc", limitAPI, nfcAdminRoutes);
 app.use("/api/nfc",       limitAPI, nfcClientRoutes);
+app.use("/api/nfc-leads", limitAPI, nfcLeadRoutes);
 
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
 app.get("/blog",       serveApp);

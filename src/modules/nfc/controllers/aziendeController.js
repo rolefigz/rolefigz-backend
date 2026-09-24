@@ -2,7 +2,7 @@ const {
   sequelize, Company, Subscription, Plan, CompanyPage, CreditLedger, Payment, MerchOrder,
 } = require("../../../models");
 const { Utente } = require("../../../models");
-const { risolviProprietario } = require("../services/ownerService");
+const { risolviProprietario, reimpostaPassword } = require("../services/ownerService");
 const {
   calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti,
 } = require("../services/subscriptionService");
@@ -200,7 +200,20 @@ const aggiustaCreditiController = async (req, res) => {
   } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
 };
 
+// Rigenera la password dell'account del cliente (es. l'ha persa) — mostrata
+// una sola volta all'admin, esattamente come alla creazione dell'azienda.
+const reimpostaPasswordController = async (req, res) => {
+  try {
+    const azienda = await Company.findByPk(req.params.id);
+    if (!azienda) return res.status(404).json({ error: "Azienda non trovata" });
+
+    const { passwordGenerata } = await reimpostaPassword(azienda.owner_user_id);
+    await registraAzione({ actorUserId: req.usuario.id, companyId: azienda.id, action: "owner_password_reset" });
+    res.json({ passwordGenerata });
+  } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
+};
+
 module.exports = {
   listaAziende, ottieniAzienda, creaAzienda, aggiornaAzienda, cambiaStato, eliminaAzienda,
-  registraPagamento, attivaProvaController, aggiustaCreditiController,
+  registraPagamento, attivaProvaController, aggiustaCreditiController, reimpostaPasswordController,
 };

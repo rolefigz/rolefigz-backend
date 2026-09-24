@@ -27,6 +27,7 @@ function nfcTab(tab, el) {
   if (el) el.classList.add('active');
   const content = document.getElementById('nfcContent');
   if (tab === 'home') tabNfcHome(content);
+  if (tab === 'azienda') tabNfcAzienda(content);
   if (tab === 'pagina') tabNfcPagina(content);
   if (tab === 'qr') tabNfcQr(content);
   if (tab === 'merch') tabNfcMerch(content);
@@ -64,6 +65,62 @@ async function tabNfcHome(content) {
       </div>
       <p style="font-size:11px;color:var(--muted)">Merchandising, ordini e statistiche dettagliate arriveranno presto in questo pannello.</p>`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+// ═══════════════════════════ LA MIA AZIENDA ═══════════════════════════
+
+async function tabNfcAzienda(content) {
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/azienda`, { headers: authHeaders() });
+    const a = await r.json();
+    if (!r.ok) throw new Error(a.error);
+
+    content.innerHTML = `
+      <div class="glass-wrap">
+        <div class="glass-card">
+          <h3>Dati azienda</h3>
+          <div class="glass-field"><label>Nome azienda</label><input id="gaName" type="text" value="${a.name || ''}"/></div>
+          <div class="glass-field"><label>Settore</label><input id="gaSettore" type="text" value="${a.sector || ''}"/></div>
+          <div class="glass-field"><label>Indirizzo pagina (non modificabile)</label><input type="text" value="rolefigz.com/nfc/${a.slug}" disabled/></div>
+        </div>
+        <div class="glass-card">
+          <h3>Dati fiscali</h3>
+          <div class="form-row">
+            <div class="glass-field"><label>P.IVA</label><input id="gaPiva" type="text" value="${a.piva || ''}"/></div>
+            <div class="glass-field"><label>Codice fiscale</label><input id="gaCf" type="text" value="${a.codice_fiscale || ''}"/></div>
+          </div>
+          <div class="form-row">
+            <div class="glass-field"><label>Codice SDI</label><input id="gaSdi" type="text" value="${a.codice_sdi || ''}"/></div>
+            <div class="glass-field"><label>PEC</label><input id="gaPec" type="text" value="${a.pec || ''}"/></div>
+          </div>
+        </div>
+        <button class="glass-btn" onclick="nfcSalvaAziendaCliente()">Salva modifiche</button>
+        <div id="gaMsg"></div>
+        <p class="glass-note">Il piano, i crediti e i pagamenti sono gestiti da RoleFigz — per modificarli contattaci direttamente.</p>
+      </div>`;
+  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+async function nfcSalvaAziendaCliente() {
+  const body = {
+    name:           document.getElementById('gaName')?.value.trim(),
+    sector:         document.getElementById('gaSettore')?.value.trim(),
+    piva:           document.getElementById('gaPiva')?.value.trim(),
+    codice_fiscale: document.getElementById('gaCf')?.value.trim(),
+    codice_sdi:     document.getElementById('gaSdi')?.value.trim(),
+    pec:            document.getElementById('gaPec')?.value.trim(),
+  };
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/azienda`, {
+      method: 'PUT',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.dettagli?.[0]?.messaggio || data.error);
+    showMsg('gaMsg', '✅ Salvato', 'ok');
+  } catch(e) { showMsg('gaMsg', e.message, 'err'); }
 }
 
 // ═══════════════════════════ LA MIA PAGINA ═══════════════════════════

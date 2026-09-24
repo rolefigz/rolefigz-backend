@@ -92,8 +92,33 @@ const validaPiano = [
   valida,
 ];
 
+const validaAggiornaAziendaCliente = [
+  body("name").optional().trim().notEmpty().withMessage("Il nome non puo' essere vuoto").isLength({ max: 160 }),
+  body("sector").optional({ checkFalsy: true }).trim().isLength({ max: 120 }),
+  body("piva").optional({ checkFalsy: true }).trim().isLength({ max: 20 }),
+  body("codice_fiscale").optional({ checkFalsy: true }).trim().isLength({ max: 20 }),
+  body("codice_sdi").optional({ checkFalsy: true }).trim().isLength({ max: 10 }),
+  body("pec").optional({ checkFalsy: true }).trim().isEmail().withMessage("PEC non valida"),
+  valida,
+];
+
+const validaCreaLead = [
+  body("company_name").trim().notEmpty().withMessage("Il nome dell'azienda e' obbligatorio").isLength({ max: 160 }),
+  body("contact_name").trim().notEmpty().withMessage("Il nome del referente e' obbligatorio").isLength({ max: 160 }),
+  body("email").trim().isEmail().withMessage("Email non valida").normalizeEmail(),
+  body("phone").optional({ checkFalsy: true }).trim().isLength({ max: 30 }),
+  body("message").optional({ checkFalsy: true }).trim().isLength({ max: 1000 }),
+  valida,
+];
+
+const validaCambiaStatoLead = [
+  body("status").isIn(["nuova", "contattata", "convertita", "scartata"]).withMessage("Stato non valido"),
+  valida,
+];
+
 module.exports = {
   validaCreaAzienda, validaAggiornaAzienda, validaPagamento, validaAggiustaCrediti,
   validaPaginaContenuto, validaPiano, validaCreaTag, validaAggiornaTag,
   validaCreaProdottoMerch, validaCreaOrdineMerch, validaCambiaStatoOrdineMerch,
+  validaAggiornaAziendaCliente, validaCreaLead, validaCambiaStatoLead,
 };

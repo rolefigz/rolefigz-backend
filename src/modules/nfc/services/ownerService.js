@@ -30,4 +30,15 @@ async function risolviProprietario({ owner_user_id, owner_nombre, owner_email },
   return { utente, passwordGenerata };
 }
 
-module.exports = { risolviProprietario };
+// Genera una nuova password per il proprietario di un'azienda (es. l'ha persa
+// e l'admin gliela rigenera di persona). Restituita in chiaro una sola volta.
+async function reimpostaPassword(utenteId) {
+  const utente = await Utente.findByPk(utenteId);
+  if (!utente) throw new ErroreAzienda("Utente non trovato", 404);
+
+  const passwordGenerata = crypto.randomBytes(9).toString("base64url");
+  await utente.update({ password: await bcrypt.hash(passwordGenerata, 10) });
+  return { utente, passwordGenerata };
+}
+
+module.exports = { risolviProprietario, reimpostaPassword };
