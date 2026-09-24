@@ -346,6 +346,9 @@ async function adminTabNfcAziendaDettaglio(id) {
         <details class="pg-sezione" open>
           <summary>🔗 LINK / RETI SOCIALI</summary>
           <div class="pg-sezione-body">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px">
+              L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.
+            </div>
             <div id="nfcPgLinksLista"></div>
             <button class="action-btn" onclick="nfcPgAggiungiLink()">+ AGGIUNGI LINK</button>
             <button class="btn-submit" onclick="nfcPgSalvaLinks(${azienda.id})" style="margin-left:8px">SALVA LINK</button>

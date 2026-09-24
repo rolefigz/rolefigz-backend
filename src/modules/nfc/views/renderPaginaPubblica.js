@@ -150,7 +150,7 @@ body.logo-in .logo-wrap{opacity:1;transform:translate(-50%,-50%) scale(1);animat
 @keyframes breathe{0%{transform:translate(-50%,-50%) scale(.94)}50%{transform:translate(-50%,-50%) scale(1.03)}100%{transform:translate(-50%,-50%) scale(1)}}
 body.revealed .logo-wrap{top:60px;width:${dimensioneLogo.header}px;height:${dimensioneLogo.header}px;transform:translate(-50%,0) scale(1)}
 
-.stage{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:156px 24px 48px}
+.stage{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:${60 + dimensioneLogo.header + 40}px 24px 48px}
 .identity{text-align:center;max-width:var(--card-w);opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s cubic-bezier(.22,.61,.36,1)}
 body.content-in .identity{opacity:1;transform:translateY(0)}
 .identity h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.5rem;letter-spacing:.01em;margin:0 0 6px}

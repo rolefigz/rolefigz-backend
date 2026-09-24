@@ -180,7 +180,8 @@ async function tabNfcPagina(content) {
         <summary>🔗 LINK</summary>
         <div class="pg-sezione-body">
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px">
-            Se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui.
+            Se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui.<br/>
+            L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.
           </div>
           <div id="nfcLinksLista"></div>
           <button class="action-btn" onclick="nfcAggiungiLink()">+ AGGIUNGI LINK</button>
