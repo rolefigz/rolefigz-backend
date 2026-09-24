@@ -113,7 +113,16 @@ async function tabNfcPagina(content) {
           <div class="field"><label>Titolo SEO</label><input id="cpSeoTitolo" type="text" maxlength="160" value="${p.seo_title || ''}"/></div>
           <div class="field"><label>Descrizione SEO</label><input id="cpSeoDescrizione" type="text" maxlength="300" value="${p.seo_description || ''}"/></div>
         </div>
-        <div class="field"><label>Colore principale</label><input id="cpColore" type="color" value="${p.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
+        <div class="form-row">
+          <div class="field"><label>Colore principale</label><input id="cpColore" type="color" value="${p.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
+          <div class="field"><label>Dimensione logo</label>
+            <select id="cpLogoSize">
+              <option value="piccolo" ${p.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
+              <option value="medio" ${!p.design?.logoSize || p.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
+              <option value="grande" ${p.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
+            </select>
+          </div>
+        </div>
 
         <button class="btn-submit" onclick="nfcSalvaContenuto()">SALVA CONTENUTO</button>
         <div id="nfcContenutoMsg"></div>
@@ -166,7 +175,7 @@ async function nfcSalvaContenuto() {
     hours:            document.getElementById('cpOrario')?.value,
     seo_title:        document.getElementById('cpSeoTitolo')?.value,
     seo_description:  document.getElementById('cpSeoDescrizione')?.value,
-    design:           { primaryColor: document.getElementById('cpColore')?.value },
+    design:           { primaryColor: document.getElementById('cpColore')?.value, logoSize: document.getElementById('cpLogoSize')?.value },
   };
   try {
     const r = await fetch(`${API_NFC_CLIENT}/pagina`, {

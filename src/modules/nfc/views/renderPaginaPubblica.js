@@ -24,6 +24,8 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   const { anteprima = false, accessibile = true } = opts;
   const coloreAccento = (pagina?.design?.primaryColor && /^#[0-9a-f]{6}$/i.test(pagina.design.primaryColor))
     ? pagina.design.primaryColor : "#FF6A2C";
+  const DIMENSIONI_LOGO = { piccolo: 64, medio: 96, grande: 136 };
+  const dimensioneLogo = DIMENSIONI_LOGO[pagina?.design?.logoSize] || DIMENSIONI_LOGO.medio;
 
   const nome = escapeHtml(azienda.name);
   const titolo = escapeHtml(pagina?.seo_title || azienda.name);
@@ -88,8 +90,8 @@ ${jsonLd}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#0A0A0A;color:#F4F1EA;font-family:Manrope,-apple-system,sans-serif}
 .stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:48px 20px}
-.logo{width:96px;height:96px;border-radius:20px;object-fit:cover;margin-bottom:16px}
-.logo--placeholder{display:flex;align-items:center;justify-content:center;background:var(--accent);color:#0A0A0A;font-size:2.4rem;font-weight:700}
+.logo{width:${dimensioneLogo}px;height:${dimensioneLogo}px;border-radius:20px;object-fit:cover;margin-bottom:16px}
+.logo--placeholder{display:flex;align-items:center;justify-content:center;background:var(--accent);color:#0A0A0A;font-size:${(dimensioneLogo * 0.025).toFixed(2)}rem;font-weight:700}
 h1{font-size:1.4rem;margin:0 0 6px;text-align:center}
 .descrizione{color:#B9B6AE;font-size:.92rem;text-align:center;max-width:420px;margin:0 0 4px;line-height:1.5}
 .orario{color:#B9B6AE;font-size:.82rem;margin:0 0 24px}

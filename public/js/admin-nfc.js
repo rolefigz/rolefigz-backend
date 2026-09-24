@@ -273,6 +273,15 @@ async function adminTabNfcAziendaDettaglio(id) {
           <div class="field"><label>Colore principale</label><input id="pgColore" type="color" value="${pagina.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
         </div>
         <div class="form-row">
+          <div class="field"><label>Dimensione logo</label>
+            <select id="pgLogoSize">
+              <option value="piccolo" ${pagina.design?.logoSize === 'piccolo' ? 'selected' : ''}>Piccolo</option>
+              <option value="medio" ${!pagina.design?.logoSize || pagina.design?.logoSize === 'medio' ? 'selected' : ''}>Medio</option>
+              <option value="grande" ${pagina.design?.logoSize === 'grande' ? 'selected' : ''}>Grande</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="field"><label>Titolo SEO</label><input id="pgSeoTitolo" type="text" value="${pagina.seo_title || ''}"/></div>
           <div class="field"><label>Descrizione SEO</label><input id="pgSeoDescrizione" type="text" value="${pagina.seo_description || ''}"/></div>
         </div>
@@ -334,7 +343,7 @@ async function nfcPgSalvaContenuto(id) {
     hours:             document.getElementById('pgOrario')?.value,
     seo_title:         document.getElementById('pgSeoTitolo')?.value,
     seo_description:   document.getElementById('pgSeoDescrizione')?.value,
-    design:            { primaryColor: document.getElementById('pgColore')?.value },
+    design:            { primaryColor: document.getElementById('pgColore')?.value, logoSize: document.getElementById('pgLogoSize')?.value },
   };
   try {
     const r = await fetch(`${API_NFC}/aziende/${id}/pagina`, {
