@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => nfcTab('home', document.quer
 // ══════════════════════════════ HOME ══════════════════════════════
 
 async function tabNfcHome(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/home`, { headers: authHeaders() });
     const d = await r.json();
@@ -48,8 +48,8 @@ async function tabNfcHome(content) {
 
     const sub = d.subscription || {};
     content.innerHTML = `
-      <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;margin-bottom:4px">Ciao, ${d.azienda.name}</h2>
-      <p style="color:var(--muted);font-size:12px;margin-bottom:20px">
+      <h2>Ciao, ${d.azienda.name}</h2>
+      <p style="font-size:.85rem;margin-bottom:20px">
         Stato: <strong>${STATO_LABEL_CLIENTE[sub.status] || sub.status}</strong>
         ${sub.paid_until ? ` — pagato fino al ${new Date(sub.paid_until).toLocaleDateString('it-IT')}` : ''}
         — pagina ${d.paginaPubblicata ? '<span style="color:var(--green)">pubblicata</span>' : '<span style="color:var(--red)">non pubblicata</span>'}
@@ -70,35 +70,33 @@ async function tabNfcHome(content) {
 // ═══════════════════════════ LA MIA AZIENDA ═══════════════════════════
 
 async function tabNfcAzienda(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/azienda`, { headers: authHeaders() });
     const a = await r.json();
     if (!r.ok) throw new Error(a.error);
 
     content.innerHTML = `
-      <div class="glass-wrap">
-        <div class="glass-card">
-          <h3>Dati azienda</h3>
-          <div class="glass-field"><label>Nome azienda</label><input id="gaName" type="text" value="${a.name || ''}"/></div>
-          <div class="glass-field"><label>Settore</label><input id="gaSettore" type="text" value="${a.sector || ''}"/></div>
-          <div class="glass-field"><label>Indirizzo pagina (non modificabile)</label><input type="text" value="rolefigz.com/nfc/${a.slug}" disabled/></div>
+      <div class="card">
+        <h3>Dati azienda</h3>
+        <div class="field"><label>Nome azienda</label><input id="gaName" type="text" value="${a.name || ''}"/></div>
+        <div class="field"><label>Settore</label><input id="gaSettore" type="text" value="${a.sector || ''}"/></div>
+        <div class="field"><label>Indirizzo pagina (non modificabile)</label><input type="text" value="rolefigz.com/nfc/${a.slug}" disabled/></div>
+      </div>
+      <div class="card">
+        <h3>Dati fiscali</h3>
+        <div class="form-row">
+          <div class="field"><label>P.IVA</label><input id="gaPiva" type="text" value="${a.piva || ''}"/></div>
+          <div class="field"><label>Codice fiscale</label><input id="gaCf" type="text" value="${a.codice_fiscale || ''}"/></div>
         </div>
-        <div class="glass-card">
-          <h3>Dati fiscali</h3>
-          <div class="form-row">
-            <div class="glass-field"><label>P.IVA</label><input id="gaPiva" type="text" value="${a.piva || ''}"/></div>
-            <div class="glass-field"><label>Codice fiscale</label><input id="gaCf" type="text" value="${a.codice_fiscale || ''}"/></div>
-          </div>
-          <div class="form-row">
-            <div class="glass-field"><label>Codice SDI</label><input id="gaSdi" type="text" value="${a.codice_sdi || ''}"/></div>
-            <div class="glass-field"><label>PEC</label><input id="gaPec" type="text" value="${a.pec || ''}"/></div>
-          </div>
+        <div class="form-row">
+          <div class="field"><label>Codice SDI</label><input id="gaSdi" type="text" value="${a.codice_sdi || ''}"/></div>
+          <div class="field"><label>PEC</label><input id="gaPec" type="text" value="${a.pec || ''}"/></div>
         </div>
-        <button class="glass-btn" onclick="nfcSalvaAziendaCliente()">Salva modifiche</button>
-        <div id="gaMsg"></div>
-        <p class="glass-note">Il piano, i crediti e i pagamenti sono gestiti da RoleFigz — per modificarli contattaci direttamente.</p>
-      </div>`;
+      </div>
+      <button class="btn-submit" onclick="nfcSalvaAziendaCliente()">Salva modifiche</button>
+      <div id="gaMsg"></div>
+      <p class="note">Il piano, i crediti e i pagamenti sono gestiti da RoleFigz — per modificarli contattaci direttamente.</p>`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
@@ -128,7 +126,7 @@ async function nfcSalvaAziendaCliente() {
 let nfcLinksCorrenti = [];
 
 async function tabNfcPagina(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/pagina`, { headers: authHeaders() });
     const d = await r.json();
@@ -142,14 +140,14 @@ async function tabNfcPagina(content) {
 
     content.innerHTML = `
       <div class="card" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button class="action-btn" onclick="nfcAnteprimaPagina()">👁 ANTEPRIMA</button>
-        <button class="action-btn" style="border-color:var(--green);color:var(--green)" onclick="nfcPubblicaPagina()">PUBBLICA</button>
-        <button class="action-btn" style="border-color:var(--red);color:var(--red)" onclick="nfcNascondiPagina()">NASCONDI</button>
-        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${p.is_published ? 'Attualmente pubblicata' : 'Non ancora pubblicata'}</span>
+        <button class="action-btn" onclick="nfcAnteprimaPagina()"><iconify-icon icon="mdi:eye-outline" width="14"></iconify-icon> Anteprima</button>
+        <button class="action-btn" style="background:rgba(26,127,75,.1);color:var(--green)" onclick="nfcPubblicaPagina()">Pubblica</button>
+        <button class="action-btn" style="background:rgba(192,57,43,.1);color:var(--red)" onclick="nfcNascondiPagina()">Nascondi</button>
+        <span style="font-size:.78rem;color:var(--muted)">${p.is_published ? 'Attualmente pubblicata' : 'Non ancora pubblicata'}</span>
       </div>
 
       <details class="pg-sezione" open>
-        <summary>📝 CONTENUTO</summary>
+        <summary><span><iconify-icon icon="mdi:file-document-outline" width="15"></iconify-icon> Contenuto</span></summary>
         <div class="pg-sezione-body">
           <div class="field">
             <label>Logo</label>
@@ -166,7 +164,7 @@ async function tabNfcPagina(content) {
       </details>
 
       <details class="pg-sezione">
-        <summary>🎨 ASPETTO</summary>
+        <summary><span><iconify-icon icon="mdi:palette-outline" width="15"></iconify-icon> Aspetto</span></summary>
         <div class="pg-sezione-body">
           <div class="form-row">
             <div class="field"><label>Colore principale</label><input id="cpColore" type="color" value="${p.design?.primaryColor || '#FF6A2C'}" style="height:42px;padding:4px;width:100px"/></div>
@@ -197,7 +195,7 @@ async function tabNfcPagina(content) {
             <label>Immagine di sfondo</label>
             ${p.background_url ? `<img src="${p.background_url}" style="width:100%;max-width:260px;height:110px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px;filter:grayscale(60%) brightness(.55)"/>` : ''}
             <input type="file" id="cpSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaSfondo()"/>
-            ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">RIMUOVI SFONDO</button>` : ''}
+            ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">Rimuovi sfondo</button>` : ''}
             <label style="margin-top:12px">Opacità della foto</label>
             <div class="range-row">
               <input type="range" id="cpBackgroundOpacity" min="10" max="100" value="${opFoto}" oninput="document.getElementById('cpBgOpVal').textContent=this.value+'%'"/>
@@ -220,35 +218,35 @@ async function tabNfcPagina(content) {
           <div class="field" style="margin-top:14px">
             <label>Colore schermata di caricamento</label>
             <input id="cpLoadingColor" type="color" value="${p.design?.loadingColor || '#0A0A0A'}" style="height:42px;padding:4px;width:100px"/>
-            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Il colore mostrato per un istante mentre la pagina si carica, prima che appaia il logo.</div>
+            <div class="note">Il colore mostrato per un istante mentre la pagina si carica, prima che appaia il logo.</div>
           </div>
         </div>
       </details>
 
       <details class="pg-sezione">
-        <summary>📍 MAPPA</summary>
+        <summary><span><iconify-icon icon="mdi:map-marker-outline" width="15"></iconify-icon> Mappa</span></summary>
         <div class="pg-sezione-body">
           <div class="field">
             <label>Google Maps o OpenStreetMap</label>
             <textarea id="cpMappa" rows="2" placeholder="Incolla qui il link o il codice <iframe> di 'Incorpora una mappa'">${p.map_embed_url || ''}</textarea>
-            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Su Google Maps: Condividi → Incorpora una mappa → copia e incolla qui.</div>
+            <div class="note">Su Google Maps: Condividi → Incorpora una mappa → copia e incolla qui.</div>
           </div>
         </div>
       </details>
 
-      <button class="btn-submit" onclick="nfcSalvaContenuto()">SALVA MODIFICHE</button>
+      <button class="btn-submit" onclick="nfcSalvaContenuto()">Salva modifiche</button>
       <div id="nfcContenutoMsg" style="margin-bottom:20px"></div>
 
       <details class="pg-sezione" open>
-        <summary>🔗 LINK</summary>
+        <summary><span><iconify-icon icon="mdi:link-variant" width="15"></iconify-icon> Link</span></summary>
         <div class="pg-sezione-body">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px">
+          <div class="note" style="margin-bottom:12px">
             Se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui.<br/>
             L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.
           </div>
           <div id="nfcLinksLista"></div>
-          <button class="action-btn" onclick="nfcAggiungiLink()">+ AGGIUNGI LINK</button>
-          <button class="btn-submit" onclick="nfcSalvaLinks()" style="margin-left:8px">SALVA LINK</button>
+          <button class="action-btn" onclick="nfcAggiungiLink()">+ Aggiungi link</button>
+          <button class="btn-submit" onclick="nfcSalvaLinks()" style="margin-left:8px">Salva link</button>
           <div id="nfcLinksMsg"></div>
         </div>
       </details>`;
@@ -267,10 +265,10 @@ function nfcRenderLinks() {
       </select>
       <input type="text" placeholder="Etichetta" value="${l.label || ''}" oninput="nfcLinksCorrenti[${i}].label=this.value"/>
       <input type="text" placeholder="URL o numero" value="${l.url || ''}" oninput="nfcLinksCorrenti[${i}].url=this.value"/>
-      <label style="font-size:9px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;white-space:nowrap">
+      <label style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;white-space:nowrap">
         <input type="checkbox" style="width:auto" ${l.is_visible !== false ? 'checked' : ''} onchange="nfcLinksCorrenti[${i}].is_visible=this.checked"/> visibile
       </label>
-      <button class="action-btn danger" onclick="nfcRimuoviLink(${i})">✕</button>
+      <button class="action-btn danger" onclick="nfcRimuoviLink(${i})"><iconify-icon icon="mdi:close" width="14"></iconify-icon></button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:12px">Nessun link ancora.</p>';
 }
 
@@ -402,7 +400,7 @@ async function nfcNascondiPagina() {
 // ══════════════════════════════ QR ══════════════════════════════
 
 async function tabNfcQr(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/tags`, { headers: authHeaders() });
     const tags = await r.json();
@@ -416,10 +414,10 @@ async function tabNfcQr(content) {
     content.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
       ${tags.map(t => `
         <div class="card">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px">${t.type.toUpperCase()}${t.is_active ? '' : ' — DISATTIVATO'}</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin:4px 0 12px">${t.label || t.code}</div>
-          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'png')">SCARICA PNG</button>
-          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'svg')">SCARICA SVG</button>
+          <div style="font-size:.72rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase">${t.type.toUpperCase()}${t.is_active ? '' : ' — disattivato'}</div>
+          <div style="font-size:1.15rem;font-weight:700;margin:4px 0 12px">${t.label || t.code}</div>
+          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'png')">Scarica PNG</button>
+          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'svg')">Scarica SVG</button>
         </div>`).join('')}
     </div>`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
@@ -447,7 +445,7 @@ let nfcCarrello = {};
 function euroDaCents(c) { return (parseInt(c || 0, 10) / 100).toFixed(2); }
 
 async function tabNfcMerch(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/prodotti`, { headers: authHeaders() });
     const d = await r.json();
@@ -465,12 +463,12 @@ async function tabNfcMerch(content) {
             <div style="font-weight:700">${p.name}</div>
             <div style="font-size:11px;color:var(--muted);margin:4px 0">${p.description || ''}</div>
             <div style="font-size:12px;margin-bottom:8px">${p.credit_cost} crediti ${p.extra_price_cents ? `· extra €${euroDaCents(p.extra_price_cents)}/pz` : ''} ${p.production_days ? `· ${p.production_days} gg` : ''}</div>
-            <button class="action-btn" onclick="nfcCarrelloAggiungi(${p.id})">+ AGGIUNGI</button>
+            <button class="action-btn" onclick="nfcCarrelloAggiungi(${p.id})">+ Aggiungi</button>
           </div>`).join('')}
       </div>
 
       <div class="card">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">CARRELLO</div>
+        <h3>Carrello</h3>
         <div id="nfcCarrelloLista"></div>
         <div id="nfcCarrelloTotali" style="margin:14px 0;font-size:13px"></div>
 
@@ -487,7 +485,7 @@ async function tabNfcMerch(content) {
         </div>
         <div class="field"><label>Note</label><input id="ordNote" type="text" placeholder="opzionale"/></div>
 
-        <button class="btn-submit" onclick="nfcInviaOrdine()">INVIA ORDINE</button>
+        <button class="btn-submit" onclick="nfcInviaOrdine()">Invia ordine</button>
         <div id="nfcOrdineMsg"></div>
       </div>`;
 
@@ -544,7 +542,7 @@ function nfcRenderCarrello() {
       <span>${r.prodotto.name}</span>
       <input type="number" min="1" value="${r.qty}" onchange="nfcCarrelloAggiorna(${r.prodotto.id}, this.value)"/>
       <span>${r.extraCents > 0 ? `+€${euroDaCents(r.extraCents)}` : ''}</span>
-      <button class="action-btn danger" onclick="nfcCarrelloAggiorna(${r.prodotto.id}, 0)">✕</button>
+      <button class="action-btn danger" onclick="nfcCarrelloAggiorna(${r.prodotto.id}, 0)"><iconify-icon icon="mdi:close" width="14"></iconify-icon></button>
     </div>`).join('');
 
   totali.innerHTML = `Crediti usati: <strong>${creditiTotali}</strong> / ${nfcCreditiSaldoCache}
@@ -585,7 +583,7 @@ const STATO_ORDINE_LABEL = {
 };
 
 async function tabNfcOrdini(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/ordini`, { headers: authHeaders() });
     const ordini = await r.json();
@@ -614,7 +612,7 @@ async function tabNfcOrdini(content) {
 let nfcChartStatistiche = null;
 
 async function tabNfcStatistiche(content, range = '7') {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
   try {
     const r = await fetch(`${API_NFC_CLIENT}/statistiche?range=${range}`, { headers: authHeaders() });
     const d = await r.json();
@@ -624,7 +622,7 @@ async function tabNfcStatistiche(content, range = '7') {
 
     content.innerHTML = `
       <div style="display:flex;gap:8px;margin-bottom:20px">
-        ${Object.keys(RANGE_LABEL).map(k => `<button class="action-btn ${k === range ? 'active' : ''}" style="${k === range ? 'border-color:var(--accent);color:var(--accent)' : ''}" onclick="tabNfcStatistiche(document.getElementById('nfcContent'), '${k}')">${RANGE_LABEL[k]}</button>`).join('')}
+        ${Object.keys(RANGE_LABEL).map(k => `<button class="action-btn ${k === range ? 'active' : ''}" onclick="tabNfcStatistiche(document.getElementById('nfcContent'), '${k}')">${RANGE_LABEL[k]}</button>`).join('')}
       </div>
 
       <div class="stats-row">
@@ -638,7 +636,7 @@ async function tabNfcStatistiche(content, range = '7') {
       </div>
 
       <div class="card">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">SCANSIONI PER TAG</div>
+        <h3>Scansioni per tag</h3>
         ${!d.perTag.length
           ? '<p style="color:var(--muted);font-size:12px">Nessuna scansione in questo periodo.</p>'
           : `<table><thead><tr><th>Tag</th><th>Scansioni</th></tr></thead><tbody>
@@ -654,9 +652,9 @@ async function tabNfcStatistiche(content, range = '7') {
         data: {
           labels: d.serieGiornaliera.map(g => new Date(g.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })),
           datasets: [
-            { label: 'Visite', data: d.serieGiornaliera.map(g => g.page_view), borderColor: '#C17F3A', tension: 0.3 },
-            { label: 'Scansioni', data: d.serieGiornaliera.map(g => g.tag_scan), borderColor: '#4A7A5A', tension: 0.3 },
-            { label: 'Click', data: d.serieGiornaliera.map(g => g.link_click), borderColor: '#8B5A1F', tension: 0.3 },
+            { label: 'Visite', data: d.serieGiornaliera.map(g => g.page_view), borderColor: '#0071E3', tension: 0.3 },
+            { label: 'Scansioni', data: d.serieGiornaliera.map(g => g.tag_scan), borderColor: '#1a7f4b', tension: 0.3 },
+            { label: 'Click', data: d.serieGiornaliera.map(g => g.link_click), borderColor: '#c0392b', tension: 0.3 },
           ],
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
