@@ -100,6 +100,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Auth PRIMA — l'utente vede subito il suo stato senza aspettare il caricamento
     initAuth();
 
+    if (new URLSearchParams(window.location.search).get('nfcLogin') === '1') {
+      if (token) {
+        fetch(`${API}/nfc/azienda`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => { if (r.ok) window.location.href = '/account-nfc.html'; else apriAuth('login'); })
+          .catch(() => apriAuth('login'));
+      } else {
+        apriAuth('login');
+      }
+    }
+
     // Poi carica il negozio
     if (percorso === '/checkout') mostraVista('checkout');
     await verificaAPI();

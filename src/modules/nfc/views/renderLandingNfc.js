@@ -90,6 +90,9 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .nav-cta{background:var(--ink);color:var(--void);border-radius:var(--pill);padding:8px 18px;font-size:.82rem;font-weight:600;text-decoration:none;white-space:nowrap;transition:transform .2s cubic-bezier(.16,1,.3,1),opacity .2s ease}
 .nav-cta:hover{opacity:.85}
 .nav-cta:active{transform:scale(.96)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-login{font-size:.82rem;font-weight:600;color:var(--ink);text-decoration:none;padding:8px 14px;white-space:nowrap}
+.nav-login:hover{color:var(--accent)}
 
 /* BOTTONI */
 .btn{display:inline-block;border-radius:var(--pill);padding:15px 30px;font-weight:600;font-size:.95rem;text-decoration:none;white-space:nowrap;transition:transform .2s cubic-bezier(.16,1,.3,1),background .2s ease,opacity .2s ease}
@@ -203,7 +206,10 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 
 <nav class="top">
   <a class="brand" href="/nfc"><img src="/assets/LogoSfondoNero.png" alt="RoleFigz"><span>RoleFigz NFC</span></a>
-  <a class="nav-cta" href="#contatti">Contattaci</a>
+  <div class="nav-right">
+    <a class="nav-login" href="/index.html?nfcLogin=1">Accedi</a>
+    <a class="nav-cta" href="#contatti">Contattaci</a>
+  </div>
 </nav>
 
 <main class="wrap hero">
