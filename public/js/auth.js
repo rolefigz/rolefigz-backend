@@ -73,7 +73,11 @@ async function accedi() {
     impostaSessione();
     chiudiModalAuth();
     if (utente.rol === 'admin') { window.location.href = '/admin.html'; return; }
-    else mostraVista('tienda');
+    try {
+      const rNfc = await fetch(`${API}/nfc/azienda`, { headers: { Authorization: `Bearer ${token}` } });
+      if (rNfc.ok) { window.location.href = '/account-nfc.html'; return; }
+    } catch(e) {}
+    mostraVista('tienda');
   } catch(e) {
     showMsg('loginMsg', e.message, 'err');
   } finally {
