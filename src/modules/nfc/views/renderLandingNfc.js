@@ -60,8 +60,9 @@ function renderLandingNfc(piani) {
 }).replace(/</g, "\\u003c")}</script>
 <style>
 :root{
-  --ink:#F5F5F7; --ink-dim:rgba(245,245,247,.62); --void:#040404; --void2:#0E0E0F;
-  --accent:#FF6A2C; --line: rgba(255,255,255,.10); --pill:999px; --card:22px;
+  --ink:#1D1D1F; --ink-dim:rgba(29,29,31,.62); --void:#FBFBFD; --line: rgba(0,0,0,.08);
+  --accent:#0071E3; --pill:999px; --card:22px; --surface:#FFFFFF;
+  --phone-void:#0E0E0F; --phone-ink:#F5F5F7; --phone-ink-dim:rgba(245,245,247,.62); --phone-accent:#FF6A2C;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -80,7 +81,7 @@ section{padding:88px 0}
 @media (prefers-reduced-motion: reduce){ .reveal{opacity:1;transform:none;transition:none} }
 
 /* NAV */
-nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(4,4,4,.72);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border-bottom:1px solid var(--line)}
+nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(251,251,253,.78);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
 .brand img{height:24px;width:24px;object-fit:contain}
 .brand span{font-weight:600;font-size:.92rem;letter-spacing:-.01em}
@@ -93,8 +94,8 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .btn--primary{background:var(--accent);color:#fff}
 .btn--primary:hover{transform:translateY(-2px)}
 .btn--primary:active{transform:scale(.97)}
-.btn--ghost{background:rgba(255,255,255,.08);color:var(--ink)}
-.btn--ghost:hover{background:rgba(255,255,255,.14)}
+.btn--ghost{background:rgba(0,0,0,.05);color:var(--ink)}
+.btn--ghost:hover{background:rgba(0,0,0,.08)}
 .btn--ghost:active{transform:scale(.97)}
 
 /* HERO */
@@ -114,15 +115,15 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 /* TELEFONO (anteprima reale del prodotto) */
 .phone-wrap{display:flex;justify-content:center;opacity:0;animation:fadeUp 1s cubic-bezier(.16,1,.3,1) .3s both}
 @media (prefers-reduced-motion: reduce){ .phone-wrap{animation:none;opacity:1} }
-.phone{width:100%;max-width:280px;border-radius:36px;background:linear-gradient(165deg,var(--void2),#050506);padding:28px 20px;box-shadow:0 50px 100px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)}
+.phone{width:100%;max-width:280px;border-radius:36px;background:linear-gradient(165deg,var(--phone-void),#050506);padding:28px 20px;box-shadow:0 30px 70px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06)}
 .phone-top{display:flex;align-items:center;gap:12px;margin-bottom:24px}
-.phone-badge{width:44px;height:44px;border-radius:14px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;flex:none}
-.phone-name{font-weight:600;font-size:.98rem}
-.phone-sub{color:var(--ink-dim);font-size:.74rem}
-.phone-link{display:flex;align-items:center;gap:11px;padding:13px 15px;margin-bottom:9px;border-radius:16px;text-decoration:none;color:var(--ink);background:rgba(255,255,255,.05);transition:background .2s ease}
-.phone-link svg{width:17px;height:17px;color:var(--accent);flex:none}
+.phone-badge{width:44px;height:44px;border-radius:14px;background:var(--phone-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;flex:none}
+.phone-name{font-weight:600;font-size:.98rem;color:var(--phone-ink)}
+.phone-sub{color:var(--phone-ink-dim);font-size:.74rem}
+.phone-link{display:flex;align-items:center;gap:11px;padding:13px 15px;margin-bottom:9px;border-radius:16px;text-decoration:none;color:var(--phone-ink);background:rgba(255,255,255,.05);transition:background .2s ease}
+.phone-link svg{width:17px;height:17px;color:var(--phone-accent);flex:none}
 .phone-link span{font-size:.84rem;font-weight:500}
-.phone-link .go{margin-left:auto;color:var(--ink-dim)}
+.phone-link .go{margin-left:auto;color:var(--phone-ink-dim)}
 .phone-caption{text-align:center;color:var(--ink-dim);font-size:.72rem;margin-top:16px}
 
 /* STEP */
@@ -136,7 +137,7 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 /* INCLUSO */
 .incluso{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
 @media (max-width:640px){.incluso{grid-template-columns:1fr}}
-.incluso-voce{padding:24px;border-radius:var(--card);background:rgba(255,255,255,.035)}
+.incluso-voce{padding:24px;border-radius:var(--card);background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05)}
 .incluso-voce h3{font-size:.98rem;margin-bottom:6px}
 .incluso-voce p{color:var(--ink-dim);font-size:.86rem;margin:0;line-height:1.5}
 
@@ -148,9 +149,9 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 
 /* PIANI */
 .piani{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
-.piano-card{position:relative;border-radius:var(--card);padding:30px 26px;background:rgba(255,255,255,.035);transition:transform .3s cubic-bezier(.16,1,.3,1),background .3s ease}
-.piano-card:hover{transform:translateY(-4px);background:rgba(255,255,255,.05)}
-.piano-card--evidenza{background:rgba(255,106,44,.08);box-shadow:0 0 0 1.5px var(--accent)}
+.piano-card{position:relative;border-radius:var(--card);padding:30px 26px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease}
+.piano-card:hover{transform:translateY(-4px);box-shadow:0 4px 8px rgba(0,0,0,.05),0 16px 36px rgba(0,0,0,.08)}
+.piano-card--evidenza{box-shadow:0 0 0 1.5px var(--accent),0 8px 24px rgba(0,0,0,.06)}
 .piano-badge{position:absolute;top:-11px;right:22px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em;padding:4px 12px;border-radius:var(--pill)}
 .piano-nome{font-weight:600;font-size:1.1rem;margin-bottom:6px}
 .piano-prezzo{font-size:2.2rem;font-weight:700;margin-bottom:4px}
@@ -158,8 +159,8 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .piano-crediti{color:var(--ink-dim);font-size:.82rem;margin-bottom:18px}
 .piano-features{list-style:none;padding:0;margin:0 0 22px;font-size:.85rem;color:var(--ink-dim);line-height:1.9}
 .piano-features li::before{content:"• ";color:var(--accent)}
-.piano-cta{display:block;text-align:center;border-radius:var(--pill);padding:12px;font-size:.85rem;font-weight:600;text-decoration:none;background:rgba(255,255,255,.08);transition:background .2s ease}
-.piano-cta:hover{background:rgba(255,255,255,.16)}
+.piano-cta{display:block;text-align:center;border-radius:var(--pill);padding:12px;font-size:.85rem;font-weight:600;text-decoration:none;background:rgba(0,0,0,.05);transition:background .2s ease}
+.piano-cta:hover{background:rgba(0,0,0,.08)}
 
 /* FAQ */
 details{border-top:1px solid var(--line);padding:20px 0}
@@ -180,13 +181,13 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 </head><body>
 
 <nav class="top">
-  <a class="brand" href="/nfc"><img src="/assets/logo.png" alt="RoleFigz"><span>RoleFigz NFC</span></a>
+  <a class="brand" href="/nfc"><img src="/assets/LogoSfondoNero.png" alt="RoleFigz"><span>RoleFigz NFC</span></a>
   <a class="nav-cta" href="#contatti">Contattaci</a>
 </nav>
 
 <main class="wrap hero">
   <div>
-    <img class="hero-logo" src="/assets/logo.png" alt="RoleFigz">
+    <img class="hero-logo" src="/assets/LogoSfondoNero.png" alt="RoleFigz">
     <h1>I tuoi clienti, a un tocco di distanza.</h1>
     <p>Pagina web, tag NFC/QR fisici e merchandising personalizzato ogni mese. Un abbonamento pagato in contanti, di persona.</p>
     <div class="hero-cta">
