@@ -155,14 +155,15 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .merch-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .merch-track::-webkit-scrollbar{display:none}
 .merch-slide{flex:0 0 100%;scroll-snap-align:center}
-.merch-slide img{width:100%;height:380px;object-fit:contain;display:block;padding:20px}
+.merch-slide img{width:100%;height:420px;object-fit:cover;display:block}
 .merch-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid var(--line);color:var(--ink);font-size:1.2rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease}
 .merch-nav:hover{background:#fff}
 .merch-nav--prev{left:12px}
 .merch-nav--next{right:12px}
-.merch-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
-.merch-dot{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.2);cursor:pointer;transition:background .2s ease,width .2s ease;border:none;padding:0}
-.merch-dot.active{background:var(--accent);width:18px;border-radius:3px}
+.merch-dots-scrim{position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.35));pointer-events:none}
+.merch-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.merch-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer;transition:background .2s ease,width .2s ease;border:none;padding:0}
+.merch-dot.active{background:#fff;width:18px;border-radius:3px}
 
 /* PIANI */
 .piani{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:28px}
@@ -286,6 +287,7 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
     </div>
     <button type="button" class="merch-nav merch-nav--prev" aria-label="Foto precedente" onclick="merchCarouselVai(-1)">‹</button>
     <button type="button" class="merch-nav merch-nav--next" aria-label="Foto successiva" onclick="merchCarouselVai(1)">›</button>
+    <div class="merch-dots-scrim"></div>
     <div class="merch-dots" id="merch-dots"></div>
   </div>
   <div class="reveal" style="transition-delay:.1s">
