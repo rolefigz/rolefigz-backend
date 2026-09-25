@@ -149,7 +149,7 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 /* MERCHANDISING */
 .merch{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
 @media (max-width:820px){.merch{grid-template-columns:1fr}}
-.merch img{width:100%;height:320px;object-fit:cover;border-radius:var(--card)}
+.merch img{width:100%;height:380px;object-fit:contain;background:var(--surface);border-radius:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);padding:20px}
 .merch p{color:var(--ink-dim);line-height:1.6;font-size:.95rem;max-width:44ch}
 
 /* PIANI */
@@ -263,7 +263,7 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 </section>
 
 <section class="wrap merch" style="border-top:1px solid var(--line)">
-  <img class="reveal" src="https://picsum.photos/seed/rolefigz-nfc-merch/900/700" alt="Esempio di merchandising personalizzato" loading="lazy">
+  <img class="reveal" src="/assets/nfc.png" alt="Esempio di merchandising personalizzato" loading="lazy">
   <div class="reveal" style="transition-delay:.1s">
     <div class="eyebrow">Il merchandising</div>
     <h2 style="font-size:1.5rem;margin-bottom:14px">Portachiavi, calamite, tessere e display, stampati da noi</h2>
