@@ -30,6 +30,7 @@ router.post("/aziende/:id/pagamenti",        verifyToken, soloAdmin, validaPagam
 router.post("/aziende/:id/prova",            verifyToken, soloAdmin, aziende.attivaProvaController);
 router.post("/aziende/:id/crediti/aggiusta", verifyToken, soloAdmin, validaAggiustaCrediti, aziende.aggiustaCreditiController);
 router.post("/aziende/:id/reset-password",   verifyToken, soloAdmin, aziende.reimpostaPasswordController);
+router.get("/aziende/:id/tag-link",          verifyToken, soloAdmin, tags.otteniLinkAzienda);
 
 router.get("/aziende/:id/pagina",            verifyToken, soloAdmin, paginaAdmin.ottieniPagina);
 router.put("/aziende/:id/pagina",            verifyToken, soloAdmin, validaPaginaContenuto, paginaAdmin.salvaPagina);
@@ -44,6 +45,8 @@ router.delete("/aziende/:id/pagina/sfondo",  verifyToken, soloAdmin, paginaAdmin
 router.get("/tags",     verifyToken, soloAdmin, tags.listaTag);
 router.post("/tags",    verifyToken, soloAdmin, validaCreaTag, tags.creaTag);
 router.put("/tags/:id", verifyToken, soloAdmin, validaAggiornaTag, tags.aggiornaTag);
+router.get("/tags/:id/qr.png", verifyToken, soloAdmin, tags.scaricaQrPng);
+router.get("/tags/:id/qr.svg", verifyToken, soloAdmin, tags.scaricaQrSvg);
 
 router.get("/prodotti",     verifyToken, soloAdmin, merchProdotti.listaProdotti);
 router.post("/prodotti",    verifyToken, soloAdmin, upload.single("image"), validaCreaProdottoMerch, merchProdotti.creaProdotto);

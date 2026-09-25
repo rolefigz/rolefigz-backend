@@ -2,6 +2,14 @@ const { Tag, Company } = require("../../../models");
 const { generaCodiceUnivoco } = require("../utils/tagCode");
 const { registraAzione } = require("../services/auditLogService");
 const ErroreAzienda = require("../utils/erroreAzienda");
+const { generaPng, generaSvg } = require("../utils/qrGenerator");
+
+// Il link che va programmato sul tag fisico (NFC) o stampato come QR —
+// stessa rotta /t/:code che poi registra lo scan e reindirizza alla pagina.
+function urlTag(tag) {
+  const base = process.env.NFC_PUBLIC_BASE_URL || "";
+  return `${base}/t/${tag.code}`;
+}
 
 const listaTag = async (req, res) => {
   try {
@@ -14,7 +22,7 @@ const listaTag = async (req, res) => {
       include: [{ model: Company, attributes: ["id", "name", "slug"] }],
       order: [["createdAt", "DESC"]],
     });
-    res.json(tags);
+    res.json(tags.map(t => ({ ...t.toJSON(), url: urlTag(t) })));
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -75,4 +83,47 @@ const aggiornaTag = async (req, res) => {
   } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
 };
 
-module.exports = { listaTag, creaTag, aggiornaTag };
+// Un solo link per azienda, riusabile su tutti i suoi tag fisici (portachiavi,
+// calamite, ecc.) — non serve un codice diverso per ogni oggetto stampato.
+// Idempotente: se l'azienda ha gia' un tag lo riusa, altrimenti ne crea uno.
+const otteniLinkAzienda = async (req, res) => {
+  try {
+    const azienda = await Company.findByPk(req.params.id);
+    if (!azienda) return res.status(404).json({ error: "Azienda non trovata" });
+
+    let tag = await Tag.findOne({ where: { company_id: azienda.id }, order: [["createdAt", "ASC"]] });
+    if (!tag) {
+      const code = await generaCodiceUnivoco();
+      tag = await Tag.create({ code, type: "nfc", company_id: azienda.id });
+      await registraAzione({
+        actorUserId: req.usuario.id, companyId: azienda.id, action: "tags_created",
+        details: { quantity: 1, type: "nfc", codici: [code] },
+      });
+    }
+    res.json({ ...tag.toJSON(), url: urlTag(tag) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const scaricaQrPng = async (req, res) => {
+  try {
+    const tag = await Tag.findByPk(req.params.id);
+    if (!tag) return res.status(404).json({ error: "Tag non trovato" });
+    const buffer = await generaPng(urlTag(tag));
+    res.set("Content-Type", "image/png");
+    res.set("Content-Disposition", `attachment; filename="nfc-${tag.code}.png"`);
+    res.send(buffer);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const scaricaQrSvg = async (req, res) => {
+  try {
+    const tag = await Tag.findByPk(req.params.id);
+    if (!tag) return res.status(404).json({ error: "Tag non trovato" });
+    const svg = await generaSvg(urlTag(tag));
+    res.set("Content-Type", "image/svg+xml");
+    res.set("Content-Disposition", `attachment; filename="nfc-${tag.code}.svg"`);
+    res.send(svg);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+module.exports = { listaTag, creaTag, aggiornaTag, otteniLinkAzienda, scaricaQrPng, scaricaQrSvg };

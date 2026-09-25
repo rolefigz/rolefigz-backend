@@ -218,6 +218,8 @@ async function adminTabNfcAziendaDettaglio(id) {
             Prova fino al: ${sub.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('it-IT') : '—'}
           </div>
           <button class="action-btn" style="margin-top:10px" onclick="nfcReimpostaPassword(${azienda.id})">REIMPOSTA PASSWORD CLIENTE</button>
+          <button class="action-btn" style="margin-top:10px" onclick="nfcMostraLinkTag(${azienda.id})">LINK/QR DEL TAG</button>
+          <div id="nfcLinkTagBox" style="margin-top:10px"></div>
         </div>
 
         <div style="background:var(--surface);border:1px solid var(--border);padding:20px">
@@ -553,6 +555,22 @@ async function nfcReimpostaPassword(id) {
   } catch(e) { alert('Errore: ' + e.message); }
 }
 
+async function nfcMostraLinkTag(id) {
+  const box = document.getElementById('nfcLinkTagBox');
+  box.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/tag-link`, { headers: { Authorization: `Bearer ${token}` } });
+    const t = await r.json();
+    if (!r.ok) throw new Error(t.error);
+    box.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:11px;word-break:break-all;padding:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:8px">${t.url}</div>
+      <button class="action-btn" onclick="navigator.clipboard.writeText('${t.url}').then(()=>alert('Link copiato'))">COPIA LINK</button>
+      <button class="action-btn" onclick="nfcScaricaQrTag(${t.id}, 'png')">QR PNG</button>
+      <button class="action-btn" onclick="nfcScaricaQrTag(${t.id}, 'svg')">QR SVG</button>
+      <p style="color:var(--muted);font-size:10px;margin-top:8px">Stesso link/QR per tutti i tag fisici di questa azienda — non serve un codice diverso per ogni oggetto stampato.</p>`;
+  } catch(e) { box.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
 async function nfcAggiustaCrediti(id) {
   const delta  = parseFloat(document.getElementById('dcDelta')?.value);
   const motivo = document.getElementById('dcMotivo')?.value.trim();
@@ -714,6 +732,7 @@ async function adminTabNfcTags(content) {
 
     const opzioniAzienda = nfcAziendeCacheTag.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
+    window.nfcTagCache = tags;
     const righe = tags.map(t => `
       <tr>
         <td><strong style="font-family:'DM Mono',monospace;letter-spacing:1px">${t.code}</strong></td>
@@ -726,11 +745,17 @@ async function adminTabNfcTags(content) {
           </select>
         </td>
         <td><span class="pill" style="background:${t.is_active ? 'var(--green)' : 'var(--muted)'};color:#fff">${t.is_active ? 'ATTIVO' : 'OFF'}</span></td>
-        <td><button class="action-btn" onclick="nfcToggleTag(${t.id}, ${!t.is_active})">${t.is_active ? 'DISATTIVA' : 'ATTIVA'}</button></td>
+        <td>
+          <button class="action-btn" onclick="nfcCopiaLinkTag(${t.id})">COPIA LINK</button>
+          <button class="action-btn" onclick="nfcScaricaQrTag(${t.id}, 'png')">QR PNG</button>
+          <button class="action-btn" onclick="nfcScaricaQrTag(${t.id}, 'svg')">QR SVG</button>
+          <button class="action-btn" onclick="nfcToggleTag(${t.id}, ${!t.is_active})">${t.is_active ? 'DISATTIVA' : 'ATTIVA'}</button>
+        </td>
       </tr>`).join('');
 
     content.innerHTML = `
       <div class="admin-form-title">TAG NFC</div>
+      <p style="color:var(--muted);font-size:11px;margin-bottom:16px">Il link di ogni tag (colonna azioni, "COPIA LINK") e' quello da programmare sul tag NFC o da incorporare nel QR — usa "QR PNG/SVG" per scaricare l'immagine gia' pronta da stampare.</p>
 
       <div style="background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:24px">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">CREA TAG</div>
@@ -748,6 +773,28 @@ async function adminTabNfcTags(content) {
         ? '<div class="empty-state"><div class="ei">🏷️</div><h3>NESSUN TAG</h3></div>'
         : `<table><thead><tr><th>Codice</th><th>Tipo</th><th>Etichetta</th><th>Azienda</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>${righe}</tbody></table>`}`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+function nfcCopiaLinkTag(id) {
+  const t = (window.nfcTagCache || []).find(x => x.id === id);
+  if (!t) return;
+  navigator.clipboard.writeText(t.url).then(
+    () => alert(`Link copiato:\n${t.url}`),
+    () => prompt('Copia il link:', t.url)
+  );
+}
+
+async function nfcScaricaQrTag(id, formato) {
+  try {
+    const r = await fetch(`${API_NFC}/tags/${id}/qr.${formato}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error('Errore durante il download');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `nfc-tag-${id}.${formato}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Errore: ' + e.message); }
 }
 
 async function nfcCreaTag() {
