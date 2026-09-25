@@ -25,13 +25,16 @@ const listaProdottiCatalogo = async (req, res) => {
 
 const creaOrdineCliente = async (req, res) => {
   try {
-    const { items, delivery_method, shipping_address, notes } = req.body;
+    const { items, delivery_method, shipping_address, notes, conferma_eccedenza } = req.body;
     const risultato = await creaOrdine({
       companyId: req.azienda.id, items, deliveryMethod: delivery_method,
       shippingAddress: shipping_address, notes, actorUserId: req.usuario.id,
+      confermaEccedenza: !!conferma_eccedenza,
     });
     res.status(201).json(risultato);
-  } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message, ...(err.dettagli && { dettagli: err.dettagli }) });
+  }
 };
 
 const listaMieiOrdini = async (req, res) => {

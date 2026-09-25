@@ -29,7 +29,6 @@ function nfcTab(tab, el) {
   if (tab === 'home') tabNfcHome(content);
   if (tab === 'azienda') tabNfcAzienda(content);
   if (tab === 'pagina') tabNfcPagina(content);
-  if (tab === 'qr') tabNfcQr(content);
   if (tab === 'merch') tabNfcMerch(content);
   if (tab === 'ordini') tabNfcOrdini(content);
   if (tab === 'statistiche') tabNfcStatistiche(content);
@@ -397,44 +396,6 @@ async function nfcNascondiPagina() {
   } catch(e) { alert('Errore: ' + e.message); }
 }
 
-// ══════════════════════════════ QR ══════════════════════════════
-
-async function tabNfcQr(content) {
-  content.innerHTML = '<div class="loading">Caricamento…</div>';
-  try {
-    const r = await fetch(`${API_NFC_CLIENT}/tags`, { headers: authHeaders() });
-    const tags = await r.json();
-    if (!r.ok) throw new Error(tags.error);
-
-    if (!tags.length) {
-      content.innerHTML = '<div class="card"><p style="color:var(--muted)">Non hai ancora nessun tag NFC o QR assegnato. Contatta RoleFigz per riceverli.</p></div>';
-      return;
-    }
-
-    content.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
-      ${tags.map(t => `
-        <div class="card">
-          <div style="font-size:.72rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase">${t.type.toUpperCase()}${t.is_active ? '' : ' — disattivato'}</div>
-          <div style="font-size:1.15rem;font-weight:700;margin:4px 0 12px">${t.label || t.code}</div>
-          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'png')">Scarica PNG</button>
-          <button class="action-btn" onclick="nfcScaricaQr(${t.id}, 'svg')">Scarica SVG</button>
-        </div>`).join('')}
-    </div>`;
-  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
-}
-
-async function nfcScaricaQr(tagId, formato) {
-  try {
-    const r = await fetch(`${API_NFC_CLIENT}/tags/${tagId}/qr.${formato}`, { headers: authHeaders() });
-    if (!r.ok) throw new Error('Errore durante il download');
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `nfc-qr-${tagId}.${formato}`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  } catch(e) { alert('Errore: ' + e.message); }
-}
 
 // ══════════════════════════════ MERCHANDISING ══════════════════════════════
 
@@ -541,12 +502,30 @@ function nfcRenderCarrello() {
     <div class="cart-row">
       <span>${r.prodotto.name}</span>
       <input type="number" min="1" value="${r.qty}" onchange="nfcCarrelloAggiorna(${r.prodotto.id}, this.value)"/>
-      <span>${r.extraCents > 0 ? `+€${euroDaCents(r.extraCents)}` : ''}</span>
+      <span style="color:var(--red);font-size:.78rem">${r.extraCents > 0 ? `+€${euroDaCents(r.extraCents)}` : ''}</span>
       <button class="action-btn danger" onclick="nfcCarrelloAggiorna(${r.prodotto.id}, 0)"><iconify-icon icon="mdi:close" width="14"></iconify-icon></button>
     </div>`).join('');
 
-  totali.innerHTML = `Crediti usati: <strong>${creditiTotali}</strong> / ${nfcCreditiSaldoCache}
-    ${extraTotaleCents > 0 ? `<br/>Eccedenza da saldare alla consegna: <strong>€${euroDaCents(extraTotaleCents)}</strong>` : ''}`;
+  totali.innerHTML = `Crediti usati: <strong>${creditiTotali}</strong> / ${nfcCreditiSaldoCache} disponibili
+    ${extraTotaleCents > 0 ? `<br/><span style="color:var(--red)">Hai superato i crediti disponibili — eccedenza da pagare in contanti: <strong>€${euroDaCents(extraTotaleCents)}</strong></span>` : ''}`;
+}
+
+async function nfcInviaOrdineConferma(confermaEccedenza) {
+  const delivery_method = document.getElementById('ordConsegna')?.value;
+  const indirizzo = document.getElementById('ordIndirizzo')?.value.trim();
+
+  const body = {
+    items: Object.entries(nfcCarrello).map(([product_id, quantity]) => ({ product_id: parseInt(product_id, 10), quantity })),
+    delivery_method,
+    shipping_address: delivery_method === 'shipping' ? { indirizzo } : undefined,
+    notes: document.getElementById('ordNote')?.value.trim() || undefined,
+    conferma_eccedenza: !!confermaEccedenza,
+  };
+
+  const r = await fetch(`${API_NFC_CLIENT}/ordini`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  });
+  return { r, d: await r.json() };
 }
 
 async function nfcInviaOrdine() {
@@ -557,20 +536,21 @@ async function nfcInviaOrdine() {
     showMsg('nfcOrdineMsg', 'Inserisci l\'indirizzo di spedizione', 'err'); return;
   }
 
-  const body = {
-    items: Object.entries(nfcCarrello).map(([product_id, quantity]) => ({ product_id: parseInt(product_id, 10), quantity })),
-    delivery_method,
-    shipping_address: delivery_method === 'shipping' ? { indirizzo } : undefined,
-    notes: document.getElementById('ordNote')?.value.trim() || undefined,
-  };
-
   try {
-    const r = await fetch(`${API_NFC_CLIENT}/ordini`, {
-      method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || (d.dettagli && d.dettagli.map(x => x.messaggio).join(', ')));
-    alert(`Ordine inviato! Crediti usati: ${d.creditiUsati}${d.extraAmountCents > 0 ? `, eccedenza da saldare: €${euroDaCents(d.extraAmountCents)}` : ''}`);
+    let { r, d } = await nfcInviaOrdineConferma(false);
+
+    if (r.status === 409 && d.dettagli?.richiedeConferma) {
+      const proseguire = confirm(
+        `Hai superato i crediti disponibili.\n\nCrediti usati: ${d.dettagli.creditiUsati} / ${d.dettagli.saldoCrediti}\n` +
+        `Eccedenza da pagare in contanti alla consegna: €${euroDaCents(d.dettagli.extraAmountCents)}\n\n` +
+        `Vuoi continuare con l'ordine?`
+      );
+      if (!proseguire) return;
+      ({ r, d } = await nfcInviaOrdineConferma(true));
+    }
+
+    if (!r.ok) throw new Error(d.error || (Array.isArray(d.dettagli) && d.dettagli.map(x => x.messaggio).join(', ')));
+    alert(`Ordine inviato! Crediti usati: ${d.creditiUsati}`);
     nfcTab('ordini', null);
   } catch(e) { showMsg('nfcOrdineMsg', e.message, 'err'); }
 }

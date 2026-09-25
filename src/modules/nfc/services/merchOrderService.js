@@ -30,7 +30,7 @@ function allocaCrediti(righe, creditiDisponibili) {
   return { dettagli, creditiTotali, extraTotaleCents };
 }
 
-async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, notes, actorUserId }) {
+async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, notes, actorUserId, confermaEccedenza }) {
   if (!Array.isArray(items) || !items.length) throw new ErroreAzienda("Il carrello e' vuoto", 400);
   if (items.length > 30) throw new ErroreAzienda("Troppi articoli nel carrello", 400);
 
@@ -55,6 +55,17 @@ async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, n
 
     const saldoAttuale = await calcolaSaldoCrediti(companyId, t);
     const { dettagli, creditiTotali, extraTotaleCents } = allocaCrediti(righe, saldoAttuale);
+
+    // Se il carrello supera i crediti disponibili, non si procede in silenzio:
+    // serve una conferma esplicita del cliente per pagare l'eccedenza in contanti.
+    if (extraTotaleCents > 0 && !confermaEccedenza) {
+      throw new ErroreAzienda("Superi i crediti disponibili per questo ordine", 409, {
+        richiedeConferma: true,
+        creditiUsati: unitaAReale(creditiTotali),
+        extraAmountCents: extraTotaleCents,
+        saldoCrediti: unitaAReale(saldoAttuale),
+      });
+    }
 
     if (deliveryMethod === "shipping" && !shippingAddress?.indirizzo) {
       throw new ErroreAzienda("Indirizzo di spedizione obbligatorio", 400);
