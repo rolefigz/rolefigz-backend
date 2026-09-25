@@ -278,12 +278,12 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 <section class="wrap merch" style="border-top:1px solid var(--line)">
   <div class="merch-carousel reveal">
     <div class="merch-track" id="merch-track">
-      <div class="merch-slide"><img src="/assets/presentationbadge1.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/presentationbadge2.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
       <div class="merch-slide"><img src="/assets/llaveros.jpeg" alt="Portachiavi NFC personalizzati" loading="lazy"></div>
       <div class="merch-slide"><img src="/assets/Identificador.jpeg" alt="Identificativo personalizzato" loading="lazy"></div>
       <div class="merch-slide"><img src="/assets/stand.jpeg" alt="Stand recensioni" loading="lazy"></div>
       <div class="merch-slide"><img src="/assets/iman.jpeg" alt="Calamita personalizzata" loading="lazy"></div>
-      <div class="merch-slide"><img src="/assets/presentationbadge2.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/presentationbadge1.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
     </div>
     <button type="button" class="merch-nav merch-nav--prev" aria-label="Foto precedente" onclick="merchCarouselVai(-1)">‹</button>
     <button type="button" class="merch-nav merch-nav--next" aria-label="Foto successiva" onclick="merchCarouselVai(1)">›</button>
