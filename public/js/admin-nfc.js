@@ -223,7 +223,7 @@ async function adminTabNfcAziendaDettaglio(id) {
         <div style="background:var(--surface);border:1px solid var(--border);padding:20px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">CREDITI — saldo attuale: <strong style="color:var(--dark)">${creditiSaldo}</strong></div>
           <div class="form-row">
-            <div class="field"><label>Delta (+/-)</label><input id="dcDelta" type="number" placeholder="es. 20 o -20"/></div>
+            <div class="field"><label>Delta (+/-)</label><input id="dcDelta" type="number" step="0.5" placeholder="es. 20 o -1.5"/></div>
             <div class="field"><label>Motivo *</label><input id="dcMotivo" type="text" placeholder="obbligatorio"/></div>
           </div>
           <button class="btn-submit" onclick="nfcAggiustaCrediti(${azienda.id})">AGGIUSTA CREDITI</button>
@@ -554,7 +554,7 @@ async function nfcReimpostaPassword(id) {
 }
 
 async function nfcAggiustaCrediti(id) {
-  const delta  = parseInt(document.getElementById('dcDelta')?.value, 10);
+  const delta  = parseFloat(document.getElementById('dcDelta')?.value);
   const motivo = document.getElementById('dcMotivo')?.value.trim();
   if (!delta) { showMsg('nfcCreditiMsg', 'Inserisci un delta diverso da zero', 'err'); return; }
   if (!motivo) { showMsg('nfcCreditiMsg', 'Il motivo e\' obbligatorio', 'err'); return; }
@@ -825,7 +825,7 @@ async function adminTabNfcProdotti(content) {
         <div id="mpFormTitolo" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">NUOVO PRODOTTO</div>
         <div class="form-row">
           <div class="field"><label>Nome *</label><input id="mpName" type="text" placeholder="Portachiavi 3D"/></div>
-          <div class="field"><label>Crediti richiesti *</label><input id="mpCrediti" type="number" min="0" placeholder="10"/></div>
+          <div class="field"><label>Crediti richiesti *</label><input id="mpCrediti" type="number" min="0" step="0.5" placeholder="es. 1.5"/></div>
           <div class="field"><label>Prezzo eccedenza (€)</label><input id="mpPrezzoExtra" type="number" step="0.01" placeholder="5.00"/></div>
           <div class="field"><label>Giorni produzione</label><input id="mpGiorni" type="number" min="0" placeholder="7"/></div>
         </div>

@@ -10,6 +10,7 @@ const { registraAzione } = require("../services/auditLogService");
 const { SLUG_RISERVATI } = require("../utils/reservedSlugs");
 const ErroreAzienda = require("../utils/erroreAzienda");
 const pageCache = require("../utils/pageCache");
+const { unitaAReale } = require("../utils/crediti");
 
 const listaAziende = async (req, res) => {
   try {
@@ -27,7 +28,7 @@ const listaAziende = async (req, res) => {
       group: ["company_id"],
       raw: true,
     });
-    const saldoPerAzienda = Object.fromEntries(saldi.map(s => [s.company_id, parseInt(s.saldo, 10)]));
+    const saldoPerAzienda = Object.fromEntries(saldi.map(s => [s.company_id, unitaAReale(parseInt(s.saldo, 10))]));
 
     const ordini = await MerchOrder.findAll({
       attributes: ["company_id", [sequelize.fn("COUNT", sequelize.col("id")), "totale"]],
@@ -61,7 +62,12 @@ const ottieniAzienda = async (req, res) => {
       Payment.findAll({ where: { company_id: azienda.id }, order: [["received_at", "DESC"]], limit: 50 }),
     ]);
 
-    res.json({ azienda, creditiSaldo, movimenti, pagamenti });
+    res.json({
+      azienda,
+      creditiSaldo: unitaAReale(creditiSaldo),
+      movimenti: movimenti.map(m => ({ ...m.toJSON(), delta: unitaAReale(m.delta) })),
+      pagamenti,
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 

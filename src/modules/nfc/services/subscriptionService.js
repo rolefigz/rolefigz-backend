@@ -4,6 +4,7 @@ const { addMonths } = require("../utils/dateHelpers");
 const { registraAzione } = require("./auditLogService");
 const ErroreAzienda = require("../utils/erroreAzienda");
 const pageCache = require("../utils/pageCache");
+const { unitaAReale, realeAUnita } = require("../utils/crediti");
 
 async function calcolaSaldoCrediti(companyId, transaction = null) {
   const somma = await CreditLedger.sum("delta", {
@@ -60,7 +61,7 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
 
     const creditiBase = piano.monthly_credits * monthsCovered;
     await CreditLedger.create({
-      company_id: companyId, delta: creditiBase, reason: "cycle_grant",
+      company_id: companyId, delta: realeAUnita(creditiBase), reason: "cycle_grant",
       reference_type: "payment", reference_id: payment.id, created_by_user_id: actorUserId,
     }, { transaction: t });
 
@@ -69,7 +70,7 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
       creditiBonus = Math.round(creditiBase * percentualeBonus / 100);
       if (creditiBonus > 0) {
         await CreditLedger.create({
-          company_id: companyId, delta: creditiBonus, reason: "loyalty_bonus",
+          company_id: companyId, delta: realeAUnita(creditiBonus), reason: "loyalty_bonus",
           reference_type: "payment", reference_id: payment.id, created_by_user_id: actorUserId,
         }, { transaction: t });
       }
@@ -84,7 +85,7 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
       },
     }, t);
 
-    const risultato = { payment, subscription, creditiBase, creditiBonus, streak: nuovaRacha, saldoCrediti: await calcolaSaldoCrediti(companyId, t) };
+    const risultato = { payment, subscription, creditiBase, creditiBonus, streak: nuovaRacha, saldoCrediti: unitaAReale(await calcolaSaldoCrediti(companyId, t)) };
     pageCache.invalidate(company.slug);
     return risultato;
   });
@@ -116,6 +117,7 @@ async function attivaProva({ companyId, actorUserId }) {
 
 // Aggiustamento manuale del saldo crediti — motivo sempre obbligatorio,
 // finisce in audit_logs (il ledger stesso resta append-only e anonimo sul motivo).
+// "delta" arriva gia' convertito in unita' (mezzi crediti) dal validatore.
 async function aggiustaCrediti({ companyId, delta, motivo, actorUserId }) {
   if (!motivo || !motivo.trim()) throw new ErroreAzienda("Il motivo e' obbligatorio", 400);
   if (!Number.isInteger(delta) || delta === 0) throw new ErroreAzienda("Il delta crediti non e' valido", 400);
@@ -133,7 +135,7 @@ async function aggiustaCrediti({ companyId, delta, motivo, actorUserId }) {
       details: { delta, motivo, ledgerId: voce.id },
     }, t);
 
-    return { voce, saldoCrediti: await calcolaSaldoCrediti(companyId, t) };
+    return { voce, saldoCrediti: unitaAReale(await calcolaSaldoCrediti(companyId, t)) };
   });
 }
 

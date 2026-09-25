@@ -1,4 +1,5 @@
 const { body, validationResult } = require("express-validator");
+const { realeAUnita } = require("../utils/crediti");
 
 const valida = (req, res, next) => {
   const errori = validationResult(req);
@@ -36,7 +37,15 @@ const validaPagamento = [
 ];
 
 const validaAggiustaCrediti = [
-  body("delta").isInt().withMessage("Delta crediti non valido").not().equals("0").withMessage("Il delta non puo' essere zero"),
+  body("delta")
+    .isFloat().withMessage("Delta crediti non valido")
+    .toFloat()
+    .custom(v => {
+      if (v === 0) throw new Error("Il delta non puo' essere zero");
+      if (Math.round(v * 2) !== v * 2) throw new Error("Il delta deve essere multiplo di 0,5");
+      return true;
+    })
+    .customSanitizer(v => realeAUnita(v)),
   body("motivo").trim().notEmpty().withMessage("Il motivo e' obbligatorio"),
   valida,
 ];
@@ -52,7 +61,14 @@ const validaPaginaContenuto = [
 
 const validaCreaProdottoMerch = [
   body("name").trim().notEmpty().withMessage("Il nome e' obbligatorio"),
-  body("credit_cost").isInt({ min: 0 }).withMessage("Crediti non validi").toInt(),
+  body("credit_cost")
+    .isFloat({ min: 0 }).withMessage("Crediti non validi")
+    .toFloat()
+    .custom(v => {
+      if (Math.round(v * 2) !== v * 2) throw new Error("I crediti devono essere multipli di 0,5");
+      return true;
+    })
+    .customSanitizer(v => realeAUnita(v)),
   body("extra_price_cents").optional().isInt({ min: 0 }).withMessage("Prezzo extra non valido").toInt(),
   body("internal_cost_cents").optional({ checkFalsy: true }).isInt({ min: 0 }).toInt(),
   body("production_days").optional({ checkFalsy: true }).isInt({ min: 0 }).toInt(),

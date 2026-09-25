@@ -1,12 +1,25 @@
 const { MerchProduct, MerchOrder, MerchOrderItem } = require("../../../models");
 const { creaOrdine } = require("../services/merchOrderService");
 const { calcolaSaldoCrediti } = require("../services/subscriptionService");
+const { unitaAReale } = require("../utils/crediti");
+
+function ordineConCreditiReali(ordine) {
+  const o = ordine.toJSON ? ordine.toJSON() : ordine;
+  return {
+    ...o,
+    credits_used: unitaAReale(o.credits_used),
+    items: (o.items || []).map(it => ({ ...it, credits_each: unitaAReale(it.credits_each) })),
+  };
+}
 
 const listaProdottiCatalogo = async (req, res) => {
   try {
     const prodotti = await MerchProduct.findAll({ where: { active: true }, order: [["position", "ASC"], ["id", "ASC"]] });
     const creditiSaldo = await calcolaSaldoCrediti(req.azienda.id);
-    res.json({ prodotti, creditiSaldo });
+    res.json({
+      prodotti: prodotti.map(p => ({ ...p.toJSON(), credit_cost: unitaAReale(p.credit_cost) })),
+      creditiSaldo: unitaAReale(creditiSaldo),
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -28,7 +41,7 @@ const listaMieiOrdini = async (req, res) => {
       include: [{ model: MerchOrderItem, as: "items", include: [{ model: MerchProduct, attributes: ["id", "name", "image"] }] }],
       order: [["createdAt", "DESC"]],
     });
-    res.json(ordini);
+    res.json(ordini.map(ordineConCreditiReali));
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 

@@ -4,6 +4,7 @@ const {
 } = require("../../../models");
 const { calcolaSaldoCrediti } = require("../services/subscriptionService");
 const paginaService = require("../services/paginaService");
+const { unitaAReale } = require("../utils/crediti");
 
 const home = async (req, res) => {
   try {
@@ -34,7 +35,7 @@ const home = async (req, res) => {
       url: `${baseUrl}/${azienda.slug}`,
       subscription,
       paginaPubblicata: pagina?.is_published || false,
-      creditiSaldo,
+      creditiSaldo: unitaAReale(creditiSaldo),
       ordiniInCorso,
       statisticheMese: { visite: conteggiMese.page_view, scansioni: conteggiMese.tag_scan, click: conteggiMese.link_click },
     });

@@ -4,12 +4,15 @@ const {
 const { calcolaSaldoCrediti } = require("./subscriptionService");
 const { registraAzione } = require("./auditLogService");
 const ErroreAzienda = require("../utils/erroreAzienda");
+const { unitaAReale } = require("../utils/crediti");
 
 const STATI_ATTIVI_PRODUZIONE = ["confermato", "in_produzione"];
 
 // Alloca i crediti disponibili sulle righe dell'ordine nell'ordine in cui
 // arrivano: quello che non ci sta nei crediti residui va in eccedenza euro,
 // al prezzo extra di quel prodotto specifico (snapshot al momento dell'ordine).
+// Lavora sempre in unita' (mezzi crediti, interi) — la conversione in crediti
+// reali avviene solo nella risposta finale di creaOrdine.
 function allocaCrediti(righe, creditiDisponibili) {
   let residuo = creditiDisponibili;
   let creditiTotali = 0;
@@ -84,7 +87,14 @@ async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, n
       details: { orderId: ordine.id, creditiTotali, extraTotaleCents },
     }, t);
 
-    return { ordine, creditiUsati: creditiTotali, extraAmountCents: extraTotaleCents, saldoCreditiResiduo: saldoAttuale - creditiTotali };
+    const ordineJson = ordine.toJSON();
+    ordineJson.credits_used = unitaAReale(ordineJson.credits_used);
+    return {
+      ordine: ordineJson,
+      creditiUsati: unitaAReale(creditiTotali),
+      extraAmountCents: extraTotaleCents,
+      saldoCreditiResiduo: unitaAReale(saldoAttuale - creditiTotali),
+    };
   });
 }
 
