@@ -149,8 +149,20 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 /* MERCHANDISING */
 .merch{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
 @media (max-width:820px){.merch{grid-template-columns:1fr}}
-.merch img{width:100%;height:380px;object-fit:contain;background:var(--surface);border-radius:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);padding:20px}
 .merch p{color:var(--ink-dim);line-height:1.6;font-size:.95rem;max-width:44ch}
+
+.merch-carousel{position:relative;border-radius:var(--card);overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05)}
+.merch-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.merch-track::-webkit-scrollbar{display:none}
+.merch-slide{flex:0 0 100%;scroll-snap-align:center}
+.merch-slide img{width:100%;height:380px;object-fit:contain;display:block;padding:20px}
+.merch-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid var(--line);color:var(--ink);font-size:1.2rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease}
+.merch-nav:hover{background:#fff}
+.merch-nav--prev{left:12px}
+.merch-nav--next{right:12px}
+.merch-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.merch-dot{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.2);cursor:pointer;transition:background .2s ease,width .2s ease;border:none;padding:0}
+.merch-dot.active{background:var(--accent);width:18px;border-radius:3px}
 
 /* PIANI */
 .piani{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:28px}
@@ -263,7 +275,19 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 </section>
 
 <section class="wrap merch" style="border-top:1px solid var(--line)">
-  <img class="reveal" src="/assets/nfc.png" alt="Esempio di merchandising personalizzato" loading="lazy">
+  <div class="merch-carousel reveal">
+    <div class="merch-track" id="merch-track">
+      <div class="merch-slide"><img src="/assets/presentationbadge1.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/llaveros.jpeg" alt="Portachiavi NFC personalizzati" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/Identificador.jpeg" alt="Identificativo personalizzato" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/stand.jpeg" alt="Stand recensioni" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/iman.jpeg" alt="Calamita personalizzata" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/presentationbadge2.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
+    </div>
+    <button type="button" class="merch-nav merch-nav--prev" aria-label="Foto precedente" onclick="merchCarouselVai(-1)">‹</button>
+    <button type="button" class="merch-nav merch-nav--next" aria-label="Foto successiva" onclick="merchCarouselVai(1)">›</button>
+    <div class="merch-dots" id="merch-dots"></div>
+  </div>
   <div class="reveal" style="transition-delay:.1s">
     <div class="eyebrow">Il merchandising</div>
     <h2 style="font-size:1.5rem;margin-bottom:14px">Portachiavi, calamite, tessere e display, stampati da noi</h2>
@@ -384,6 +408,58 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
             esito.className = 'lead-form-esito err';
           });
       });
+    }
+  } catch(e) {}
+
+  try {
+    var track = document.getElementById('merch-track');
+    var dotsWrap = document.getElementById('merch-dots');
+    if (track && dotsWrap) {
+      var slides = track.children.length;
+      for (var i = 0; i < slides; i++) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'merch-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Vai alla foto ' + (i + 1));
+        dot.addEventListener('click', (function(idx){ return function(){ merchVaiA(idx); }; })(i));
+        dotsWrap.appendChild(dot);
+      }
+      var corrente = 0;
+      var autoTimer = null;
+      var ridotto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function aggiornaDots() {
+        Array.prototype.forEach.call(dotsWrap.children, function(d, idx){ d.classList.toggle('active', idx === corrente); });
+      }
+      window.merchVaiA = function(idx) {
+        corrente = idx;
+        track.scrollTo({ left: track.clientWidth * corrente, behavior: 'smooth' });
+        aggiornaDots();
+      };
+      window.merchCarouselVai = function(delta) {
+        merchVaiA((corrente + delta + slides) % slides);
+      };
+      function avviaAuto() {
+        if (ridotto) return;
+        fermaAuto();
+        autoTimer = setInterval(function(){ merchVaiA((corrente + 1) % slides); }, 3500);
+      }
+      function fermaAuto() { if (autoTimer) clearInterval(autoTimer); }
+
+      var scrollTimeout;
+      track.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() {
+          corrente = Math.round(track.scrollLeft / track.clientWidth);
+          aggiornaDots();
+        }, 100);
+      });
+      track.addEventListener('mouseenter', fermaAuto);
+      track.addEventListener('mouseleave', avviaAuto);
+      track.addEventListener('touchstart', fermaAuto, { passive: true });
+      track.addEventListener('touchend', avviaAuto);
+
+      avviaAuto();
     }
   } catch(e) {}
 })();
