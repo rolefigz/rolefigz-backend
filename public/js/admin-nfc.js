@@ -219,6 +219,7 @@ async function adminTabNfcAziendaDettaglio(id) {
           </div>
           <button class="action-btn" style="margin-top:10px" onclick="nfcReimpostaPassword(${azienda.id})">REIMPOSTA PASSWORD CLIENTE</button>
           <button class="action-btn" style="margin-top:10px" onclick="nfcMostraLinkTag(${azienda.id})">LINK/QR DEL TAG</button>
+          <button class="action-btn" style="margin-top:10px;border-color:var(--green);color:var(--green)" onclick="nfcAttivaIndefinita(${azienda.id})">ATTIVA SENZA PAGAMENTO</button>
           <div id="nfcLinkTagBox" style="margin-top:10px"></div>
         </div>
 
@@ -552,6 +553,20 @@ async function nfcReimpostaPassword(id) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     alert(`Nuova password generata:\n\n${data.passwordGenerata}\n\nComunicala al cliente, non verra' mostrata di nuovo.`);
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function nfcAttivaIndefinita(id) {
+  if (!confirm('Attivare questa azienda a tempo indeterminato senza registrare un pagamento? La pagina restera\' sempre accessibile finche\' non la sospendi.')) return;
+  try {
+    const r = await fetch(`${API_NFC}/aziende/${id}/attiva-indefinita`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    alert('Azienda attivata senza pagamento.');
+    adminTabNfcAziendaDettaglio(id);
   } catch(e) { alert('Errore: ' + e.message); }
 }
 

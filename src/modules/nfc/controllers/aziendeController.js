@@ -4,7 +4,7 @@ const {
 const { Utente } = require("../../../models");
 const { risolviProprietario, reimpostaPassword } = require("../services/ownerService");
 const {
-  calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti,
+  calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti, attivaIndefinitamente,
 } = require("../services/subscriptionService");
 const { registraAzione } = require("../services/auditLogService");
 const { SLUG_RISERVATI } = require("../utils/reservedSlugs");
@@ -198,6 +198,13 @@ const attivaProvaController = async (req, res) => {
   } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
 };
 
+const attivaIndefinitamenteController = async (req, res) => {
+  try {
+    const subscription = await attivaIndefinitamente({ companyId: req.params.id, actorUserId: req.usuario.id });
+    res.json(subscription);
+  } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
+};
+
 const aggiustaCreditiController = async (req, res) => {
   try {
     const { delta, motivo } = req.body;
@@ -221,5 +228,5 @@ const reimpostaPasswordController = async (req, res) => {
 
 module.exports = {
   listaAziende, ottieniAzienda, creaAzienda, aggiornaAzienda, cambiaStato, eliminaAzienda,
-  registraPagamento, attivaProvaController, aggiustaCreditiController, reimpostaPasswordController,
+  registraPagamento, attivaProvaController, attivaIndefinitamenteController, aggiustaCreditiController, reimpostaPasswordController,
 };

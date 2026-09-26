@@ -139,4 +139,32 @@ async function aggiustaCrediti({ companyId, delta, motivo, actorUserId }) {
   });
 }
 
-module.exports = { calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti };
+// Attivazione indefinita senza pagamento (account di cortesia, partner,
+// test interno) — stessa logica di accesso di un abbonamento pagato
+// (paginaAccessibile in publicPageController.js), solo con paid_until
+// fissato molto lontano nel tempo cosi' non scade mai e non serve un
+// rinnovo. Un pagamento in contanti registrato in seguito estende comunque
+// la data da li' in avanti (resta lontanissima), non la riduce mai.
+async function attivaIndefinitamente({ companyId, actorUserId }) {
+  return sequelize.transaction(async (t) => {
+    const company = await Company.findByPk(companyId, { transaction: t, lock: t.LOCK.UPDATE });
+    if (!company) throw new ErroreAzienda("Azienda non trovata", 404);
+
+    const subscription = await Subscription.findOne({
+      where: { company_id: companyId }, transaction: t, lock: t.LOCK.UPDATE,
+    });
+    if (!subscription) throw new ErroreAzienda("Abbonamento non trovato", 404);
+
+    const paidUntil = new Date("2099-12-31");
+    await subscription.update({ status: "active", paid_until: paidUntil }, { transaction: t });
+
+    await registraAzione({
+      actorUserId, companyId, action: "lifetime_activated", details: { paidUntil },
+    }, t);
+
+    pageCache.invalidate(company.slug);
+    return subscription;
+  });
+}
+
+module.exports = { calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti, attivaIndefinitamente };

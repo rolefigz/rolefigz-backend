@@ -28,6 +28,7 @@ router.delete("/aziende/:id",      verifyToken, soloAdmin, aziende.eliminaAziend
 
 router.post("/aziende/:id/pagamenti",        verifyToken, soloAdmin, validaPagamento, aziende.registraPagamento);
 router.post("/aziende/:id/prova",            verifyToken, soloAdmin, aziende.attivaProvaController);
+router.post("/aziende/:id/attiva-indefinita", verifyToken, soloAdmin, aziende.attivaIndefinitamenteController);
 router.post("/aziende/:id/crediti/aggiusta", verifyToken, soloAdmin, validaAggiustaCrediti, aziende.aggiustaCreditiController);
 router.post("/aziende/:id/reset-password",   verifyToken, soloAdmin, aziende.reimpostaPasswordController);
 router.get("/aziende/:id/tag-link",          verifyToken, soloAdmin, tags.otteniLinkAzienda);
