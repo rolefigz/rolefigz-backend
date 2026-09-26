@@ -46,7 +46,6 @@ function hexARgba(hex, alphaPercento) {
 // opts.accessibile: false -> mostra il messaggio di abbonamento scaduto invece del contenuto
 function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   const { anteprima = false, accessibile = true } = opts;
-  const baseUrl = process.env.NFC_PUBLIC_BASE_URL || "";
   const d = pagina?.design || {};
 
   const titolo = escapeHtml(pagina?.seo_title || azienda.name);
@@ -97,12 +96,14 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   // Il link punta al redirect interno /nfc/go/:id (non all'URL esterno
   // direttamente), cosi' ogni click passa da vaiAlLink e viene registrato
   // come evento link_click prima del redirect 302 verso la destinazione reale.
+  // Path assoluto rispetto alla root del dominio (non dipende da
+  // NFC_PUBLIC_BASE_URL) cosi' funziona anche se quella variabile manca.
   const righeLink = links.map((l, i) => {
     const urlSicuro = (() => { try { return validaUrlSicuro(l.url); } catch { return null; } })();
     if (!urlSicuro) return "";
     const target = urlSicuro.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
     const icona = ICONE_SVG[l.type] || ICONE_SVG.custom;
-    return `<a class="link" style="--d:${i * 70}ms" href="${escapeAttr(baseUrl)}/go/${l.id}"${target}>
+    return `<a class="link" style="--d:${i * 70}ms" href="/nfc/go/${l.id}"${target}>
       <span class="link__icon">${icona}</span>
       <span class="link__label">${escapeHtml(l.label)}</span>
       <span class="link__go">›</span>
