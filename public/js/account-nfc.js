@@ -195,9 +195,9 @@ async function tabNfcPagina(content) {
             ${p.background_url ? `<img src="${p.background_url}" style="width:100%;max-width:260px;height:110px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:8px;filter:grayscale(60%) brightness(.55)"/>` : ''}
             <input type="file" id="cpSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcCaricaSfondo()"/>
             ${p.background_url ? `<button class="action-btn danger" style="margin-top:8px" onclick="nfcRimuoviSfondo()">Rimuovi sfondo</button>` : ''}
-            <label style="margin-top:12px">Opacità della foto</label>
+            <label style="margin-top:12px">Intensità del filtro scuro (0 = foto a colori pieni, 100 = più scura e leggibile)</label>
             <div class="range-row">
-              <input type="range" id="cpBackgroundOpacity" min="10" max="100" value="${opFoto}" oninput="document.getElementById('cpBgOpVal').textContent=this.value+'%'"/>
+              <input type="range" id="cpBackgroundOpacity" min="0" max="100" value="${opFoto}" oninput="document.getElementById('cpBgOpVal').textContent=this.value+'%'"/>
               <span class="val" id="cpBgOpVal">${opFoto}%</span>
             </div>
           </div>

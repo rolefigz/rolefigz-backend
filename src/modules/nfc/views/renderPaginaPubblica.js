@@ -71,7 +71,12 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   // di questa opzione), si comporta come "foto" per compatibilita'.
   const tipoSfondo = d.backgroundType || (pagina?.background_url ? "foto" : "nessuno");
   const coloreSfondo = colorEsadecimaleValido(d.backgroundColor) ? d.backgroundColor : "#0A0A0A";
-  const opacitaFoto = Math.max(10, Math.min(100, parseInt(d.backgroundOpacity, 10) || 70)) / 100;
+  // 0 = foto a colori pieni senza filtro, 100 = filtro scuro/grigio al massimo
+  // (utile per la leggibilita' del testo sopra foto molto chiare o vivaci).
+  const backgroundOpacityNum = parseInt(d.backgroundOpacity, 10);
+  const opacitaFoto = Math.max(0, Math.min(100, Number.isNaN(backgroundOpacityNum) ? 70 : backgroundOpacityNum)) / 100;
+  const grigioFoto = Math.round(70 * opacitaFoto);
+  const luminFoto = (1 - 0.58 * opacitaFoto).toFixed(2);
   const coloreBottoni = colorEsadecimaleValido(d.buttonColor) ? d.buttonColor : "#F4F1EA";
   const opacitaBottoni = d.buttonOpacity !== undefined ? d.buttonOpacity : 5;
   const coloreCaricamento = colorEsadecimaleValido(d.loadingColor) ? d.loadingColor : "#0A0A0A";
@@ -140,9 +145,9 @@ html,body{margin:0;padding:0;min-height:100%;background:var(--void);color:var(--
 
 ${usaFoto ? `
 .scene{position:fixed;inset:0;overflow:hidden;z-index:0}
-.scene__photo{position:absolute;inset:-3%;width:106%;height:106%;background-image:url('${escapeAttr(pagina.background_url)}');background-size:cover;background-position:center;filter:grayscale(70%) brightness(.42) contrast(1.05);opacity:0;transform:scale(1);animation:kenburns 18s ease-in-out infinite alternate;animation-play-state:paused;transition:opacity 1.6s cubic-bezier(.22,.61,.36,1)}
+.scene__photo{position:absolute;inset:-3%;width:106%;height:106%;background-image:url('${escapeAttr(pagina.background_url)}');background-size:cover;background-position:center;filter:grayscale(${grigioFoto}%) brightness(${luminFoto}) contrast(1.05);opacity:0;transform:scale(1);animation:kenburns 18s ease-in-out infinite alternate;animation-play-state:paused;transition:opacity 1.6s cubic-bezier(.22,.61,.36,1)}
 .scene__tint{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%, rgba(10,10,10,0) 0%, rgba(10,10,10,.55) 60%, rgba(10,10,10,.92) 100%), rgba(12,12,12,.35)}
-body.revealed .scene__photo{opacity:${opacitaFoto};animation-play-state:running}
+body.revealed .scene__photo{opacity:1;animation-play-state:running}
 @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07) translate(-1%,0%)}}
 ` : ""}
 

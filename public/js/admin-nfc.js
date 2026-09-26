@@ -312,9 +312,9 @@ async function adminTabNfcAziendaDettaglio(id) {
               ${pagina.background_url ? `<img src="${pagina.background_url}" style="width:100%;max-width:180px;height:76px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px;filter:grayscale(60%) brightness(.55)"/>` : ''}
               <input type="file" id="pgSfondo" accept="image/png,image/jpeg,image/webp" onchange="nfcPgCaricaSfondo(${azienda.id})"/>
               ${pagina.background_url ? `<button class="action-btn danger" style="margin-top:6px" onclick="nfcPgRimuoviSfondo(${azienda.id})">RIMUOVI SFONDO</button>` : ''}
-              <label style="margin-top:12px">Opacità della foto</label>
+              <label style="margin-top:12px">Intensità del filtro scuro (0 = foto a colori pieni, 100 = più scura e leggibile)</label>
               <div class="range-row">
-                <input type="range" id="pgBackgroundOpacity" min="10" max="100" value="${nfcPgOpFoto}" oninput="document.getElementById('pgBgOpVal').textContent=this.value+'%'"/>
+                <input type="range" id="pgBackgroundOpacity" min="0" max="100" value="${nfcPgOpFoto}" oninput="document.getElementById('pgBgOpVal').textContent=this.value+'%'"/>
                 <span class="val" id="pgBgOpVal">${nfcPgOpFoto}%</span>
               </div>
             </div>
