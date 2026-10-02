@@ -24,6 +24,27 @@ const ICONE_SVG = {
   custom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6M9.5 9h-1a3 3 0 0 0 0 6h1M14.5 15h1a3 3 0 0 0 0-6h-1"/></svg>',
 };
 
+// Elenco ufficiale dei 14 allergeni alimentari (Reg. UE 1169/2011). design.allergeni contiene
+// i numeri (1-14) di quelli presenti; se la lista e' vuota il bottone non compare.
+const ALLERGENI = [
+  { n: 1,  nome: "Cereali",  dettaglio: "Contenenti glutine come grano, segale, orzo, avena, farro, kamut e i loro ceppi derivati e i prodotti derivati" },
+  { n: 2,  nome: "Crostacei", dettaglio: "e prodotti a base di crostacei" },
+  { n: 3,  nome: "Uova", dettaglio: "e prodotti a base di uova" },
+  { n: 4,  nome: "Pesce", dettaglio: "e prodotti a base di pesce" },
+  { n: 5,  nome: "Arachidi", dettaglio: "e prodotti a base di arachidi" },
+  { n: 6,  nome: "Soia", dettaglio: "e prodotti a base di soia" },
+  { n: 7,  nome: "Latte", dettaglio: "e prodotti a base di latte (incluso lattosio)" },
+  { n: 8,  nome: "Frutta a guscio", dettaglio: "come mandorle, nocciole, noci, pistacchi e i loro prodotti" },
+  { n: 9,  nome: "Sedano", dettaglio: "e prodotti a base di sedano" },
+  { n: 10, nome: "Senape", dettaglio: "e prodotti a base di senape" },
+  { n: 11, nome: "Semi di sesamo", dettaglio: "e prodotti a base di semi di sesamo" },
+  { n: 12, nome: "Anidride solforosa e solfiti", dettaglio: "in concentrazioni superiori a 10 mg/kg o 10 mg/litro in termini di anidride solforosa totale" },
+  { n: 13, nome: "Lupini", dettaglio: "e prodotti a base di lupini" },
+  { n: 14, nome: "Molluschi", dettaglio: "e prodotti a base di molluschi" },
+];
+
+const ICONA_ALLERGENI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21 19.5H3z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>';
+
 const DIMENSIONI_LOGO = { piccolo: { centro: 84, header: 48 }, medio: { centro: 120, header: 68 }, grande: { centro: 162, header: 92 } };
 
 function colorEsadecimaleValido(v) { return /^#[0-9a-f]{6}$/i.test(v || ""); }
@@ -110,6 +131,32 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
     </a>`;
   }).join("");
 
+  const allergeniPresenti = new Set((Array.isArray(d.allergeni) ? d.allergeni : []).map(Number));
+  const bloccoAllergeni = allergeniPresenti.size ? `
+    <button type="button" class="link link--btn" style="--d:${links.length * 70}ms" onclick="document.getElementById('allergeni').showModal()">
+      <span class="link__icon">${ICONA_ALLERGENI}</span>
+      <span class="link__label">Allergeni</span>
+      <span class="link__go">›</span>
+    </button>` : "";
+  const dialogoAllergeni = allergeniPresenti.size ? `
+<dialog id="allergeni" class="allergeni" aria-labelledby="allergeniTitolo" onclick="if (event.target === this) this.close()">
+  <div class="allergeni__head">
+    <h2 id="allergeniTitolo">Allergeni</h2>
+    <button type="button" class="allergeni__chiudi" aria-label="Chiudi" onclick="this.closest('dialog').close()">✕</button>
+  </div>
+  <p class="allergeni__nota">Elenco dei 14 allergeni alimentari. Quelli evidenziati sono presenti nei nostri prodotti.</p>
+  <ol class="allergeni__lista">
+    ${ALLERGENI.map(a => {
+      const presente = allergeniPresenti.has(a.n);
+      return `<li class="${presente ? "presente" : ""}">
+      <span class="allergeni__n">${a.n}</span>
+      <span><strong>${a.nome}</strong> ${a.dettaglio}</span>
+      ${presente ? '<span class="allergeni__tag">Presente</span>' : ""}
+    </li>`;
+    }).join("")}
+  </ol>
+</dialog>` : "";
+
   const blocMappa = pagina?.map_embed_url ? `
     <div class="mappa">
       <iframe src="${escapeAttr(pagina.map_embed_url)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
@@ -185,6 +232,22 @@ body.content-in .link{opacity:1;transform:translateY(0)}
 .link__icon svg{width:100%;height:100%;display:block}
 .link__label{font-family:'Space Grotesk',sans-serif;font-size:.96rem;font-weight:600}
 .link__go{margin-left:auto;color:var(--ink-dim);font-size:1.1rem;transition:transform .2s ease}
+.link--btn{width:100%;font:inherit;text-align:left;cursor:pointer}
+
+.allergeni{width:min(100% - 32px,var(--card-w));max-height:min(100% - 48px,720px);padding:0;color:var(--ink);background:var(--void);border:1px solid var(--line);overflow:auto}
+.allergeni::backdrop{background:rgba(0,0,0,.7);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.allergeni__head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--void);border-bottom:1px solid var(--line)}
+.allergeni__head h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:600}
+.allergeni__chiudi{width:36px;height:36px;font-size:1rem;color:var(--ink);background:none;border:1px solid var(--line);cursor:pointer}
+.allergeni__nota{margin:14px 18px 6px;color:var(--ink-dim);font-size:.8rem;line-height:1.5}
+.allergeni__lista{list-style:none;margin:0;padding:6px 10px 14px}
+.allergeni__lista li{display:flex;align-items:flex-start;gap:12px;padding:10px 8px;font-size:.84rem;line-height:1.45;color:var(--ink-dim);border-bottom:1px solid var(--line)}
+.allergeni__lista li:last-child{border-bottom:0}
+.allergeni__lista strong{color:var(--ink);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.allergeni__n{flex:none;width:24px;height:24px;display:grid;place-items:center;font-size:.72rem;font-weight:700;border:1px solid var(--line)}
+.allergeni__lista li.presente{color:var(--ink);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.allergeni__lista li.presente .allergeni__n{color:var(--void);background:var(--accent);border-color:var(--accent)}
+.allergeni__tag{flex:none;margin-left:auto;padding:2px 8px;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent)}
 .link:hover .link__go{transform:translateX(3px)}
 
 .mappa{width:100%;max-width:var(--card-w);margin-top:24px;opacity:0;transition:opacity .9s ease .3s}
@@ -208,10 +271,11 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
     ${pagina?.description ? `<p class="descr">${escapeHtml(pagina.description)}</p>` : ""}
     ${pagina?.hours ? `<p class="hours">🕒 ${escapeHtml(pagina.hours)}</p>` : ""}
   </section>
-  <nav class="links" aria-label="Link">${righeLink}</nav>
+  <nav class="links" aria-label="Link">${righeLink}${bloccoAllergeni}</nav>
   ${blocMappa}
   <p class="foot">Powered by RoleFigz NFC</p>
 </main>
+${dialogoAllergeni}
 
 <script>
   var body = document.body;

@@ -233,6 +233,16 @@ async function tabNfcPagina(content) {
         </div>
       </details>
 
+      <details class="pg-sezione">
+        <summary><span><iconify-icon icon="mdi:alert-outline" width="15"></iconify-icon> Allergeni</span></summary>
+        <div class="pg-sezione-body">
+          <div class="note" style="margin-bottom:10px">Segna gli allergeni presenti: sulla pagina comparirà il pulsante «Allergeni» con l'elenco dei 14 e quelli segnati evidenziati. Se non ne segni nessuno il pulsante non compare.</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+            ${ALLERGENI_NOMI.map((nome, i) => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" name="cpAllergene" value="${i + 1}" ${(p.design?.allergeni || []).map(Number).includes(i + 1) ? 'checked' : ''}/>${i + 1}. ${nome}</label>`).join('')}
+          </div>
+        </div>
+      </details>
+
       <button class="btn-submit" onclick="nfcSalvaContenuto()">Salva modifiche</button>
       <div id="nfcContenutoMsg" style="margin-bottom:20px"></div>
 
@@ -289,6 +299,9 @@ function nfcAggiornaTipoSfondo() {
   if (fotoWrap) fotoWrap.style.display = tipo === 'foto' ? '' : 'none';
 }
 
+const ALLERGENI_NOMI = ['Cereali con glutine', 'Crostacei', 'Uova', 'Pesce', 'Arachidi', 'Soia', 'Latte', 'Frutta a guscio',
+  'Sedano', 'Senape', 'Semi di sesamo', 'Anidride solforosa e solfiti', 'Lupini', 'Molluschi'];
+
 async function nfcSalvaContenuto() {
   const body = {
     description:     document.getElementById('cpDescrizione')?.value,
@@ -305,6 +318,7 @@ async function nfcSalvaContenuto() {
       buttonColor:       document.getElementById('cpButtonColor')?.value,
       buttonOpacity:     parseInt(document.getElementById('cpButtonOpacity')?.value, 10),
       loadingColor:      document.getElementById('cpLoadingColor')?.value,
+      allergeni:         [...document.querySelectorAll('input[name="cpAllergene"]:checked')].map(c => Number(c.value)),
     },
   };
   try {

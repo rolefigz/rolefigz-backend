@@ -349,6 +349,16 @@ async function adminTabNfcAziendaDettaglio(id) {
           </div>
         </details>
 
+        <details class="pg-sezione">
+          <summary>⚠️ ALLERGENI</summary>
+          <div class="pg-sezione-body">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px">Gli allergeni segnati compaiono evidenziati nel pulsante «Allergeni» della pagina. Nessuno segnato = nessun pulsante.</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+              ${ALLERGENI_NOMI.map((nome, i) => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" name="pgAllergene" value="${i + 1}" ${(pagina.design?.allergeni || []).map(Number).includes(i + 1) ? 'checked' : ''}/>${i + 1}. ${nome}</label>`).join('')}
+            </div>
+          </div>
+        </details>
+
         <button class="btn-submit" onclick="nfcPgSalvaContenuto(${azienda.id})">SALVA MODIFICHE</button>
         <div id="nfcPgContenutoMsg" style="margin-bottom:14px"></div>
 
@@ -416,6 +426,9 @@ function nfcPgAggiornaTipoSfondo() {
   if (fotoWrap) fotoWrap.style.display = tipo === 'foto' ? '' : 'none';
 }
 
+const ALLERGENI_NOMI = ['Cereali con glutine', 'Crostacei', 'Uova', 'Pesce', 'Arachidi', 'Soia', 'Latte', 'Frutta a guscio',
+  'Sedano', 'Senape', 'Semi di sesamo', 'Anidride solforosa e solfiti', 'Lupini', 'Molluschi'];
+
 async function nfcPgSalvaContenuto(id) {
   const body = {
     description:      document.getElementById('pgDescrizione')?.value,
@@ -432,6 +445,7 @@ async function nfcPgSalvaContenuto(id) {
       buttonColor:       document.getElementById('pgButtonColor')?.value,
       buttonOpacity:     parseInt(document.getElementById('pgButtonOpacity')?.value, 10),
       loadingColor:      document.getElementById('pgLoadingColor')?.value,
+      allergeni:         [...document.querySelectorAll('input[name="pgAllergene"]:checked')].map(c => Number(c.value)),
     },
   };
   try {
