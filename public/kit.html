@@ -180,6 +180,22 @@
       font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
       background: rgba(247,245,240,.85); padding: 6px 12px; border: 1px solid var(--border); white-space: nowrap;
     }
+    .k-freccia {
+      position: absolute; top: calc(50% - 30px); transform: translateY(-50%); z-index: 3;
+      width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer;
+      background: rgba(255,255,255,.92); color: var(--dark); font-size: 34px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,.12); transition: background .15s, transform .15s;
+    }
+    .k-freccia:hover { background: var(--dark); color: #fff; }
+    .k-freccia:active { transform: translateY(-50%) scale(.94); }
+    .k-freccia.sx { left: 14px; }
+    .k-freccia.dx { right: 14px; animation: k-invito 1.6s ease-in-out 1.2s 3; }
+    @keyframes k-invito { 0%, 100% { transform: translateY(-50%); } 50% { transform: translate(6px, -50%); } }
+    .k-count {
+      position: absolute; top: 14px; right: 14px; pointer-events: none;
+      font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--dark);
+      background: rgba(247,245,240,.9); padding: 6px 10px; border: 1px solid var(--border);
+    }
     .k-note { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.6; }
 
     /* ── PREVENTIVO ── */
@@ -424,6 +440,9 @@
           shadow-intensity="0.8" shadow-softness="0.9" exposure="1.05" environment-image="neutral" interaction-prompt="none"
           camera-orbit="0deg 55deg auto" alt="Anteprima 3D del pezzo con il tuo logo"></model-viewer>
         <div class="k-viewer-tip"><span class="iconify" data-icon="mdi:rotate-3d-variant"></span> Trascina per ruotare</div>
+        <button type="button" class="k-freccia sx" id="kPrev" aria-label="Pezzo precedente"><span class="iconify" data-icon="mdi:chevron-left"></span></button>
+        <button type="button" class="k-freccia dx" id="kNext" aria-label="Pezzo successivo"><span class="iconify" data-icon="mdi:chevron-right"></span></button>
+        <div class="k-count" id="kCount"></div>
         <div class="k-viewer-info">
           <div class="k-viewer-name" id="kPieceName"></div>
           <div class="k-viewer-dim" id="kPieceDim"></div>
@@ -704,7 +723,7 @@
   }
 
   function mostraKit(k) {
-    const pezzi = [{ nome: 'Tutto il kit', misure: 'Così esce dalla stampante, tutto insieme', glb: k.piatto_glb, icon: 'mdi:view-grid-outline' }]
+    const pezzi = [{ nome: 'Tutto il kit', misure: 'Tutti i pezzi del kit campione', glb: k.piatto_glb, icon: 'mdi:view-grid-outline' }]
       .concat(k.pezzi.map(p => ({ ...p, icon: iconaPezzo(p.chiave) })));
     const lista = $('kPieces'); lista.innerHTML = '';
     pezzi.forEach((p, i) => {
@@ -714,12 +733,29 @@
       b.addEventListener('click', () => seleziona(i));
       lista.appendChild(b);
     });
+    let attuale = 0;
     function seleziona(i) {
-      [...lista.children].forEach((b, j) => b.classList.toggle('on', j === i));
-      $('kViewer').src = pezzi[i].glb;
-      $('kPieceName').textContent = pezzi[i].nome;
-      $('kPieceDim').textContent = pezzi[i].misure;
+      attuale = (i + pezzi.length) % pezzi.length;
+      [...lista.children].forEach((b, j) => b.classList.toggle('on', j === attuale));
+      // da telefono la lista dei pezzi scorre in orizzontale: si porta al centro il pezzo attivo (solo la lista,
+      // mai la pagina)
+      const chip = lista.children[attuale];
+      if (lista.scrollWidth > lista.clientWidth) {
+        lista.scrollTo({ left: chip.offsetLeft - (lista.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+      }
+      $('kViewer').src = pezzi[attuale].glb;
+      $('kPieceName').textContent = pezzi[attuale].nome;
+      $('kPieceDim').textContent = pezzi[attuale].misure;
+      $('kCount').textContent = `${attuale + 1} / ${pezzi.length}`;
     }
+    // frecce sul visore: si capisce subito che ci sono altri pezzi (anche da telefono)
+    $('kPrev').onclick = () => seleziona(attuale - 1);
+    $('kNext').onclick = () => seleziona(attuale + 1);
+    document.onkeydown = e => {
+      if ($('k-kit').hidden || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'ArrowLeft') seleziona(attuale - 1);
+      if (e.key === 'ArrowRight') seleziona(attuale + 1);
+    };
     seleziona(1);
     $('kKitTitle').textContent = '';
     $('kKitTitle').append(document.createTextNode('IL KIT DI'), document.createElement('br'), document.createTextNode((k.cliente || '').toUpperCase()));
