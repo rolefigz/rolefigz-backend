@@ -16,6 +16,7 @@ const analiticheRoutes  = require("./src/routers/analiticheRoutes");
 const ticketsRoutes      = require("./src/routers/ticketsRoutes");
 const spedizioneRoutes   = require("./src/routers/spedizioneRoutes");
 const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
+const kitRoutes          = require("./src/routers/kitRoutes");
 const puntiRoutes        = require("./src/routers/puntiRoutes");
 const promoRoutes           = require("./src/routers/promoRoutes");
 const impostazioniRoutes    = require("./src/routers/impostazioniRoutes");
@@ -57,6 +58,7 @@ app.use("/api/analytics",  limitAPI,  analiticheRoutes);
 app.use("/api/tickets",    limitAPI,  ticketsRoutes);
 app.use("/api/spedizione", limitAPI,  spedizioneRoutes);
 app.use("/api",           limitAPI,  gadget3dRoutes);
+app.use("/api/kit",       limitAPI,  kitRoutes);
 app.use("/api/punti",     limitAPI,  puntiRoutes);
 app.use("/api/promo",          limitAPI,  promoRoutes);
 app.use("/api/impostazioni",   limitAPI,  impostazioniRoutes);
@@ -70,6 +72,9 @@ const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "inde
 app.get("/blog",       serveApp);
 app.get("/blog/:slug", serveApp);
 app.get("/checkout",   serveApp);
+
+// Kit merch: carica il logo → kit in 3D + preventivo + prenotazione del kit campione
+app.get("/kit", (req, res) => res.sendFile(path.join(__dirname, "public", "kit.html")));
 
 app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));

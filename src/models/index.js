@@ -13,6 +13,7 @@ const Ticket              = require("./Ticket");
 const Messaggio           = require("./Messaggio");
 const OpzioneSpedizione   = require("./OpzioneSpedizione");
 const RichiestaGadget     = require("./RichiestaGadget");
+const RichiestaKit        = require("./RichiestaKit");
 const PuntiTransazione    = require("./PuntiTransazione");
 const CodicePromo         = require("./CodicePromo");
 const Impostazione        = require("./Impostazione");
@@ -22,7 +23,7 @@ module.exports = {
   sequelize,
   Utente, Categoria, Prodotto, Ordine, DettaglioOrdine,
   VarianteProdotto, ImmagineProdotto, Recensione,
-  Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget,
+  Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget, RichiestaKit,
   PuntiTransazione, CodicePromo, Impostazione,
   ...nfc
 };

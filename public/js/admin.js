@@ -304,6 +304,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'kit_campione') {
+    await adminTabKit(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;

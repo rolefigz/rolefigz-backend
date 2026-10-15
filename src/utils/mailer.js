@@ -686,4 +686,80 @@ const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente })
   );
 };
 
-module.exports = { emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
+// ── Kit campione (/kit) ─────────────────────────────────────────────
+// I dati arrivano dal form pubblico: sempre escapati.
+const escKit = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function cornice(titolo, etichetta, corpo, piede) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px">
+        <tr><td align="center">
+          <table width="580" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222">
+            <tr><td style="padding:32px 40px;border-bottom:1px solid #222">
+              <span style="font-size:26px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#C17F3A">FIGZ</span></span>
+            </td></tr>
+            <tr><td style="padding:40px 40px 24px;background:#0f0f0f">
+              <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#C17F3A;text-transform:uppercase">// ${etichetta}</p>
+              <h1 style="margin:0;font-size:34px;font-weight:900;letter-spacing:2px;color:#f0ece4">${titolo}</h1>
+            </td></tr>
+            <tr><td style="padding:32px 40px;border-bottom:1px solid #222">${corpo}</td></tr>
+            <tr><td style="padding:28px 40px;background:#0a0a0a">
+              <p style="margin:0;font-size:12px;color:#555;line-height:1.7">${piede}</p>
+              <p style="margin:16px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D PERSONALIZZATA · PIACENZA</p>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>
+    </body></html>`;
+}
+
+const P = "margin:0 0 16px;font-size:13px;color:#ccc;line-height:1.8";
+
+const emailKitCliente = async (r, urlPreventivo) => {
+  const nome = escKit(r.nome), azienda = escKit(r.azienda);
+  if (r.tipo === "revisione") {
+    return invia(r.email, `✋ Revisione del logo ricevuta — RoleFigz ${r.numero}`, cornice("RICHIESTA<br>RICEVUTA", "Revisione del logo", `
+      <p style="${P}">Ciao <strong style="color:#f0ece4">${nome}</strong>,</p>
+      <p style="${P}">abbiamo ricevuto il logo di <strong style="color:#f0ece4">${azienda}</strong>. Non si può convertire in automatico,
+      quindi lo prepariamo a mano per la stampa 3D (colori pieni, dettagli ingrossati dove serve).</p>
+      <p style="${P}">Ti scriviamo entro <strong style="color:#f0ece4">2 giorni lavorativi</strong> con l'anteprima e il preventivo.</p>
+      <p style="margin:0;font-size:20px;font-weight:bold;color:#C17F3A">${r.numero}</p>`,
+      "Hai una versione migliore del logo (PNG o SVG, colori pieni)? Rispondi a questa email e allegala."));
+  }
+  return invia(r.email, `🧰 Kit campione prenotato — RoleFigz ${r.numero}`, cornice("KIT<br>PRENOTATO!", "Kit campione", `
+    <p style="${P}">Ciao <strong style="color:#f0ece4">${nome}</strong>,</p>
+    <p style="${P}">abbiamo ricevuto la prenotazione del kit campione con il logo di <strong style="color:#f0ece4">${azienda}</strong>.
+    Lo stampiamo e ti scriviamo quando è pronto per il ritiro a <strong style="color:#f0ece4">Piacenza</strong>.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #222;margin:20px 0">
+      <tr style="background:#0a0a0a">
+        <td style="padding:12px 20px;font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Prenotazione</td>
+        <td style="padding:12px 20px;font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase">Prezzo</td>
+      </tr>
+      <tr>
+        <td style="padding:14px 20px;font-size:18px;font-weight:bold;color:#C17F3A">${r.numero}</td>
+        <td style="padding:14px 20px;font-size:15px;color:#f0ece4">€ ${Number(r.prezzo).toFixed(2).replace(".", ",")} · al ritiro</td>
+      </tr>
+    </table>
+    <p style="${P}">Il prezzo del kit si sconta dal tuo primo ordine di almeno <strong style="color:#f0ece4">100 €</strong>
+    entro <strong style="color:#f0ece4">60 giorni</strong> dal ritiro.</p>
+    ${urlPreventivo ? `<p style="margin:0"><a href="${escKit(urlPreventivo)}" style="display:inline-block;background:#C17F3A;color:#fff;text-decoration:none;padding:12px 24px;font-size:13px;font-weight:bold;letter-spacing:2px">SCARICA IL PREVENTIVO (PDF)</a></p>` : ""}`,
+    "Hai domande o vuoi cambiare qualcosa? Rispondi a questa email."));
+};
+
+const emailKitAdmin = async (r) => {
+  const riga = (k, v) => v ? `<p><strong>${k}:</strong> ${v}</p>` : "";
+  await invia(ADMIN, `${r.tipo === "kit" ? "🧰 Kit campione" : "✋ Revisione logo"} ${r.numero} — ${escKit(r.azienda)}`,
+    `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
+      <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">${r.tipo === "kit" ? "KIT CAMPIONE" : "REVISIONE LOGO"} ${r.numero}</h2>
+      ${riga("Nome", escKit(r.nome))}${riga("Azienda", escKit(r.azienda))}
+      ${riga("Email", `<a href="mailto:${escKit(r.email)}" style="color:#C17F3A">${escKit(r.email)}</a>`)}
+      ${riga("Telefono", escKit(r.telefono))}${riga("Note", escKit(r.note))}
+      <hr style="border-color:#222;margin:16px 0"/>
+      ${riga("Verdetto logo", escKit(r.verdetto))}${riga("QR", escKit(r.qr_url))}
+      ${r.logo_url ? riga("Logo", `<a href="${escKit(r.logo_url)}" style="color:#C17F3A">Visualizza logo</a>`) : ""}
+      <p style="color:#888">3MF, foglio di montaggio e preventivo: pannello admin → Kit campione.</p>
+    </div>`);
+};
+
+module.exports = { emailKitCliente, emailKitAdmin, emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
