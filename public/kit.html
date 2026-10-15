@@ -301,7 +301,7 @@
           <div class="k-ex">
             <svg viewBox="0 0 160 90" aria-hidden="true"><defs><pattern id="sc" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#fff"/><rect width="5" height="5" fill="#e6e6e6"/><rect x="5" y="5" width="5" height="5" fill="#e6e6e6"/></pattern></defs><rect width="160" height="90" fill="url(#sc)"/><path d="M50 20h60l-30 50z" fill="#0A66C2"/></svg>
             <div class="k-ex-t">PNG o SVG</div>
-            <div class="k-ex-d">Sfondo trasparente o di un colore unico. Almeno 1000 px di larghezza.</div>
+            <div class="k-ex-d">Ancora meglio PDF o AI vettoriale. Sfondo trasparente o di un colore unico, almeno 1000 px.</div>
           </div>
           <div class="k-ex">
             <svg viewBox="0 0 160 90" aria-hidden="true"><rect width="160" height="90" fill="#fff"/><rect x="28" y="28" width="104" height="18" fill="#141412"/><rect x="28" y="52" width="70" height="12" fill="#141412"/></svg>
@@ -358,8 +358,8 @@
       <div class="k-upload" id="kUpload" tabindex="0" role="button" aria-label="Carica il logo">
         <span class="k-upload-icon"><span class="iconify" data-icon="mdi:cloud-upload-outline"></span></span>
         <div class="k-upload-text">Trascina il logo qui o clicca per scegliere</div>
-        <div class="k-upload-sub">PNG, SVG, JPG o WEBP · max 10 MB · meglio con sfondo trasparente</div>
-        <input type="file" id="kFile" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml" hidden/>
+        <div class="k-upload-sub">PNG, SVG, PDF, AI, JPG o WEBP · max 10 MB · il vettoriale (SVG/PDF) è il migliore</div>
+        <input type="file" id="kFile" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp,image/svg+xml,application/pdf" hidden/>
       </div>
       <div class="k-preview" id="kPreview">
         <img id="kPreviewImg" class="k-preview-img" alt="Anteprima del logo"/>
@@ -571,10 +571,21 @@
     errore('kErr1');
     stato.file = null; aggiornaPulsante();
     const nome = file.name.toLowerCase();
-    const ok = /\.(png|jpe?g|webp|svg)$/.test(nome) || ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.type);
+    const ok = /\.(png|jpe?g|webp|svg|pdf|ai)$/.test(nome) || ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'application/pdf'].includes(file.type);
     $('kPreview').classList.remove('on');
-    if (!ok) return hint('err', 'Formato non supportato. Carica il logo in PNG, SVG, JPG o WEBP (non PDF, Word o foto HEIC).');
+    if (!ok) return hint('err', 'Formato non supportato. Carica il logo in PNG, SVG, PDF, AI, JPG o WEBP (non Word, EPS o foto HEIC).');
     if (file.size > 10 * 1024 * 1024) return hint('err', 'Il file supera i 10 MB. Esporta il logo in PNG o SVG: pesa molto meno.');
+    if (/\.(pdf|ai)$/.test(nome) || file.type === 'application/pdf') {
+      // PDF/AI: il browser non li mostra come immagine; sono vettoriali, il formato migliore
+      $('kPreviewImg').removeAttribute('src');
+      $('kPreviewImg').alt = nome.split('.').pop().toUpperCase();
+      $('kPreviewName').textContent = file.name;
+      $('kPreviewMeta').textContent = 'File vettoriale · perfetto · ' + (file.size / 1024).toFixed(0) + ' KB';
+      $('kPreview').classList.add('on');
+      hint();
+      stato.file = file; aggiornaPulsante();
+      return;
+    }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {

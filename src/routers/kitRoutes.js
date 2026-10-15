@@ -35,8 +35,10 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const ok = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.mimetype);
-    cb(ok ? null : Object.assign(new Error("Formato non supportato. Usa PNG, JPG, WEBP o SVG."), { status: 415 }), ok);
+    // i vettoriali (SVG, PDF, AI) sono il formato migliore: il servizio li renderizza senza perdite
+    const ok = ["image/png", "image/jpeg", "image/webp", "image/svg+xml", "application/pdf", "application/postscript",
+                "application/illustrator"].includes(file.mimetype) || /\.(png|jpe?g|webp|svg|pdf|ai)$/i.test(file.originalname || "");
+    cb(ok ? null : Object.assign(new Error("Formato non supportato. Usa PNG, SVG, PDF, AI, JPG o WEBP."), { status: 415 }), ok);
   },
 });
 
