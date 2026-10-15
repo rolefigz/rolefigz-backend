@@ -117,6 +117,7 @@ router.post("/genera", limiteGenera, async (req, res) => {
       pezzi: k.pezzi.map(p => ({ chiave: p.chiave, nome: p.nome, misure: p.misure, glb: url(p.glb) })),
       piatto_glb: url(k.piatto_glb), preventivo_pdf: url(k.preventivo_pdf),
       preventivo: k.preventivo, kit_campione: k.kit_campione,
+      controllo: (k.controllo && k.controllo.esito) || "non_fatto",   // controllo qualità con IA
     });
   } catch (err) { rispondiErrore(res, err); }
 });
