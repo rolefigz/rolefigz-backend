@@ -224,6 +224,7 @@ function _impostaVisibilitaFabChat(visibile) {
 }
 
 function impostaSessione() {
+  if (typeof apriTicketKitInSospeso === 'function') setTimeout(apriTicketKitInSospeso, 300);   // ticket da /kit
   document.getElementById('loginBtn').style.display     = 'none';
   document.getElementById('logoutBtn').style.display    = 'block';
   document.getElementById('headerLoginBtn').style.display = 'none';

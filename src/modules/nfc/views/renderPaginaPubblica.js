@@ -66,9 +66,10 @@ function hexARgba(hex, alphaPercento) {
 // opts.anteprima: mostra un banner "anteprima" e blocca l'indicizzazione
 // opts.accessibile: false -> mostra il messaggio di abbonamento scaduto invece del contenuto
 // opts.testoBanner: testo del banner di anteprima (le pagine di prova del kit campione hanno il loro)
+// opts.creditoFoto: attribuzione della foto di sfondo (foto di Google Maps nelle pagine di prova)
 // opts.linkDiretti: i link puntano direttamente all'URL (pagine di prova: i loro link non sono in page_links)
 function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
-  const { anteprima = false, accessibile = true, linkDiretti = false,
+  const { anteprima = false, accessibile = true, linkDiretti = false, creditoFoto = "",
           testoBanner = "ANTEPRIMA — QUESTA PAGINA NON E' ANCORA PUBBLICA" } = opts;
   const d = pagina?.design || {};
 
@@ -277,7 +278,7 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
   </section>
   <nav class="links" aria-label="Link">${righeLink}${bloccoAllergeni}</nav>
   ${blocMappa}
-  <p class="foot">Powered by RoleFigz NFC</p>
+  <p class="foot">Powered by RoleFigz NFC${creditoFoto ? ` · ${escapeHtml(creditoFoto)}` : ""}</p>
 </main>
 ${dialogoAllergeni}
 

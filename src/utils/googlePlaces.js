@@ -12,6 +12,7 @@ const BASE = "https://places.googleapis.com/v1";
 const TETTO = {
   ricerca: parseInt(process.env.PLACES_RICERCHE_GIORNO || "30", 10),
   dettaglio: parseInt(process.env.PLACES_DETTAGLI_GIORNO || "30", 10),
+  foto: parseInt(process.env.PLACES_FOTO_GIORNO || "60", 10),
 };
 const CACHE_MS = 24 * 60 * 60 * 1000;
 const cache = new Map();                                  // chiave → { scade, valore }
@@ -23,7 +24,7 @@ const CAMPI_RICERCA = [
 const CAMPI_DETTAGLIO = [
   "id", "displayName", "formattedAddress", "primaryTypeDisplayName", "nationalPhoneNumber",
   "internationalPhoneNumber", "websiteUri", "googleMapsUri", "regularOpeningHours.weekdayDescriptions",
-  "rating", "userRatingCount", "location",
+  "rating", "userRatingCount", "location", "photos",
 ].join(",");
 
 const ID_PLACE = /^[A-Za-z0-9_-]{10,300}$/;
@@ -134,7 +135,26 @@ async function dettaglioAttivita(placeId) {
     recensioni: p.userRatingCount || 0,
     lat: p.location?.latitude ?? null,
     lng: p.location?.longitude ?? null,
+    // la prima foto della scheda (di solito quella che ha scelto l'attività) e chi l'ha scattata
+    foto: p.photos?.[0]?.name || null,
+    foto_autore: (p.photos?.[0]?.authorAttributions || []).map(a => a.displayName).filter(Boolean).join(", ") || null,
   });
+}
+
+// URL temporaneo (googleusercontent) di una foto di Google Maps. Le regole di Google non permettono di salvare
+// le foto altrove: si chiede l'URL a Google e lo si tiene 12 h in memoria (non la foto), con tetto giornaliero.
+const urlFoto = new Map();
+async function urlFotoAttivita(nomeFoto, larghezza = 1600) {
+  if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(nomeFoto || "")) return null;
+  const c = urlFoto.get(nomeFoto);
+  if (c && c.scade > Date.now()) return c.url;
+  chiave();
+  await consuma("foto");
+  const d = await chiama(`${BASE}/${nomeFoto}/media?maxWidthPx=${larghezza}&skipHttpRedirect=true`, { method: "GET" }, "photoUri");
+  if (!d.photoUri) return null;
+  if (urlFoto.size > 300) urlFoto.delete(urlFoto.keys().next().value);
+  urlFoto.set(nomeFoto, { scade: Date.now() + 12 * 60 * 60 * 1000, url: d.photoUri });
+  return d.photoUri;
 }
 
 // Link che apre direttamente la finestra «Scrivi una recensione» di Google per quell'attività
@@ -153,4 +173,4 @@ function mappaEmbed(d) {
   return `https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s${testo}!6i16`;
 }
 
-module.exports = { cercaAttivita, dettaglioAttivita, linkRecensione, mappaEmbed, ErrorePlaces, ID_PLACE };
+module.exports = { cercaAttivita, dettaglioAttivita, urlFotoAttivita, linkRecensione, mappaEmbed, ErrorePlaces, ID_PLACE };

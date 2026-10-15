@@ -2,6 +2,40 @@ let chatTicketCorrente = null;
 let chatPollingInterval = null;
 let chatFabInterval    = null;
 
+// ── Ticket da /kit («Voglio qualcosa di più personalizzato») ────────────────
+// /?ticket=kit&azienda=…&kit=… apre il chat con un ticket nuovo già compilato; se serve, prima il login
+// (la richiesta resta in sessionStorage e si riprende dopo l'accesso, da impostaSessione).
+(function () {
+  const q = new URLSearchParams(window.location.search);
+  if (q.get('ticket') !== 'kit') return;
+  try {
+    sessionStorage.setItem('rfTicketKit', JSON.stringify({
+      azienda: (q.get('azienda') || '').slice(0, 80), kit: (q.get('kit') || '').slice(0, 20),
+      logo: (q.get('logo') || '').slice(0, 40),
+    }));
+  } catch (e) {}
+  history.replaceState(null, '', window.location.pathname);
+  document.addEventListener('DOMContentLoaded', () => setTimeout(apriTicketKitInSospeso, 400));
+})();
+
+function apriTicketKitInSospeso() {
+  let dati = null;
+  try { dati = JSON.parse(sessionStorage.getItem('rfTicketKit') || 'null'); } catch (e) {}
+  if (!dati) return;
+  if (!token) { apriAuth('login'); return; }            // dopo l'accesso impostaSessione la richiama
+  try { sessionStorage.removeItem('rfTicketKit'); } catch (e) {}
+  apriChat();
+  chatMostraNuovoForm();
+  document.getElementById('chatAsunto').value = 'Kit personalizzato' + (dati.azienda ? ' — ' + dati.azienda : '');
+  document.getElementById('chatPrimerMsg').value =
+    'Ciao! Ho provato il kit merch' + (dati.kit ? ' (' + dati.kit + ')' : '') + ' su rolefigz.com/kit' +
+    (dati.logo ? ' (logo ' + dati.logo + ')' : '') + ' e vorrei qualcosa di più personalizzato:\n\n';
+  setTimeout(() => {
+    const t = document.getElementById('chatPrimerMsg');
+    t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+  }, 120);
+}
+
 // ── FAB & Pannello ───────────────────────────────────────────────────────────
 
 function alternaChat() {

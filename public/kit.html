@@ -209,6 +209,7 @@
       font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--dark);
       background: rgba(247,245,240,.9); padding: 6px 10px; border: 1px solid var(--border);
     }
+    .k-personalizza { display: flex; justify-content: center; margin-top: 16px; }
     .k-controllo { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.5; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
     .k-controllo[hidden] { display: none; }
     .k-note { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.6; }
@@ -471,6 +472,7 @@
       </div>
     </div>
     <p class="k-controllo" id="kControllo" hidden><span class="iconify" data-icon="mdi:account-check-outline"></span> <span>Il nostro controllo qualità vuole ritoccare a mano qualche pezzo del tuo kit: lo sistemiamo noi prima di stampare, non devi fare nulla.</span></p>
+    <a class="k-link-btn k-personalizza" id="kPersonalizza" href="/?ticket=kit"><span class="iconify" data-icon="mdi:palette-swatch-outline"></span> Voglio qualcosa di più personalizzato</a>
     <p class="k-note">Anteprima generata automaticamente: colori e piccoli dettagli possono variare leggermente nella stampa reale. Il QR dello stand e i tag NFC si programmano con il link che preferisci.</p>
   </div>
 </section>
@@ -754,6 +756,8 @@
   }
 
   function mostraKit(k) {
+    $('kPersonalizza').href = '/?' + new URLSearchParams({ ticket: 'kit', azienda: $('kAzienda').value.trim(),
+      kit: k.numero || '', logo: (stato.logo && stato.logo.logo_id) || '' }).toString();
     $('kControllo').hidden = k.controllo !== 'da_rivedere';
     const pezzi = [{ nome: 'Tutto il kit', misure: 'Tutti i pezzi del kit campione', glb: k.piatto_glb, icon: 'mdi:view-grid-outline' }]
       .concat(k.pezzi.map(p => ({ ...p, icon: iconaPezzo(p.chiave) })));
