@@ -1,6 +1,7 @@
 const { Ticket, Messaggio, Utente } = require("../models");
 const { sendMessage, registraWebhook } = require("../utils/telegram");
 const { emailRispostaTicket } = require("../utils/mailer");
+const { clienteDelTicket } = require("./ticketsOspiteController");
 
 // POST /api/telegram/webhook — riceve aggiornamenti da Telegram
 const webhook = async (req, res) => {
@@ -37,12 +38,14 @@ const webhook = async (req, res) => {
     await Messaggio.create({ ticket_id: ticket.id, remitente: "admin", texto: message.text });
     await Ticket.update({ updatedAt: new Date() }, { where: { id: ticket.id } });
 
-    if (ticket.Utente?.email) {
+    const cliente = await clienteDelTicket(ticket);        // con account o senza (ospite)
+    if (cliente) {
       emailRispostaTicket({
         ticket,
         texto:        message.text,
-        emailCliente: ticket.Utente.email,
-        nomeCliente:  ticket.Utente.nombre || ticket.Utente.email,
+        emailCliente: cliente.email,
+        nomeCliente:  cliente.nome,
+        tokenOspite:  cliente.token,
       }).catch(console.error);
     }
 

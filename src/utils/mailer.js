@@ -638,8 +638,10 @@ async function notificaWhatsApp(testo) {
   if (!r.ok) throw new Error(`CallMeBot HTTP ${r.status}`);
 }
 
-const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente }) => {
+const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente, tokenOspite = null }) => {
   const BASE_URL = process.env.BASE_URL || "https://www.rolefigz.com";
+  // ticket senza account: il link riapre la conversazione senza login
+  const link = tokenOspite ? `${BASE_URL}/?ticket_ospite=${tokenOspite}` : BASE_URL;
   await invia(
     emailCliente,
     `💬 Nuova risposta al tuo ticket #${ticket.id} — RoleFigz`,
@@ -674,8 +676,8 @@ const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente })
             </tr>
             <tr>
               <td style="padding:28px 40px;background:#0a0a0a;text-align:center">
-                <a href="${BASE_URL}" style="display:inline-block;padding:14px 32px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none;text-transform:uppercase">APRI IL TICKET</a>
-                <p style="margin:20px 0 0;font-size:12px;color:#444;line-height:1.7">Accedi al tuo account per rispondere.</p>
+                <a href="${link}" style="display:inline-block;padding:14px 32px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none;text-transform:uppercase">${tokenOspite ? "RISPONDI" : "APRI IL TICKET"}</a>
+                <p style="margin:20px 0 0;font-size:12px;color:#444;line-height:1.7">${tokenOspite ? "Puoi rispondere dal link, senza registrarti." : "Accedi al tuo account per rispondere."}</p>
                 <p style="margin:12px 0 0;font-size:10px;letter-spacing:2px;color:#333">ROLEFIGZ — STAMPA 3D</p>
               </td>
             </tr>
@@ -684,6 +686,21 @@ const emailRispostaTicket = async ({ ticket, texto, emailCliente, nomeCliente })
       </table>
     </body></html>`
   );
+};
+
+// Conferma al cliente senza account: ticket ricevuto + link per continuare la conversazione
+const emailTicketOspiteRicevuto = async ({ ticket, nome, email, token }) => {
+  const BASE_URL = process.env.BASE_URL || "https://www.rolefigz.com";
+  const e = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  await invia(email, `🎫 Abbiamo ricevuto il tuo messaggio — RoleFigz #${ticket.id}`,
+    `<div style="font-family:'Helvetica Neue',Arial,sans-serif;background:#0a0a0a;padding:40px 20px">
+      <div style="max-width:560px;margin:0 auto;background:#111;border:1px solid #222;padding:32px 36px;color:#ccc">
+        <div style="font-size:24px;font-weight:900;letter-spacing:4px;color:#f0ece4">ROLE<span style="color:#ff3c00">FIGZ</span></div>
+        <p style="font-size:15px;line-height:1.7">Ciao <strong style="color:#f0ece4">${e(nome)}</strong>, abbiamo ricevuto il tuo messaggio
+        «<strong style="color:#f0ece4">${e(ticket.asunto)}</strong>». Ti rispondiamo di solito in giornata: ti arriva una email.</p>
+        <p style="margin:24px 0"><a href="${BASE_URL}/?ticket_ospite=${token}" style="display:inline-block;padding:13px 28px;background:#ff3c00;color:#fff;font-weight:900;font-size:12px;letter-spacing:3px;text-decoration:none">VEDI LA CONVERSAZIONE</a></p>
+        <p style="font-size:12px;color:#555">Non serve registrarsi: tieni questa email per tornare alla conversazione.</p>
+      </div></div>`);
 };
 
 // ── Kit campione (/kit) ─────────────────────────────────────────────
@@ -765,4 +782,4 @@ const emailKitAdmin = async (r) => {
     </div>`);
 };
 
-module.exports = { emailKitCliente, emailKitAdmin, emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
+module.exports = { emailTicketOspiteRicevuto, emailKitCliente, emailKitAdmin, emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };

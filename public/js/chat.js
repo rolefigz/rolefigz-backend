@@ -3,8 +3,7 @@ let chatPollingInterval = null;
 let chatFabInterval    = null;
 
 // ── Ticket da /kit («Voglio qualcosa di più personalizzato») ────────────────
-// /?ticket=kit&azienda=…&kit=… apre il chat con un ticket nuovo già compilato; se serve, prima il login
-// (la richiesta resta in sessionStorage e si riprende dopo l'accesso, da impostaSessione).
+// /?ticket=kit&azienda=…&kit=… apre il chat con un ticket nuovo già compilato (anche senza account).
 (function () {
   const q = new URLSearchParams(window.location.search);
   if (q.get('ticket') !== 'kit') return;
@@ -22,7 +21,6 @@ function apriTicketKitInSospeso() {
   let dati = null;
   try { dati = JSON.parse(sessionStorage.getItem('rfTicketKit') || 'null'); } catch (e) {}
   if (!dati) return;
-  if (!token) { apriAuth('login'); return; }            // dopo l'accesso impostaSessione la richiama
   try { sessionStorage.removeItem('rfTicketKit'); } catch (e) {}
   apriChat();
   chatMostraNuovoForm();
@@ -36,6 +34,51 @@ function apriTicketKitInSospeso() {
   }, 120);
 }
 
+// ── Senza account (ospite) ────────────────────────────────────────────────────
+// Senza login i ticket si aprono con nome ed email; il browser ricorda i loro token (anche dal link dell'email
+// /?ticket_ospite=…). Con login funziona tutto come prima.
+const ospite = () => !token;
+
+function tokenOspiti() {
+  try { return JSON.parse(localStorage.getItem('rfTicketOspiti') || '[]'); } catch (e) { return []; }
+}
+function salvaTokenOspite(t) {
+  try { localStorage.setItem('rfTicketOspiti', JSON.stringify([t, ...tokenOspiti().filter(x => x !== t)].slice(0, 30))); } catch (e) {}
+}
+function urlMessaggi(id) {
+  return ospite() ? `${API}/tickets/ospite/${encodeURIComponent(id)}/mensajes` : `${API}/tickets/${id}/mensajes`;
+}
+function headersChat(json) {
+  const h = json ? { 'Content-Type': 'application/json' } : {};
+  if (!ospite()) h.Authorization = `Bearer ${token}`;
+  return h;
+}
+
+// link dell'email: apre direttamente la conversazione
+(function () {
+  const t = new URLSearchParams(window.location.search).get('ticket_ospite');
+  if (!t || !/^\d{1,10}\.[a-f0-9]{32}$/.test(t)) return;
+  salvaTokenOspite(t);
+  history.replaceState(null, '', window.location.pathname);
+  document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
+    if (!token) { apriChat(); apriTicket(t); }
+  }, 400));
+})();
+
+// invito a scrivere (una volta per sessione, dopo un po' sulla pagina)
+function chiudiInvitoChat() {
+  const el = document.getElementById('chatInvito');
+  if (el) el.hidden = true;
+  try { sessionStorage.setItem('rfInvitoChat', '1'); } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
+  let visto = false;
+  try { visto = !!sessionStorage.getItem('rfInvitoChat'); } catch (e) {}
+  const el = document.getElementById('chatInvito');
+  const pannello = document.getElementById('chatPanel');
+  if (el && !visto && !(pannello && pannello.classList.contains('on'))) el.hidden = false;
+}, 12000));
+
 // ── FAB & Pannello ───────────────────────────────────────────────────────────
 
 function alternaChat() {
@@ -45,7 +88,7 @@ function alternaChat() {
 }
 
 function apriChat() {
-  if (!token) { apriAuth('login'); return; }
+  chiudiInvitoChat();
   document.getElementById('chatPanel').classList.add('on');
   chatMostraLista();
   caricaMieiTicket();
@@ -72,7 +115,17 @@ function chatMostraNuovoForm() {
   document.getElementById('chatConvView').classList.remove('on');
   document.getElementById('chatAsunto').value    = '';
   document.getElementById('chatPrimerMsg').value = '';
-  setTimeout(() => document.getElementById('chatAsunto').focus(), 50);
+  document.getElementById('chatOspite').style.display = ospite() ? '' : 'none';
+  document.getElementById('chatConsensoBox').style.display = ospite() ? 'flex' : 'none';
+  document.getElementById('chatErrore').style.display = 'none';
+  if (ospite()) {
+    try {
+      const io = JSON.parse(localStorage.getItem('rfOspite') || '{}');
+      if (io.nome) document.getElementById('chatNome').value = io.nome;
+      if (io.email) document.getElementById('chatEmail').value = io.email;
+    } catch (e) {}
+  }
+  setTimeout(() => document.getElementById(ospite() && !document.getElementById('chatNome').value ? 'chatNome' : 'chatAsunto').focus(), 50);
 }
 
 function chatMostraConversazione() {
@@ -85,9 +138,10 @@ function chatMostraConversazione() {
 
 async function caricaMieiTicket() {
   const el = document.getElementById('chatTicketsList');
-  if (!token) return;
   try {
-    const r = await fetch(`${API}/tickets/mis`, { headers: { Authorization: `Bearer ${token}` } });
+    const r = ospite()
+      ? await fetch(`${API}/tickets/ospite/elenco`, { method: 'POST', headers: headersChat(true), body: JSON.stringify({ tokens: tokenOspiti() }) })
+      : await fetch(`${API}/tickets/mis`, { headers: headersChat() });
     const lista = await r.json();
 
     if (!lista.length) {
@@ -96,9 +150,9 @@ async function caricaMieiTicket() {
     }
 
     el.innerHTML = lista.map(t => `
-      <div class="chat-ticket-item${t.no_leidos > 0 ? ' unread' : ''}" onclick="apriTicket(${t.id})">
-        <span class="chat-ticket-asunto">${t.asunto}</span>
-        <div class="chat-ticket-preview">${t.ultimo_mensaje || '—'}</div>
+      <div class="chat-ticket-item${t.no_leidos > 0 ? ' unread' : ''}" onclick="apriTicket('${t.token || t.id}')">
+        <span class="chat-ticket-asunto">${escapeHtml(t.asunto)}</span>
+        <div class="chat-ticket-preview">${escapeHtml(t.ultimo_mensaje || (t.token ? 'Senza account' : '—'))}</div>
         <div class="chat-ticket-foot">
           <span class="pill ${t.estado === 'abierto' ? 'green' : ''}" style="font-size:7px">${t.estado.toUpperCase()}</span>
           ${t.no_leidos > 0 ? `<span class="chat-unread-count">${t.no_leidos}</span>` : ''}
@@ -124,9 +178,8 @@ function tornaListaChat() {
 }
 
 async function caricaMessaggi(id) {
-  if (!token) return;
   try {
-    const r = await fetch(`${API}/tickets/${id}/mensajes`, { headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(urlMessaggi(id), { headers: headersChat() });
     if (!r.ok) return;
     const data = await r.json();
     renderMessaggi(data.mensajes, data.ticket);
@@ -168,9 +221,9 @@ async function inviaMessaggio() {
   const btn = document.getElementById('chatSendBtn');
   if (btn) btn.disabled = true;
   try {
-    const r = await fetch(`${API}/tickets/${chatTicketCorrente}/mensajes`, {
+    const r = await fetch(urlMessaggi(chatTicketCorrente), {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: headersChat(true),
       body:    JSON.stringify({ texto: testo })
     });
     if (!r.ok) throw new Error();
@@ -186,19 +239,32 @@ async function creaTicket() {
   const asunto = document.getElementById('chatAsunto').value.trim();
   const testo  = document.getElementById('chatPrimerMsg').value.trim();
   const btn    = document.getElementById('chatCreateBtn');
-  if (!asunto || !testo) return;
+  const err = document.getElementById('chatErrore');
+  const mostraErrore = m => { err.textContent = m; err.style.display = 'block'; };
+  err.style.display = 'none';
+  if (!asunto || !testo) return mostraErrore('Scrivi oggetto e messaggio.');
+  let extra = {};
+  if (ospite()) {
+    const nome = document.getElementById('chatNome').value.trim();
+    const email = document.getElementById('chatEmail').value.trim();
+    if (!nome || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mostraErrore('Scrivi il tuo nome e una email valida: ti rispondiamo lì.');
+    if (!document.getElementById('chatConsenso').checked) return mostraErrore('Accetta l\'informativa privacy per inviare.');
+    extra = { nome, email, consenso: true };
+    try { localStorage.setItem('rfOspite', JSON.stringify({ nome, email })); } catch (e) {}
+  }
 
   btn.disabled = true; btn.textContent = '...';
   try {
-    const r = await fetch(`${API}/tickets`, {
+    const r = await fetch(ospite() ? `${API}/tickets/ospite` : `${API}/tickets`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ asunto, texto: testo })
+      headers: headersChat(true),
+      body:    JSON.stringify({ asunto, texto: testo, ...extra })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    apriTicket(data.ticket.id);
-  } catch {}
+    if (data.token) { salvaTokenOspite(data.token); apriTicket(data.token); }
+    else apriTicket(data.ticket.id);
+  } catch (e) { mostraErrore(e.message || 'Invio non riuscito: riprova.'); }
   btn.disabled = false; btn.textContent = 'INVIA';
 }
 
@@ -224,10 +290,17 @@ function fermaPollingFab() {
 }
 
 async function aggiornaBadgeFab() {
-  if (!token) return;
   try {
-    const r = await fetch(`${API}/tickets/unread`, { headers: { Authorization: `Bearer ${token}` } });
-    const data = await r.json();
+    let data;
+    if (ospite()) {
+      if (!tokenOspiti().length) return;
+      const r = await fetch(`${API}/tickets/ospite/elenco`, { method: 'POST', headers: headersChat(true), body: JSON.stringify({ tokens: tokenOspiti() }) });
+      const lista = await r.json();
+      data = { count: lista.reduce((s, t) => s + (t.no_leidos || 0), 0) };
+    } else {
+      const r = await fetch(`${API}/tickets/unread`, { headers: headersChat() });
+      data = await r.json();
+    }
     const badge = document.getElementById('chatFabBadge');
     if (badge) {
       badge.textContent = data.count || '';

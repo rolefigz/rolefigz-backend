@@ -407,6 +407,17 @@ footer { background: var(--dark); color: #888; padding: 56px 48px 32px; border-t
   cursor: pointer; box-shadow: 0 4px 24px rgba(0,0,0,.28); transition: background .2s, transform .15s;
 }
 .chat-fab.visible { display: flex; }
+.chat-invito {
+  position: fixed; bottom: 92px; right: 28px; z-index: 500; max-width: 250px; padding: 12px 30px 12px 14px;
+  background: #fff; color: var(--dark); border: 1px solid rgba(0,0,0,.08); box-shadow: 0 6px 28px rgba(0,0,0,.18);
+  font-size: 13px; line-height: 1.45; cursor: pointer; animation: chatInvito .5s cubic-bezier(.22,.61,.36,1);
+}
+.chat-invito[hidden] { display: none; }
+.chat-invito::after { content: ''; position: absolute; bottom: -7px; right: 20px; width: 12px; height: 12px; background: #fff;
+  border-right: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); transform: rotate(45deg); }
+.chat-invito strong { color: var(--accent); }
+.chat-invito-x { position: absolute; top: 6px; right: 6px; border: none; background: none; color: #999; cursor: pointer; font-size: 11px; }
+@keyframes chatInvito { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .chat-fab:hover { background: var(--dark2); transform: scale(1.06); }
 .chat-fab-badge {
   position: absolute; top: -3px; right: -3px;

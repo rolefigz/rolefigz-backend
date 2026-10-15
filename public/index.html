@@ -728,6 +728,10 @@
 </div>
 
 <!-- ══ CHAT FAB ══ -->
+<div class="chat-invito" id="chatInvito" hidden onclick="alternaChat()">
+  <strong>Hai una domanda?</strong> Scrivici: rispondiamo di solito in giornata, senza registrarti.
+  <button type="button" class="chat-invito-x" aria-label="Chiudi" onclick="event.stopPropagation();chiudiInvitoChat()">✕</button>
+</div>
 <button class="chat-fab" id="chatFab" onclick="alternaChat()" aria-label="Supporto">
   <iconify-icon icon="mdi:chat-outline" width="22"></iconify-icon>
   <span class="chat-fab-badge" id="chatFabBadge"></span>
@@ -755,6 +759,13 @@
 
   <!-- Nuovo ticket -->
   <div class="chat-new-form" id="chatNewForm">
+    <!-- senza account: nome ed email per risponderti -->
+    <div id="chatOspite" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div class="field" style="flex:1;margin:0"><label>NOME</label><input type="text" id="chatNome" maxlength="100" autocomplete="name"/></div>
+        <div class="field" style="flex:1;margin:0"><label>EMAIL</label><input type="email" id="chatEmail" maxlength="120" autocomplete="email"/></div>
+      </div>
+    </div>
     <div class="field" style="margin-bottom:10px">
       <label>OGGETTO</label>
       <input type="text" id="chatAsunto" placeholder="Come possiamo aiutarti?" onkeydown="if(event.key==='Enter')document.getElementById('chatPrimerMsg').focus()"/>
@@ -763,6 +774,8 @@
       <label>MESSAGGIO</label>
       <textarea id="chatPrimerMsg" placeholder="Descrivi il tuo problema o domanda..." style="flex:1;min-height:100px;resize:none" onkeydown="if(event.ctrlKey&&event.key==='Enter')creaTicket()"></textarea>
     </div>
+    <label id="chatConsensoBox" style="display:none;gap:8px;align-items:flex-start;font-size:10px;line-height:1.5;margin-bottom:10px;color:var(--muted)"><input type="checkbox" id="chatConsenso" style="margin-top:2px"/> <span>Acconsento al trattamento dei dati per ricevere la risposta (<a href="/privacy.html" target="_blank" style="color:var(--accent)">privacy</a>). Non serve registrarsi.</span></label>
+    <div id="chatErrore" style="display:none;font-size:11px;color:#c0392b;margin-bottom:8px"></div>
     <button class="chat-new-btn" id="chatCreateBtn" onclick="creaTicket()">INVIA</button>
     <button class="chat-back-btn" style="margin:6px 0" onclick="chatMostraLista()">← Indietro</button>
   </div>

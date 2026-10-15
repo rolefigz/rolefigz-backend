@@ -2,6 +2,17 @@ const { Op } = require("sequelize");
 const { Ticket, Messaggio, Utente } = require("../models");
 const { emailNuovoTicketAdmin, emailRispostaTicket } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
+const { clienteDelTicket } = require("./ticketsOspiteController");
+
+// I ticket senza account non hanno Utente: per il pannello admin si presenta l'ospite come se lo fosse
+async function conCliente(ticket) {
+  const j = ticket.toJSON();
+  if (!j.Utente) {
+    const c = await clienteDelTicket(ticket);
+    if (c) j.Utente = { nombre: c.nome + " (senza account)", email: c.email };
+  }
+  return j;
+}
 
 // POST /api/tickets — crea ticket + primo messaggio (cliente)
 const crearTicket = async (req, res) => {
@@ -39,7 +50,7 @@ const getMisTickets = async (req, res) => {
         order: [["createdAt", "DESC"]]
       });
       return {
-        ...t.toJSON(),
+        ...(await conCliente(t)),
         no_leidos:      nonLetti,
         ultimo_mensaje: ultimo?.texto?.slice(0, 60) || "",
         ultimo_at:      ultimo?.createdAt || t.createdAt
@@ -84,7 +95,7 @@ const getMensajes = async (req, res) => {
       order: [["createdAt", "ASC"]]
     });
 
-    res.json({ ticket, mensajes: messaggi });
+    res.json({ ticket: await conCliente(ticket), mensajes: messaggi });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -114,12 +125,14 @@ const enviarMensaje = async (req, res) => {
       ).catch(console.error);
     }
 
-    if (mittente === "admin" && ticket.Utente?.email) {
+    const cliente = mittente === "admin" ? await clienteDelTicket(ticket) : null;
+    if (cliente) {
       emailRispostaTicket({
         ticket,
         texto:        texto.trim(),
-        emailCliente: ticket.Utente.email,
-        nomeCliente:  ticket.Utente.nombre || ticket.Utente.email,
+        emailCliente: cliente.email,
+        nomeCliente:  cliente.nome,
+        tokenOspite:  cliente.token,
       }).catch(console.error);
     }
 
@@ -144,7 +157,7 @@ const getAllTickets = async (req, res) => {
         order: [["createdAt", "DESC"]]
       });
       return {
-        ...t.toJSON(),
+        ...(await conCliente(t)),
         no_leidos:      nonLetti,
         ultimo_mensaje: ultimo?.texto?.slice(0, 60) || "",
         ultimo_at:      ultimo?.createdAt || t.createdAt
