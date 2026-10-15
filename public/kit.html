@@ -382,9 +382,15 @@
     <div class="k-title">CARICA<br>IL TUO LOGO</div>
 
     <div id="kUploadBox">
-      <div class="field">
-        <label for="kAzienda">Nome dell'azienda *</label>
-        <input type="text" id="kAzienda" maxlength="80" placeholder="Es. Bar Stella" autocomplete="organization"/>
+      <div class="k-row2">
+        <div class="field">
+          <label for="kAzienda">Nome dell'azienda *</label>
+          <input type="text" id="kAzienda" maxlength="80" placeholder="Es. Bar Stella" autocomplete="organization"/>
+        </div>
+        <div class="field">
+          <label for="kCitta">Città (facoltativo)</label>
+          <input type="text" id="kCitta" maxlength="80" placeholder="Es. Piacenza" autocomplete="address-level2"/>
+        </div>
       </div>
       <div class="k-upload" id="kUpload" tabindex="0" role="button" aria-label="Carica il logo">
         <span class="k-upload-icon"><span class="iconify" data-icon="mdi:cloud-upload-outline"></span></span>
@@ -516,7 +522,7 @@
           <div class="field"><label for="pTel">Telefono (facoltativo)</label><input id="pTel" maxlength="40" autocomplete="tel"/></div>
         </div>
         <div class="k-nfc-demo">
-          <p><strong>Bonus: la tua pagina NFC di prova.</strong> Il QR dello stand del kit aprirà un'anteprima con i dati della tua scheda Google Maps: contatti, mappa e il bottone per lasciare una recensione. Cerca la tua attività (facoltativo).</p>
+          <p><strong>Bonus: la tua pagina NFC di prova.</strong> Il QR dello stand del kit aprirà un'anteprima con i dati della tua scheda Google Maps: contatti, mappa e il bottone per lasciare una recensione. Scegli la tua attività (facoltativo).</p>
           <div class="k-nfc-row">
             <div class="field"><label for="pCitta">Città dell'attività</label><input id="pCitta" maxlength="80" autocomplete="address-level2" placeholder="es. Piacenza"/></div>
             <button type="button" class="k-nfc-cerca" id="pCerca" onclick="kCercaAttivita()">Trova su Google Maps</button>
@@ -795,6 +801,10 @@
     });
     $('kPdf').href = k.preventivo_pdf;
     $('pAzienda').value = $('kAzienda').value.trim();
+    if ($('kCitta').value.trim()) {
+      $('pCitta').value = $('kCitta').value.trim();
+      kCercaAttivita(true);
+    }
 
     ['k-kit', 'k-preventivo', 'k-prenota'].forEach(id => mostra(id));
     mostra('kBookBox'); mostra('kBookOk', false);
@@ -813,10 +823,10 @@
   }
 
   // Ricerca dell'attività su Google Maps: il cliente sceglie la sua (o nessuna)
-  window.kCercaAttivita = async () => {
-    errore('kErrP');
+  window.kCercaAttivita = async (automatica = false) => {
+    if (!automatica) errore('kErrP');
     const azienda = $('pAzienda').value.trim(), citta = $('pCitta').value.trim();
-    if (azienda.length < 2 || citta.length < 2) return errore('kErrP', "Scrivi il nome dell'azienda e la città.");
+    if (azienda.length < 2 || citta.length < 2) return automatica ? null : errore('kErrP', "Scrivi il nome dell'azienda e la città.");
     const box = $('pAttivita');
     $('pCerca').disabled = true; $('pCerca').textContent = 'Cerco…';
     try {
@@ -839,7 +849,7 @@
       });
       box.hidden = false;
     } catch (err) {
-      errore('kErrP', erroreRete(err));
+      if (!automatica) errore('kErrP', erroreRete(err));
     }
     $('pCerca').disabled = false; $('pCerca').textContent = 'Trova su Google Maps';
   };
