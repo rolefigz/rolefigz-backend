@@ -13,6 +13,34 @@ function slugDaQr(qrUrl) {
   return m && SLUG.test(m[1]) ? m[1] : null;
 }
 
+// Il logo caricato dal cliente (copia su Cloudinary) su una «piastrella» del colore che lo fa leggere: il PNG è
+// trasparente e la pagina è scura, quindi un logo nero sparirebbe. Cloudinary dice i colori del logo: se è chiaro
+// va su fondo scuro, altrimenti su fondo bianco. Ritorna l'URL trasformato (o quello originale se qualcosa va male).
+async function logoSuPiastrella(logoUrl, logoId) {
+  if (!logoUrl || !logoUrl.includes("/image/upload/")) return logoUrl || null;
+  let fondo = "FFFFFF";
+  try {
+    const cloudinary = require("cloudinary").v2;
+    const info = await cloudinary.api.resource(`rolefigz/kit-logos/kit-${logoId}`, { colors: true });
+    // luminosità media dei colori del logo, pesata per la loro percentuale
+    let somma = 0, peso = 0;
+    for (const [hex, pct] of info.colors || []) {
+      const c = parseInt(String(hex).slice(1, 7), 16);
+      const lum = (0.299 * (c >> 16 & 255) + 0.587 * (c >> 8 & 255) + 0.114 * (c & 255)) / 255;
+      somma += lum * pct; peso += pct;
+    }
+    if (peso && somma / peso > 0.75) fondo = "141412";
+  } catch (err) {
+    console.error("Colori del logo (Cloudinary):", err.message);
+  }
+  return logoUrl.replace("/image/upload/", `/image/upload/c_pad,w_600,h_600,b_rgb:${fondo},r_60/`);
+}
+
+// Sfondo a tutto schermo dallo stesso logo (più grande, senza angoli arrotondati)
+function sfondoDaLogo(logoUrl) {
+  return logoUrl ? logoUrl.replace(/\/c_pad,w_600,h_600,(b_rgb:[0-9A-F]{6}),r_60\//, "/c_pad,w_1400,h_1400,$1/") : null;
+}
+
 // Crea (o aggiorna) la pagina di prova per una prenotazione. Ritorna la PaginaDemo o null se non si può
 // (slug già usato da un'azienda vera del modulo NFC, o da un'altra prova ancora attiva di un'altra prenotazione).
 async function creaPaginaDemo(richiesta, placeId) {
@@ -24,7 +52,8 @@ async function creaPaginaDemo(richiesta, placeId) {
     slug, richiesta_id: richiesta.id, place_id: d.place_id, nome: d.nome || richiesta.azienda,
     categoria: d.categoria || null, indirizzo: d.indirizzo || null, telefono: d.telefono || null,
     telefono_int: d.telefono_int || null, sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari,
-    valutazione: d.valutazione, recensioni: d.recensioni, lat: d.lat, lng: d.lng, logo_url: richiesta.logo_url,
+    valutazione: d.valutazione, recensioni: d.recensioni, lat: d.lat, lng: d.lng,
+    logo_url: await logoSuPiastrella(richiesta.logo_url, richiesta.logo_id),     // il logo che ha caricato il cliente
     scadenza: new Date(Date.now() + GIORNI_VALIDITA * 24 * 60 * 60 * 1000), attiva: true,
   };
   const esistente = await PaginaDemo.findOne({ where: { slug } });
@@ -65,8 +94,8 @@ function renderPaginaDemo(p) {
     (p.recensioni ? ` (${p.recensioni} recensioni)` : "") : "";
   const azienda = { name: p.nome, sector: (p.categoria || "") + voto || null };
   const pagina = {
-    logo_url: p.logo_url, background_url: p.logo_url,
-    design: { backgroundType: p.logo_url ? "foto" : "nessuno", backgroundOpacity: 80, logoSize: "grande" },
+    logo_url: p.logo_url, background_url: sfondoDaLogo(p.logo_url),
+    design: { backgroundType: p.logo_url ? "foto" : "nessuno", backgroundOpacity: 65, logoSize: "grande" },
     map_embed_url: places.mappaEmbed(p), description: p.indirizzo, hours: orarioDiOggi(p.orari),
     seo_title: `${p.nome} — anteprima RoleFigz NFC`,
   };
@@ -81,4 +110,5 @@ async function trovaPaginaDemo(slug) {
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi };
+module.exports = { creaPaginaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, sfondoDaLogo,
+                   logoSuPiastrella };

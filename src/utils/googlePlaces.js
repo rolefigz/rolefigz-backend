@@ -142,11 +142,15 @@ function linkRecensione(placeId) {
   return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
 }
 
-// Mappa incorporabile senza chiave (iframe)
+// Mappa incorporabile senza chiave: lo stesso formato del codice iframe di Google («Condividi → Incorpora una
+// mappa», /maps/embed?pb=…). Il vecchio «maps?q=…&output=embed» passa da un redirect con X-Frame-Options:
+// SAMEORIGIN e alcuni browser lasciavano il riquadro vuoto.
 function mappaEmbed(d) {
   // nome + indirizzo: Google mostra la scheda dell'attività (con le coordinate solo un segnaposto)
   const q = d.indirizzo ? `${d.nome}, ${d.indirizzo}` : `${d.lat},${d.lng}`;
-  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`;
+  // nel parametro pb il «!» separa i campi: va codificato anche lui
+  const testo = encodeURIComponent(q).replace(/%20/g, "+").replace(/!/g, "%21");
+  return `https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s${testo}!6i16`;
 }
 
 module.exports = { cercaAttivita, dettaglioAttivita, linkRecensione, mappaEmbed, ErrorePlaces, ID_PLACE };
