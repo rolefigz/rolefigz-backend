@@ -42,7 +42,7 @@ async function chiama(percorso, opzioni = {}, timeoutMs = 120000) {
 async function analizzaLogo(buffer, nomeFile, mimetype) {
   const form = new FormData();
   form.append("logo", new Blob([buffer], { type: mimetype || "application/octet-stream" }), nomeFile || "logo.png");
-  const r = await chiama("/analizza", { method: "POST", body: form }, 90000);
+  const r = await chiama("/analizza", { method: "POST", body: form }, 120000);  // IA: 2 modelli × 2 tentativi da 20 s
   return r.json();
 }
 
