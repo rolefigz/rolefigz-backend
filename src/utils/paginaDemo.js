@@ -36,9 +36,11 @@ async function logoSuPiastrella(logoUrl, logoId) {
   return logoUrl.replace("/image/upload/", `/image/upload/c_pad,w_600,h_600,b_rgb:${fondo},r_60/`);
 }
 
-// Sfondo a tutto schermo dallo stesso logo (più grande, senza angoli arrotondati)
-function sfondoDaLogo(logoUrl) {
-  return logoUrl ? logoUrl.replace(/\/c_pad,w_600,h_600,(b_rgb:[0-9A-F]{6}),r_60\//, "/c_pad,w_1400,h_1400,$1/") : null;
+// Colore dello sfondo (liso) della pagina: quello della piastrella del logo → bianco per un logo scuro, nero per
+// un logo chiaro, così la piastrella si fonde con la pagina e si vede solo il logo
+function coloreSfondo(logoUrl) {
+  const m = String(logoUrl || "").match(/\/c_pad,w_600,h_600,b_rgb:([0-9A-F]{6}),r_60\//);
+  return m && m[1] === "141412" ? "#141412" : "#FFFFFF";
 }
 
 // Crea (o aggiorna) la pagina di prova per una prenotazione. Ritorna la PaginaDemo o null se non si può
@@ -53,7 +55,6 @@ async function creaPaginaDemo(richiesta, placeId) {
     categoria: d.categoria || null, indirizzo: d.indirizzo || null, telefono: d.telefono || null,
     telefono_int: d.telefono_int || null, sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari,
     valutazione: d.valutazione, recensioni: d.recensioni, lat: d.lat, lng: d.lng,
-    foto: d.foto, foto_autore: d.foto_autore,
     logo_url: await logoSuPiastrella(richiesta.logo_url, richiesta.logo_id),     // il logo che ha caricato il cliente
     scadenza: new Date(Date.now() + GIORNI_VALIDITA * 24 * 60 * 60 * 1000), attiva: true,
   };
@@ -95,37 +96,24 @@ function renderPaginaDemo(p) {
     (p.recensioni ? ` (${p.recensioni} recensioni)` : "") : "";
   const azienda = { name: p.nome, sector: (p.categoria || "") + voto || null };
   const pagina = {
-    // sfondo: la foto della scheda Google (servita da /nfc/<slug>/foto); se non c'è, il logo del cliente
-    logo_url: p.logo_url, background_url: p.foto ? `/nfc/${p.slug}/foto` : sfondoDaLogo(p.logo_url),
-    design: { backgroundType: p.logo_url ? "foto" : "nessuno", backgroundOpacity: 65, logoSize: "grande" },
+    // sfondo liso, bianco o nero secondo il logo del cliente
+    logo_url: p.logo_url, background_url: null,
+    design: { backgroundType: "colore", backgroundColor: coloreSfondo(p.logo_url), logoSize: "grande",
+              buttonColor: coloreSfondo(p.logo_url) === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6,
+              loadingColor: coloreSfondo(p.logo_url) },
     map_embed_url: places.mappaEmbed(p), description: p.indirizzo, hours: orarioDiOggi(p.orari),
     seo_title: `${p.nome} — anteprima RoleFigz NFC`,
   };
   return renderPaginaPubblica(azienda, pagina, linkDemo(p), {
     anteprima: true, linkDiretti: true, testoBanner: "ANTEPRIMA DI PROVA CREATA DA ROLEFIGZ",
-    creditoFoto: p.foto ? `Foto: ${p.foto_autore ? p.foto_autore + " · " : ""}Google Maps` : "",
   });
 }
 
 // La pagina di prova attiva per questo slug, o null
-// /nfc/<slug>/foto → redirect all'URL temporaneo della foto di Google (mai salvata da noi)
-async function fotoPaginaDemo(req, res) {
-  try {
-    const p = await trovaPaginaDemo(String(req.params.slug || "").toLowerCase());
-    const url = p && p.foto ? await places.urlFotoAttivita(p.foto) : null;
-    if (!url) return res.status(404).end();
-    res.set("Cache-Control", "private, max-age=3600");
-    res.redirect(302, url);
-  } catch (err) {
-    console.error("Foto pagina demo:", err.message);
-    res.status(404).end();
-  }
-}
-
 async function trovaPaginaDemo(slug) {
   const p = await PaginaDemo.findOne({ where: { slug, attiva: true } });
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { fotoPaginaDemo, creaPaginaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, sfondoDaLogo,
+module.exports = { creaPaginaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
                    logoSuPiastrella };

@@ -92,8 +92,6 @@ app.get("/nfc/go/:linkId",    limitNfcScan, vaiAlLink);
 app.get("/nfc/rolefigz", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "nfc.html"));
 });
-// foto di sfondo delle pagine NFC di prova (redirect alla foto di Google Maps, mai salvata da noi)
-app.get("/nfc/:slug/foto", limitNfcScan, require("./src/utils/paginaDemo").fotoPaginaDemo);
 app.get("/nfc/:slug", mostraPaginaNfc);
 
 app.use((req, res, next) => {
