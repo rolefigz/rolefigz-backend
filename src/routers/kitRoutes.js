@@ -12,6 +12,8 @@ const { verifyToken, soloAdmin } = require("../middleware/auth");
 const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
+const places = require("../utils/googlePlaces");
+const { creaPaginaDemo } = require("../utils/paginaDemo");
 
 const router = express.Router();
 
@@ -30,6 +32,7 @@ const limiteAnalisi    = limite(20, 1, "Hai caricato troppi loghi in poco tempo.
 const limiteGenera     = limite(10, 1, "Hai generato troppi kit in poco tempo. Riprova tra un'ora.");
 const limitePrenota    = limite(5, 1, "Troppe richieste. Riprova più tardi o scrivici a rolefigz@gmail.com.");
 const limiteRevisione  = limite(5, 1, "Troppe richieste. Riprova più tardi o scrivici a rolefigz@gmail.com.");
+const limiteAttivita   = limite(15, 1, "Troppe ricerche in poco tempo. Riprova tra un'ora.");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -129,6 +132,18 @@ router.get("/file/:kitId/:file", async (req, res) => {
   try { await inoltraFile(res, kitId, file, 3600); } catch (err) { rispondiErrore(res, err); }
 });
 
+// ── 3b. Ricerca dell'attività su Google Maps (per la pagina NFC di prova) ──
+router.post("/attivita", limiteAttivita, async (req, res) => {
+  const nome = testo(req.body?.azienda, 100), citta = testo(req.body?.citta, 80);
+  if (nome.length < 2 || citta.length < 2) return res.status(400).json({ error: "Inserisci azienda e città." });
+  try {
+    res.json({ risultati: await places.cercaAttivita(nome, citta) });
+  } catch (err) {
+    if (err instanceof places.ErrorePlaces) return res.status(err.status).json({ error: err.message });
+    rispondiErrore(res, err);
+  }
+});
+
 // ── 4. Prenotazione del kit campione ────────────────────────────────
 router.post("/prenota", limitePrenota, async (req, res) => {
   const b = req.body || {};
@@ -151,12 +166,24 @@ router.post("/prenota", limitePrenota, async (req, res) => {
       numero: k.numero, tipo: "kit", kit_id: b.kit_id, logo_id: k.logo_id, verdetto: k.verdetto,
       ...dati, logo_url, qr_url: k.qr_url, prezzo: k.kit_campione?.prezzo ?? 19.90,
     });
-    const preventivo = `${process.env.BASE_URL || "https://www.rolefigz.com"}/api/kit/file/${b.kit_id}/preventivo.pdf`;
-    emailKitCliente(r, preventivo).catch(err => console.error("Email kit cliente:", err.message));
+    // pagina NFC di prova con i dati di Google Maps (se il cliente ha scelto la sua attività): se Google non
+    // risponde la prenotazione va avanti lo stesso
+    let demo = null;
+    if (places.ID_PLACE.test(b.place_id || "")) {
+      demo = await creaPaginaDemo(r, b.place_id).catch(err => { console.error("Pagina demo:", err.message); return null; });
+    }
+    const base = process.env.BASE_URL || "https://www.rolefigz.com";
+    const pagina_demo = demo ? `${base}/nfc/${demo.slug}` : null;
+    if (pagina_demo) {
+      r.note_admin = `Pagina NFC di prova: ${pagina_demo} (scade il ${new Date(demo.scadenza).toLocaleDateString("it-IT")})`;
+      await r.save();
+    }
+    const preventivo = `${base}/api/kit/file/${b.kit_id}/preventivo.pdf`;
+    emailKitCliente(r, preventivo, pagina_demo).catch(err => console.error("Email kit cliente:", err.message));
     emailKitAdmin(r).catch(err => console.error("Email kit admin:", err.message));
-    notifica(r);
-    console.log(`✅ Kit campione ${r.numero} — ${r.azienda} (${r.email})`);
-    res.json({ success: true, numero: r.numero });
+    notifica(r, pagina_demo ? `\n🌐 ${pagina_demo}` : "");
+    console.log(`✅ Kit campione ${r.numero} — ${r.azienda} (${r.email})${pagina_demo ? " · " + pagina_demo : ""}`);
+    res.json({ success: true, numero: r.numero, pagina_demo });
   } catch (err) { rispondiErrore(res, err); }
 });
 

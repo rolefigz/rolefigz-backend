@@ -114,6 +114,19 @@
     .k-hint.on { display: block; }
     .k-hint.warn { background: rgba(230,160,32,.08); border: 1px solid rgba(230,160,32,.3); color: #8a5d07; }
     .k-hint.err { background: rgba(192,57,43,.07); border: 1px solid rgba(192,57,43,.25); color: var(--red); }
+    .k-nfc-demo { margin: 6px 0 14px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
+    .k-nfc-demo p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #b9b6ae; }
+    .k-nfc-demo p strong { color: #f0ece4; }
+    .k-nfc-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .k-nfc-row .field { flex: 1; min-width: 180px; margin: 0; }
+    .k-nfc-cerca { padding: 12px 16px; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; }
+    .k-nfc-cerca:disabled { opacity: .5; cursor: wait; }
+    .k-attivita { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .k-attivita label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #b9b6ae; border: 1px solid rgba(255,255,255,.10); cursor: pointer; }
+    .k-attivita label:has(input:checked) { border-color: var(--accent); background: rgba(193,127,58,.08); }
+    .k-attivita input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+    .k-attivita strong { color: #f0ece4; }
+    .k-attivita .msg { font-size: 12px; color: #b9b6ae; }
     .k-check { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--text); line-height: 1.6; margin: 18px 0 4px; cursor: pointer; }
     .k-check input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
     .k-check a { color: var(--accent); }
@@ -502,6 +515,14 @@
           <div class="field"><label for="pEmail">Email *</label><input id="pEmail" type="email" maxlength="120" autocomplete="email"/></div>
           <div class="field"><label for="pTel">Telefono (facoltativo)</label><input id="pTel" maxlength="40" autocomplete="tel"/></div>
         </div>
+        <div class="k-nfc-demo">
+          <p><strong>Bonus: la tua pagina NFC di prova.</strong> Il QR dello stand del kit aprirà un'anteprima con i dati della tua scheda Google Maps: contatti, mappa e il bottone per lasciare una recensione. Cerca la tua attività (facoltativo).</p>
+          <div class="k-nfc-row">
+            <div class="field"><label for="pCitta">Città dell'attività</label><input id="pCitta" maxlength="80" autocomplete="address-level2" placeholder="es. Piacenza"/></div>
+            <button type="button" class="k-nfc-cerca" id="pCerca" onclick="kCercaAttivita()">Trova su Google Maps</button>
+          </div>
+          <div class="k-attivita" id="pAttivita" hidden></div>
+        </div>
         <div class="field"><label for="pNote">Note (facoltativo)</label><textarea id="pNote" maxlength="1000" placeholder="Colori preferiti, link per gli NFC, quando ti serve…"></textarea></div>
         <label class="k-check"><input type="checkbox" id="pConsenso"/> <span>Prenoto il kit campione a 19,90 € da pagare al ritiro a Piacenza e acconsento al trattamento dei dati (<a href="/privacy.html" target="_blank">privacy</a>, <a href="/termini.html" target="_blank">termini</a>).</span></label>
         <button class="k-btn accent" id="pInvia" onclick="kPrenota()"><span>Prenota il kit</span> <span class="iconify" data-icon="mdi:arrow-right"></span></button>
@@ -513,6 +534,7 @@
       <div class="k-success-h">KIT<br>PRENOTATO!</div>
       <div class="k-success-id" id="kBookNum"></div>
       <div class="k-success-sub">Ti abbiamo mandato una email con il riepilogo e il preventivo. Ti scriviamo quando il kit è pronto per il ritiro a Piacenza.</div>
+      <a class="k-link-btn" id="kDemoLink" href="#" target="_blank" rel="noopener" hidden style="margin-top:18px"><span class="iconify" data-icon="mdi:cellphone-nfc"></span> Vedi la tua pagina NFC di prova</a>
       <button class="k-restart" onclick="kRicomincia()">Prova con un altro logo</button>
     </div>
   </div>
@@ -790,11 +812,44 @@
     b.querySelector('span').textContent = testo;
   }
 
+  // Ricerca dell'attività su Google Maps: il cliente sceglie la sua (o nessuna)
+  window.kCercaAttivita = async () => {
+    errore('kErrP');
+    const azienda = $('pAzienda').value.trim(), citta = $('pCitta').value.trim();
+    if (azienda.length < 2 || citta.length < 2) return errore('kErrP', "Scrivi il nome dell'azienda e la città.");
+    const box = $('pAttivita');
+    $('pCerca').disabled = true; $('pCerca').textContent = 'Cerco…';
+    try {
+      const r = await leggi(await fetch(API + '/attivita', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ azienda, citta }) }));
+      box.innerHTML = '';
+      if (!r.risultati.length) {
+        const m = document.createElement('div'); m.className = 'msg';
+        m.textContent = 'Nessuna attività trovata su Google Maps: controlla nome e città (puoi prenotare lo stesso).';
+        box.appendChild(m);
+      }
+      r.risultati.concat([{ place_id: '', nome: 'Nessuna di queste', indirizzo: 'Prenoto il kit senza pagina di prova' }]).forEach((a, i) => {
+        if (!r.risultati.length && !a.place_id) return;
+        const l = document.createElement('label');
+        const inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'pPlace'; inp.value = a.place_id; inp.checked = i === 0;
+        const s = document.createElement('span');
+        const n = document.createElement('strong'); n.textContent = a.nome;
+        const voto = a.valutazione ? ' · ★ ' + String(a.valutazione).replace('.', ',') + (a.recensioni ? ' (' + a.recensioni + ')' : '') : '';
+        s.append(n, document.createElement('br'), document.createTextNode([a.categoria, a.indirizzo].filter(Boolean).join(' · ') + voto));
+        l.append(inp, s); box.appendChild(l);
+      });
+      box.hidden = false;
+    } catch (err) {
+      errore('kErrP', erroreRete(err));
+    }
+    $('pCerca').disabled = false; $('pCerca').textContent = 'Trova su Google Maps';
+  };
+
   window.kPrenota = async () => {
     errore('kErrP');
     const dati = {
       kit_id: stato.kit && stato.kit.kit_id, nome: $('pNome').value.trim(), azienda: $('pAzienda').value.trim(),
       email: $('pEmail').value.trim(), telefono: $('pTel').value.trim(), note: $('pNote').value.trim(), consenso: $('pConsenso').checked,
+      place_id: (document.querySelector('input[name="pPlace"]:checked') || {}).value || '',
     };
     if (!dati.nome || !dati.azienda) return errore('kErrP', 'Inserisci nome e azienda.');
     if (!EMAIL.test(dati.email)) return errore('kErrP', "Controlla l'email: non sembra valida.");
@@ -804,6 +859,7 @@
       const r = await leggi(await fetch(API + '/prenota', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dati) }));
       mostra('kBookBox', false); mostra('kBookOk');
       $('kBookNum').textContent = 'PRENOTAZIONE ' + r.numero;
+      if (r.pagina_demo) { $('kDemoLink').href = r.pagina_demo; $('kDemoLink').hidden = false; }
       scrolla($('k-prenota'));
     } catch (err) {
       errore('kErrP', erroreRete(err));

@@ -3,6 +3,7 @@ const { Company, CompanyPage, PageLink, Subscription } = require("../../../model
 const { renderPaginaPubblica } = require("../views/renderPaginaPubblica");
 const { registraEvento } = require("../services/analyticsService");
 const pageCache = require("../utils/pageCache");
+const { trovaPaginaDemo, renderPaginaDemo } = require("../../../utils/paginaDemo");
 
 const PAGINA_404 = path.join(__dirname, "..", "..", "..", "..", "public", "404.html");
 
@@ -29,7 +30,14 @@ async function mostraPagina(req, res) {
   // La azienda si carica sempre (query leggera, indicizzata su slug) perche'
   // il page_view va registrato anche quando la risposta arriva dalla cache.
   const azienda = await Company.findOne({ where: { slug, status: "active" } });
-  if (!azienda) return res.status(404).sendFile(PAGINA_404);
+  if (!azienda) {
+    // pagina di prova del kit campione (il QR dello stand campione punta qui), se c'è e non è scaduta
+    const demo = await trovaPaginaDemo(slug).catch(() => null);
+    if (!demo) return res.status(404).sendFile(PAGINA_404);
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.set("X-Robots-Tag", "noindex");
+    return res.send(renderPaginaDemo(demo));
+  }
 
   const cache = pageCache.get(slug);
   if (cache) {

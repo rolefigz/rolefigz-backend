@@ -65,8 +65,11 @@ function hexARgba(hex, alphaPercento) {
 // azienda: Company, pagina: CompanyPage|null, links: PageLink[]
 // opts.anteprima: mostra un banner "anteprima" e blocca l'indicizzazione
 // opts.accessibile: false -> mostra il messaggio di abbonamento scaduto invece del contenuto
+// opts.testoBanner: testo del banner di anteprima (le pagine di prova del kit campione hanno il loro)
+// opts.linkDiretti: i link puntano direttamente all'URL (pagine di prova: i loro link non sono in page_links)
 function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
-  const { anteprima = false, accessibile = true } = opts;
+  const { anteprima = false, accessibile = true, linkDiretti = false,
+          testoBanner = "ANTEPRIMA — QUESTA PAGINA NON E' ANCORA PUBBLICA" } = opts;
   const d = pagina?.design || {};
 
   const titolo = escapeHtml(pagina?.seo_title || azienda.name);
@@ -124,7 +127,8 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
     if (!urlSicuro) return "";
     const target = urlSicuro.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
     const icona = ICONE_SVG[l.type] || ICONE_SVG.custom;
-    return `<a class="link" style="--d:${i * 70}ms" href="/nfc/go/${l.id}"${target}>
+    const href = linkDiretti ? escapeAttr(urlSicuro) : `/nfc/go/${l.id}`;
+    return `<a class="link" style="--d:${i * 70}ms" href="${href}"${target}>
       <span class="link__icon">${icona}</span>
       <span class="link__label">${escapeHtml(l.label)}</span>
       <span class="link__go">›</span>
@@ -259,7 +263,7 @@ body.content-in .foot{opacity:1}
 ${anteprima ? '.banner{position:fixed;top:0;left:0;right:0;z-index:30;background:var(--accent);color:#0a0a0a;text-align:center;padding:8px;font-family:\'Space Grotesk\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:1px}' : ""}
 </style></head>
 <body>
-${anteprima ? '<div class="banner">ANTEPRIMA — QUESTA PAGINA NON E\' ANCORA PUBBLICA</div>' : ""}
+${anteprima ? `<div class="banner">${escapeHtml(testoBanner)}</div>` : ""}
 ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></div><div class="scene__tint"></div></div>' : ""}
 <div class="intro" aria-hidden="true"></div>
 <div class="logo-wrap">${blocLogo}</div>

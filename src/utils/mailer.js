@@ -716,7 +716,7 @@ function cornice(titolo, etichetta, corpo, piede) {
 
 const P = "margin:0 0 16px;font-size:13px;color:#ccc;line-height:1.8";
 
-const emailKitCliente = async (r, urlPreventivo) => {
+const emailKitCliente = async (r, urlPreventivo, urlPaginaDemo = null) => {
   const nome = escKit(r.nome), azienda = escKit(r.azienda);
   if (r.tipo === "revisione") {
     return invia(r.email, `✋ Revisione del logo ricevuta — RoleFigz ${r.numero}`, cornice("RICHIESTA<br>RICEVUTA", "Revisione del logo", `
@@ -743,7 +743,10 @@ const emailKitCliente = async (r, urlPreventivo) => {
     </table>
     <p style="${P}">Il prezzo del kit si sconta dal tuo primo ordine di almeno <strong style="color:#f0ece4">100 €</strong>
     entro <strong style="color:#f0ece4">60 giorni</strong> dal ritiro.</p>
-    ${urlPreventivo ? `<p style="margin:0"><a href="${escKit(urlPreventivo)}" style="display:inline-block;background:#C17F3A;color:#fff;text-decoration:none;padding:12px 24px;font-size:13px;font-weight:bold;letter-spacing:2px">SCARICA IL PREVENTIVO (PDF)</a></p>` : ""}`,
+    ${urlPreventivo ? `<p style="margin:0"><a href="${escKit(urlPreventivo)}" style="display:inline-block;background:#C17F3A;color:#fff;text-decoration:none;padding:12px 24px;font-size:13px;font-weight:bold;letter-spacing:2px">SCARICA IL PREVENTIVO (PDF)</a></p>` : ""}
+    ${urlPaginaDemo ? `<p style="${P};margin-top:22px">Abbiamo preparato anche un'<strong style="color:#f0ece4">anteprima della tua pagina NFC</strong>
+    con i tuoi contatti, la mappa e il bottone per le recensioni su Google: è quella che si apre con il QR dello stand del kit.</p>
+    <p style="margin:0"><a href="${escKit(urlPaginaDemo)}" style="display:inline-block;border:1px solid #C17F3A;color:#C17F3A;text-decoration:none;padding:11px 22px;font-size:13px;font-weight:bold;letter-spacing:2px">VEDI LA TUA PAGINA NFC</a></p>` : ""}`,
     "Hai domande o vuoi cambiare qualcosa? Rispondi a questa email."));
 };
 
@@ -756,7 +759,7 @@ const emailKitAdmin = async (r) => {
       ${riga("Email", `<a href="mailto:${escKit(r.email)}" style="color:#C17F3A">${escKit(r.email)}</a>`)}
       ${riga("Telefono", escKit(r.telefono))}${riga("Note", escKit(r.note))}
       <hr style="border-color:#222;margin:16px 0"/>
-      ${riga("Verdetto logo", escKit(r.verdetto))}${riga("QR", escKit(r.qr_url))}
+      ${riga("Verdetto logo", escKit(r.verdetto))}${riga("QR", escKit(r.qr_url))}${riga("Admin", escKit(r.note_admin))}
       ${r.logo_url ? riga("Logo", `<a href="${escKit(r.logo_url)}" style="color:#C17F3A">Visualizza logo</a>`) : ""}
       <p style="color:#888">3MF, foglio di montaggio e preventivo: pannello admin → Kit campione.</p>
     </div>`);
