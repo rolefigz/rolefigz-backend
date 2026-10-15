@@ -21,8 +21,14 @@ class ErrorePlaces extends Error {
 }
 
 function chiave() {
-  const k = (process.env.GOOGLE_PLACES_API_KEY || "").trim();
-  if (!k) throw new ErrorePlaces("Ricerca su Google Maps non disponibile al momento.", 503);
+  // GOOGLE_PLACES_API_KEY; si accettano anche i nomi più comuni con cui si salva una chiave di Google Maps
+  const nome = ["GOOGLE_PLACES_API_KEY", "GOOGLE_MAPS_API_KEY", "PLACES_API_KEY", "GOOGLE_API_KEY"]
+    .find(n => (process.env[n] || "").trim());
+  if (!nome) {
+    console.error("Google Places: manca la variabile GOOGLE_PLACES_API_KEY nel servizio web");
+    throw new ErrorePlaces("Ricerca su Google Maps non disponibile al momento.", 503);
+  }
+  const k = process.env[nome].trim();
   return k;
 }
 
