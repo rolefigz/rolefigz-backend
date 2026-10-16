@@ -587,19 +587,24 @@
 
   // ── attesa con passi ─────────────────────────────────────
   function attendi(titolo, passi, durataMs) {
+    clearTimeout(stato.nascondiAttesa);                 // un fineAttesa appena chiamato non deve nascondere questa
     mostra('kWait'); $('kWaitT').textContent = titolo;
     let i = 0, t0 = Date.now();
     $('kBar').style.width = '4%';
     $('kWaitS').textContent = passi[0];
     clearInterval(stato.timer);
     stato.timer = setInterval(() => {
-      const p = Math.min(92, (Date.now() - t0) / durataMs * 92);
+      // avanza veloce all'inizio e poi rallenta: non si ferma mai del tutto anche se ci vuole più del previsto
+      const p = 95 * (1 - Math.exp(-(Date.now() - t0) / durataMs * 1.6));
       $('kBar').style.width = p + '%';
-      const nuovo = Math.min(passi.length - 1, Math.floor(p / 92 * passi.length));
+      const nuovo = Math.min(passi.length - 1, Math.floor(p / 95 * passi.length));
       if (nuovo !== i) { i = nuovo; $('kWaitS').textContent = passi[i]; }
     }, 400);
   }
-  function fineAttesa() { clearInterval(stato.timer); $('kBar').style.width = '100%'; setTimeout(() => mostra('kWait', false), 250); }
+  function fineAttesa() {
+    clearInterval(stato.timer); $('kBar').style.width = '100%';
+    stato.nascondiAttesa = setTimeout(() => mostra('kWait', false), 250);
+  }
 
   // ── 1. scelta del file, con controlli immediati ──────────
   const area = $('kUpload'), input = $('kFile');
@@ -664,7 +669,7 @@
     if ($('kAnalizza').disabled) return;
     errore('kErr1');
     mostra('kUploadBox', false); mostra('kVerdict', false); mostra('kRevisione', false);
-    attendi('Analizziamo il logo…', ['Contiamo i colori…', 'Cerchiamo sfumature e ombre…', 'Controlliamo risoluzione e dettagli…', 'Quasi fatto…'], 9000);
+    attendi('Analizziamo il logo…', ['Contiamo i colori…', 'Cerchiamo sfumature e ombre…', 'Controlliamo risoluzione e dettagli…', 'Quasi fatto…'], 20000);
     try {
       const fd = new FormData();
       fd.append('logo', stato.file);
@@ -738,7 +743,7 @@
   // ── 3. generazione del kit ───────────────────────────────
   async function genera() {
     mostra('kVerdict', stato.logo.verdetto !== 'automatico' ? false : true);
-    attendi('Stampiamo il tuo kit in 3D…', ['Vettorializziamo il logo…', 'Modelliamo portachiavi e magnete…', 'Modelliamo badge e biglietto NFC…', 'Montiamo lo stand con il QR…', 'Prepariamo il preventivo…'], 18000);
+    attendi('Stampiamo il tuo kit in 3D…', ['Vettorializziamo il logo…', 'Modelliamo portachiavi e magnete…', 'Modelliamo badge e biglietto NFC…', 'Montiamo lo stand con il QR…', 'Controllo qualità di ogni pezzo…', 'Prepariamo il preventivo…'], 45000);
     scrolla($('k-carica'));
     try {
       stato.kit = await leggi(await fetch(API + '/genera', {
