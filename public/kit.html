@@ -219,7 +219,12 @@
     .k-quote td, .k-quote th { padding: 14px 18px; }
     .k-quote td.n { text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; white-space: nowrap; }
     .k-quote th.n { text-align: right; }
-    .k-quote td.v { color: var(--accent); font-weight: 600; }
+    .k-quote td.v { color: var(--accent); }
+    .k-quote td.top, .k-quote th.top { color: var(--accent); font-weight: 700; }
+    .k-quote th small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; letter-spacing: .5px; color: var(--muted); }
+    .k-quote th.top small { color: var(--accent); font-weight: 700; }
+    .k-quote td .nota { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); }
+    .k-quote-risparmio { margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--accent); }
     .k-quote-foot { padding: 16px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.8; }
     .k-quote-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
     .k-link-btn {
@@ -485,11 +490,13 @@
     <p class="k-lead">Prezzi per pezzo con il tuo logo, IVA esclusa. Puoi combinare i prodotti come vuoi.</p>
     <div class="k-quote">
       <table>
-        <thead><tr><th>Prodotto</th><th class="n hide-sm">Quantità base</th><th class="n">Prezzo / pz</th><th class="n" id="kVolHead">Da 100 pz (−10%)</th></tr></thead>
+        <thead><tr><th>Prodotto</th><th class="n">25–99 pz<small>prezzo / pz</small></th><th class="n">100–499 pz<small>−10%</small></th><th class="n top">500+ pz<small>−20%</small></th></tr></thead>
         <tbody id="kQuoteBody"></tbody>
       </table>
       <div class="k-quote-foot">
-        Impostazione grafica del logo 25 € una tantum, gratis da 100 pezzi · Preventivo valido 30 giorni · Oltre 500 pezzi: preventivo su misura.
+        <div class="k-quote-risparmio" id="kRisparmio" hidden></div>
+        Minimo 25 pezzi per articolo (stand: multipli di 6) · Impostazione grafica del logo 25 € una tantum, gratis da 100 pezzi · Oltre 1.000 pezzi: preventivo su misura · Preventivo valido 30 giorni.<br>
+        Altre misure del portachiavi su richiesta (S 35×20, L 55×30, XL 70×36 mm).
       </div>
     </div>
     <div class="k-quote-actions">
@@ -802,12 +809,26 @@
     $('kKitTitle').append(document.createTextNode('IL KIT DI'), document.createElement('br'), document.createTextNode((k.cliente || '').toUpperCase()));
 
     const corpo = $('kQuoteBody'); corpo.innerHTML = '';
+    // prezzi per tramo (25–99 / 100–499 −10% / 500+ −20%), come nel PDF; i kit vecchi non hanno prezzi_tramo
+    const tramo = (v, pct) => Math.round(v * (1 - pct / 100) / 0.05) * 0.05;
+    const prezziDi = r => r.prezzi_tramo && r.prezzi_tramo.length >= 2 ? r.prezzi_tramo : [r.prezzo_volume, tramo(r.prezzo, 20)];
     k.preventivo.forEach(r => {
       const tr = document.createElement('tr');
-      const c = (testo, cls) => { const td = document.createElement('td'); td.textContent = testo; if (cls) td.className = cls; tr.appendChild(td); };
-      c(r.nome); c(r.base_pezzi + ' pz' + (r.nota ? ' (' + r.nota + ')' : ''), 'n hide-sm'); c(euro(r.prezzo), 'n'); c(euro(r.prezzo_volume), 'n v');
+      const c = (testo, cls) => { const td = document.createElement('td'); td.textContent = testo; if (cls) td.className = cls; tr.appendChild(td); return td; };
+      const nome = c(r.nome);
+      if (r.nota) { const s = document.createElement('span'); s.className = 'nota'; s.textContent = r.nota; nome.appendChild(s); }
+      const [p100, p500] = prezziDi(r);
+      c(euro(r.prezzo), 'n'); c(euro(p100), 'n v'); c(euro(p500), 'n top');
       corpo.appendChild(tr);
     });
+    // esempio di risparmio con il portachiavi della tabella (dai prezzi veri)
+    const llav = k.preventivo.find(r => r.nome.startsWith('Portachiavi NFC') && !r.nome.includes('resina'));
+    if (llav) {
+      const n = 500, pieno = n * llav.prezzo, scontato = n * prezziDi(llav)[1];
+      const tondo = v => '€ ' + (Math.abs(v - Math.round(v)) < 0.005 ? Math.round(v).toLocaleString('it-IT') : v.toFixed(2).replace('.', ','));
+      $('kRisparmio').textContent = 'Esempio: ' + n + ' portachiavi = ' + tondo(scontato) + ' invece di ' + tondo(pieno) + ' (risparmi ' + tondo(pieno - scontato) + ').';
+      $('kRisparmio').hidden = false;
+    }
     $('kPdf').href = k.preventivo_pdf;
     $('pAzienda').value = $('kAzienda').value.trim();
     if ($('kCitta').value.trim()) {
