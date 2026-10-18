@@ -7,7 +7,8 @@ const rateLimit = require("express-rate-limit");
 const crypto    = require("crypto");
 const { Readable } = require("stream");
 const cloudinary = require("cloudinary").v2;
-const { RichiestaKit } = require("../models");
+const { Op } = require("sequelize");
+const { RichiestaKit, PaginaDemo } = require("../models");
 const { verifyToken, soloAdmin } = require("../middleware/auth");
 const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
@@ -220,7 +221,9 @@ const STATI = ["prenotato", "in_stampa", "pronto", "ritirato", "annullato"];
 
 router.get("/admin/richieste", verifyToken, soloAdmin, async (req, res) => {
   const where = {};
+  // gli annullati non compaiono nell'elenco normale: solo scegliendo il filtro ANNULLATO (per eliminarli)
   if (STATI.includes(req.query.stato)) where.stato = req.query.stato;
+  else where.stato = { [Op.ne]: "annullato" };
   if (["kit", "revisione"].includes(req.query.tipo)) where.tipo = req.query.tipo;
   try {
     res.json(await RichiestaKit.findAll({ where, order: [["createdAt", "DESC"]], limit: 300 }));
@@ -245,6 +248,26 @@ router.patch("/admin/richieste/:id", verifyToken, soloAdmin, async (req, res) =>
     if (note_admin !== undefined) r.note_admin = String(note_admin).slice(0, 2000);
     await r.save();
     res.json(r);
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Eliminazione definitiva (dal pannello, la decide l'admin): solo richieste ANNULLATE. Si cancella anche la loro
+// pagina NFC di prova. :id = un numero, oppure «annullati» per tutte le annullate.
+router.delete("/admin/richieste/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const where = req.params.id === "annullati"
+      ? { stato: "annullato" }
+      : { id: parseInt(req.params.id, 10) || 0, stato: "annullato" };
+    const righe = await RichiestaKit.findAll({ where, attributes: ["id", "numero"] });
+    if (!righe.length) {
+      return res.status(req.params.id === "annullati" ? 200 : 400)
+        .json(req.params.id === "annullati" ? { eliminati: 0 } : { error: "Si possono eliminare solo le richieste annullate." });
+    }
+    const ids = righe.map(r => r.id);
+    const pagine = await PaginaDemo.destroy({ where: { richiesta_id: { [Op.in]: ids } } });
+    const eliminati = await RichiestaKit.destroy({ where: { id: { [Op.in]: ids }, stato: "annullato" } });
+    console.log(`🗑️ Kit campione eliminati: ${righe.map(r => r.numero).join(", ")} (pagine NFC di prova: ${pagine})`);
+    res.json({ eliminati, pagine_demo: pagine });
   } catch (err) { rispondiErrore(res, err); }
 });
 

@@ -43,6 +43,7 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
           <select onchange="kitCambiaStato(${k.id}, this.value, '${filtroStato}', '${filtroTipo}')">
             ${STATI_KIT.map(s => `<option value="${s}" ${k.stato === s ? 'selected' : ''}>${s.replace('_', ' ').toUpperCase()}</option>`).join('')}
           </select>
+          ${k.stato === 'annullato' ? `<button class="action-btn" onclick="kitElimina('${k.id}', '${escKit(k.numero)}')" style="display:block;margin-top:6px;border-color:#c0392b;color:#c0392b">ELIMINA DEFINITIVAMENTE</button>` : ''}
           <textarea placeholder="Note interne" onchange="kitNota(${k.id}, this.value)" style="display:block;width:180px;margin-top:6px;font-size:10px;min-height:40px">${escKit(k.note_admin)}</textarea>
         </td>
       </tr>`;
@@ -59,9 +60,11 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
       <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Prenotazioni del kit campione (19,90 €, ritiro a Piacenza) e richieste di revisione manuale del logo.
       Quando segni <strong>RITIRATO</strong> si genera il codice sconto (valido 60 giorni su un primo ordine da almeno 100 €).
       <a href="/kit" target="_blank" style="color:var(--accent)">Apri la pagina ↗</a></p>
-      <div style="display:flex;gap:10px;margin-bottom:16px">
+      <p style="font-size:11px;color:var(--muted);margin:-6px 0 14px">Le richieste <strong>ANNULLATE</strong> non compaiono nell'elenco: scegli ANNULLATO nel filtro per vederle ed eliminarle.</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
         ${filtro('TUTTI GLI STATI', STATI_KIT, filtroStato, `adminTabKit(document.getElementById('adminContent'), this.value, '${filtroTipo}')`)}
         ${filtro('TUTTI I TIPI', ['kit', 'revisione'], filtroTipo, `adminTabKit(document.getElementById('adminContent'), '${filtroStato}', this.value)`)}
+        ${filtroStato === 'annullato' && lista.length ? `<button class="action-btn" onclick="kitElimina('annullati', '${lista.length} richieste annullate')" style="border-color:#c0392b;color:#c0392b">ELIMINA DEFINITIVAMENTE TUTTI GLI ANNULLATI (${lista.length})</button>` : ''}
       </div>
       ${!lista.length
         ? '<div class="empty-state"><div class="ei">🧰</div><h3>NESSUNA RICHIESTA</h3><p>Le prenotazioni da rolefigz.com/kit appariranno qui.</p></div>'
@@ -79,6 +82,19 @@ async function kitCambiaStato(id, stato, filtroStato, filtroTipo) {
     if (!r.ok) throw new Error((await r.json()).error);
   } catch (e) { alert('Errore: ' + e.message); }
   adminTabKit(document.getElementById('adminContent'), filtroStato, filtroTipo);
+}
+
+// Eliminazione definitiva delle richieste annullate (una o tutte): chiede conferma, non si può annullare
+async function kitElimina(id, cosa) {
+  if (!confirm(`Eliminare definitivamente ${cosa}?\n\nSi cancellano dal database (e la loro pagina NFC di prova). Non si può annullare.`)) return;
+  try {
+    const r = await fetch(`${API}/kit/admin/richieste/${encodeURIComponent(id)}`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+  } catch (e) { alert('Errore: ' + e.message); }
+  adminTabKit(document.getElementById('adminContent'), 'annullato', '');
 }
 
 async function kitNota(id, note_admin) {
