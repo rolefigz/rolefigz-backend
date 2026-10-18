@@ -825,7 +825,7 @@
     const llav = k.preventivo.find(r => r.nome.startsWith('Portachiavi NFC') && !r.nome.includes('resina'));
     if (llav) {
       const n = 500, pieno = n * llav.prezzo, scontato = n * prezziDi(llav)[1];
-      const tondo = v => '€ ' + (Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)).replace(/B(?=(d{3})+(?!d))/g, '.') : v.toFixed(2).replace('.', ','));
+      const tondo = v => '€ ' + (Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : v.toFixed(2).replace('.', ','));
       $('kRisparmio').textContent = 'Esempio: ' + n + ' portachiavi = ' + tondo(scontato) + ' invece di ' + tondo(pieno) + ' (risparmi ' + tondo(pieno - scontato) + ').';
       $('kRisparmio').hidden = false;
     }

@@ -309,6 +309,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'kit_video') {
+    adminTabKitVideo(content);
+    return;
+  }
+
   if (tab === 'tariffe_spedizione') {
     await adminTabTariffeSpedizione(content);
     return;

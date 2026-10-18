@@ -137,3 +137,99 @@ async function kitScarica3mf(kitId) {
 function kitScaricaLogo(logoId, numero) {
   kitApriBlob(`${API}/kit/admin/logo/${logoId}`, `logo-${numero}.png`, false);
 }
+
+// ── Video kit: kit con il logo di un locale da visitare + video da mandare su WhatsApp ──
+// Stessi passi di /kit (analisi del logo e generazione) ma dalle rotte admin, senza limiti orari; il video lo
+// registra kit-video.js direttamente dal visore 3D.
+const videoKit = { pezzi: null, azienda: '', url: null };
+
+function adminTabKitVideo(content) {
+  const supportato = !!KitVideo.formato();
+  content.innerHTML = `
+    <div class="admin-form-title">VIDEO KIT · per i locali</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Carica il logo di un locale (da Instagram o Google Maps): si genera il suo kit in 3D e un video
+    di circa 20 secondi da mandargli su WhatsApp prima della visita. Il kit non compare tra le prenotazioni.</p>
+    ${supportato ? '' : '<div class="msg err" style="margin-bottom:14px">Questo browser non può registrare video: usa Chrome.</div>'}
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+      <div class="field" style="flex:1;min-width:200px"><label>Nome del locale *</label><input id="kvAzienda" type="text" placeholder="Pizzeria Da Mario"/></div>
+      <div class="field" style="flex:1;min-width:200px"><label>Logo * (PNG, SVG, PDF, JPG)</label><input id="kvLogo" type="file" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp"/></div>
+      <button class="btn-submit" id="kvGenera" onclick="kitVideoGenera()" style="width:auto;padding:12px 22px">GENERA KIT</button>
+    </div>
+    <div id="kvStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px"></div>
+    <div id="kvRisultato" style="display:none">
+      <div id="kvAvviso"></div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <model-viewer id="kvViewer" loading="eager" camera-controls auto-rotate rotation-per-second="18deg" shadow-intensity="0.8" shadow-softness="0.9"
+          exposure="1.05" environment-image="neutral" interaction-prompt="none" camera-orbit="0deg 55deg auto"
+          style="width:100%;max-width:520px;height:420px;background:radial-gradient(circle at 50% 40%,#f7f5f0 0%,#ddd8ce 100%)"></model-viewer>
+        <video id="kvAnteprima" controls playsinline style="display:none;width:100%;max-width:336px;background:#141412"></video>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="action-btn" id="kvCrea" onclick="kitVideoCrea()" style="border-color:var(--accent);color:var(--accent)" ${supportato ? '' : 'disabled'}>🎬 CREA VIDEO</button>
+        <button class="action-btn" id="kvCondividi" style="display:none">CONDIVIDI</button>
+        <a class="action-btn" id="kvScarica" style="display:none;text-decoration:none">SCARICA VIDEO ⬇</a>
+        <a class="action-btn" id="kvPdf" target="_blank" rel="noopener" style="text-decoration:none">PREVENTIVO PDF</a>
+      </div>
+    </div>`;
+}
+
+function kitVideoStato(testo) { const e = document.getElementById('kvStato'); if (e) e.textContent = testo; }
+
+async function kitVideoGenera() {
+  const azienda = document.getElementById('kvAzienda').value.trim();
+  const file = document.getElementById('kvLogo').files[0];
+  if (!azienda || !file) return kitVideoStato('Servono il nome del locale e il logo.');
+  const btn = document.getElementById('kvGenera'); btn.disabled = true;
+  document.getElementById('kvRisultato').style.display = 'none';
+  try {
+    kitVideoStato('Analizzo il logo…');
+    const fd = new FormData(); fd.append('logo', file);
+    let r = await fetch(`${API}/kit/admin/analizza`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const logo = await r.json();
+    if (!r.ok) throw new Error(logo.error || `HTTP ${r.status}`);
+    kitVideoStato('Genero il kit in 3D… (fino a un minuto)');
+    r = await fetch(`${API}/kit/admin/genera`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ logo_id: logo.logo_id, azienda }),
+    });
+    const k = await r.json();
+    if (!r.ok) throw new Error(k.error || `HTTP ${r.status}`);
+
+    // i pezzi uno per uno e, per chiudere, tutto il kit
+    videoKit.pezzi = k.pezzi.map(p => ({ nome: p.nome, misure: p.misure, glb: p.glb }))
+      .concat({ nome: 'Tutto il kit', misure: 'Tutti i pezzi del kit campione', glb: k.piatto_glb });
+    videoKit.azienda = k.cliente || azienda;
+    const [ic, pill] = VERDETTO_KIT[logo.verdetto] || ['', 'pill'];
+    const motivi = (logo.motivi || []).map(escKit).join(' · ');
+    // ⚠️/✋ o controllo qualità da rivedere: guardarlo bene prima di mandarlo al locale
+    const daGuardare = logo.verdetto !== 'automatico' || k.controllo === 'da_rivedere';
+    document.getElementById('kvAvviso').innerHTML = `<div style="margin-bottom:10px">
+      <span class="${pill}">${ic} ${escKit((logo.verdetto || '').toUpperCase())}</span> <strong>${escKit(k.numero)}</strong>
+      ${daGuardare ? `<div class="msg err" style="margin-top:8px">Controlla bene il kit prima di mandarlo: il logo potrebbe non essere venuto bene.${motivi ? ' ' + motivi : ''}</div>` : ''}</div>`;
+    document.getElementById('kvPdf').href = k.preventivo_pdf;
+    document.getElementById('kvViewer').src = videoKit.pezzi[videoKit.pezzi.length - 1].glb;
+    ['kvAnteprima', 'kvCondividi', 'kvScarica'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+    document.getElementById('kvRisultato').style.display = '';
+    kitVideoStato('Kit pronto. Controllalo e crea il video.');
+  } catch (e) { kitVideoStato('Errore: ' + e.message); }
+  btn.disabled = false;
+}
+
+async function kitVideoCrea() {
+  if (!videoKit.pezzi) return;
+  const btn = document.getElementById('kvCrea'), mv = document.getElementById('kvViewer');
+  btn.disabled = true; document.getElementById('kvGenera').disabled = true; mv.style.pointerEvents = 'none';
+  try {
+    const file = await KitVideo.crea({ mv, pezzi: videoKit.pezzi, azienda: videoKit.azienda, onStato: kitVideoStato });
+    if (videoKit.url) URL.revokeObjectURL(videoKit.url);
+    videoKit.url = URL.createObjectURL(file);
+    const anteprima = document.getElementById('kvAnteprima'); anteprima.src = videoKit.url; anteprima.style.display = '';
+    const scarica = document.getElementById('kvScarica'); scarica.href = videoKit.url; scarica.download = file.name; scarica.style.display = '';
+    // dal telefono: «Condividi» apre direttamente WhatsApp e le altre app
+    const condividi = document.getElementById('kvCondividi');
+    condividi.style.display = navigator.canShare && navigator.canShare({ files: [file] }) ? '' : 'none';
+    condividi.onclick = () => navigator.share({ files: [file] }).catch(() => {});
+    kitVideoStato(file.name.endsWith('.webm') ? 'Video pronto in WebM: per WhatsApp crealo da Chrome, che lo salva in MP4.' : 'Video pronto.');
+  } catch (e) { kitVideoStato('Errore: ' + e.message); }
+  btn.disabled = false; document.getElementById('kvGenera').disabled = false; mv.style.pointerEvents = '';
+}

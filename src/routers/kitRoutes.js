@@ -94,23 +94,26 @@ function notifica(r, extra = "") {
 }
 
 // ── 1. Analisi del logo ─────────────────────────────────────────────
-router.post("/analizza", limiteAnalisi, (req, res, next) => {
+function caricaLogo(req, res, next) {
   upload.single("logo")(req, res, err => {
     if (!err) return next();
     const msg = err.code === "LIMIT_FILE_SIZE" ? "Il file è troppo grande (massimo 10 MB)." : err.message;
     res.status(err.status || 400).json({ error: msg });
   });
-}, async (req, res) => {
+}
+
+async function analizza(req, res) {
   if (!req.file) return res.status(400).json({ error: "Carica il logo." });
   try {
     const r = await api.analizzaLogo(req.file.buffer, req.file.originalname, req.file.mimetype);
     res.json({ logo_id: r.logo_id, verdetto: r.verdetto, problemi: r.problemi, motivi: r.motivi,
                consigli: r.consigli, marca: r.marca });
   } catch (err) { rispondiErrore(res, err); }
-});
+}
+router.post("/analizza", limiteAnalisi, caricaLogo, analizza);
 
 // ── 2. Generazione del kit ──────────────────────────────────────────
-router.post("/genera", limiteGenera, async (req, res) => {
+async function genera(req, res) {
   const { logo_id } = req.body || {};
   if (!ID_LOGO.test(logo_id || "")) return res.status(400).json({ error: "Logo non valido: caricalo di nuovo." });
   try {
@@ -124,7 +127,8 @@ router.post("/genera", limiteGenera, async (req, res) => {
       controllo: (k.controllo && k.controllo.esito) || "non_fatto",   // controllo qualità con IA
     });
   } catch (err) { rispondiErrore(res, err); }
-});
+}
+router.post("/genera", limiteGenera, genera);
 
 // ── 3. File pubblici del kit (3D e preventivo) ──────────────────────
 router.get("/file/:kitId/:file", async (req, res) => {
@@ -270,6 +274,10 @@ router.delete("/admin/richieste/:id", verifyToken, soloAdmin, async (req, res) =
     res.json({ eliminati, pagine_demo: pagine });
   } catch (err) { rispondiErrore(res, err); }
 });
+
+// Pannello admin → Video kit: stessi passi della pagina pubblica ma senza limiti orari (kit per i locali da visitare)
+router.post("/admin/analizza", verifyToken, soloAdmin, caricaLogo, analizza);
+router.post("/admin/genera", verifyToken, soloAdmin, genera);
 
 router.get("/admin/file/:kitId/:file", verifyToken, soloAdmin, async (req, res) => {
   const { kitId, file } = req.params;
