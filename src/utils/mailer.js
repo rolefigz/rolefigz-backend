@@ -1,5 +1,6 @@
 const { Resend } = require("resend");
 require("dotenv").config();
+const PrezziSegnaposti = require("../../public/js/prezzi-segnaposti.js");
 
 const ADMIN = process.env.EMAIL_USER;
 
@@ -733,6 +734,28 @@ function cornice(titolo, etichetta, corpo, piede) {
 
 const P = "margin:0 0 16px;font-size:13px;color:#ccc;line-height:1.8";
 
+// Preventivo dei segnaposti per il numero di tavoli indicato: una riga per taglia, quanti pack e quanto costa.
+function tabellaPreventivoSegnaposti(tavoli) {
+  const eur = v => "€ " + v.toFixed(2).replace(".", ",");
+  const th = "padding:10px 12px;font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase;text-align:left";
+  const td = "padding:10px 12px;font-size:13px;color:#ccc;border-top:1px solid #222";
+  const righe = PrezziSegnaposti.preventivo(tavoli).map(t => `
+      <tr>
+        <td style="${td}"><strong style="color:#f0ece4">${t.nome}</strong>${t.consigliato ? ' <span style="color:#C17F3A">· consigliato</span>' : ""}<br><span style="font-size:11px;color:#888">${t.include}</span></td>
+        <td style="${td}">${t.pack} × ${t.pezzi} pz${t.scorta ? `<br><span style="font-size:11px;color:#888">${t.scorta} di scorta</span>` : ""}</td>
+        <td style="${td};color:#C17F3A;font-weight:bold">${eur(t.totale)}</td>
+        <td style="${td}">${eur(t.perTavolo)}</td>
+      </tr>`).join("");
+  return `
+    <p style="${P};margin-top:24px"><strong style="color:#f0ece4">Il tuo preventivo per ${tavoli} tavoli</strong> (un segnaposto per tavolo):</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #222;margin:0 0 12px">
+      <tr style="background:#0a0a0a"><td style="${th}">Taglia</td><td style="${th}">Pack</td><td style="${th}">Totale</td><td style="${th}">Per tavolo</td></tr>
+      ${righe}
+    </table>
+    <p style="margin:0 0 16px;font-size:11px;color:#888;line-height:1.7">Prezzi finali, senza IVA da aggiungere, consegna in scatola personalizzata.
+    Sulla taglia S il logo è largo circa 4,5 cm: se ha scritte piccole o dettagli fini rende meglio su M, L o XL. Con il kit campione le tocchi tutte prima di scegliere.</p>`;
+}
+
 const emailKitCliente = async (r, urlPreventivo, urlPaginaDemo = null) => {
   const nome = escKit(r.nome), azienda = escKit(r.azienda);
   if (r.tipo === "revisione") {
@@ -753,7 +776,8 @@ const emailKitCliente = async (r, urlPreventivo, urlPaginaDemo = null) => {
       <p style="margin:0 0 18px;font-size:20px;font-weight:bold;color:#C17F3A">${r.numero} · € ${Number(r.prezzo).toFixed(2).replace(".", ",")} al ritiro</p>
       <p style="${P}"><strong style="color:#f0ece4">🎁 Bonus:</strong> con il kit hai <strong style="color:#f0ece4">una settimana
       di menù digitale gratis</strong> dal giorno in cui lo ritiri, già configurato con il tuo menù: basta avvicinare il
-      telefono al segnaposto o inquadrare il QR.</p>`,
+      telefono al segnaposto o inquadrare il QR.</p>
+      ${r.tavoli ? tabellaPreventivoSegnaposti(r.tavoli) : ""}`,
       "Hai domande o vuoi cambiare qualcosa? Rispondi a questa email."));
   }
   return invia(r.email, `🧰 Kit campione prenotato — RoleFigz ${r.numero}`, cornice("KIT<br>PRENOTATO!", "Kit campione", `
@@ -787,7 +811,7 @@ const emailKitAdmin = async (r) => {
       <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">${r.tipo === "kit" ? "KIT CAMPIONE" : "REVISIONE LOGO"} ${r.numero}</h2>
       ${riga("Nome", escKit(r.nome))}${riga("Azienda", escKit(r.azienda))}
       ${riga("Email", `<a href="mailto:${escKit(r.email)}" style="color:#C17F3A">${escKit(r.email)}</a>`)}
-      ${riga("Telefono", escKit(r.telefono))}${riga("Note", escKit(r.note))}
+      ${riga("Telefono", escKit(r.telefono))}${riga("Tavoli", r.tavoli)}${riga("Note", escKit(r.note))}
       <hr style="border-color:#222;margin:16px 0"/>
       ${riga("Verdetto logo", escKit(r.verdetto))}${riga("QR", escKit(r.qr_url))}${riga("Admin", escKit(r.note_admin))}
       ${r.logo_url ? riga("Logo", `<a href="${escKit(r.logo_url)}" style="color:#C17F3A">Visualizza logo</a>`) : ""}

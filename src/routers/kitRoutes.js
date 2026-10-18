@@ -132,7 +132,8 @@ router.post("/genera", limiteGenera, genera);
 
 // ── 2b. Generazione dei segnaposti (pagina /kit/segnaposti) ─────────
 // URL del menù facoltativo (vuoto → 4bytemenu.it/demo), testo sotto il QR (max 14 caratteri, come «Scopri il menù»)
-// e striscia bianca per scrivere a matita. Ancora senza preventivo: i prezzi li sta rifacendo Oskar.
+// e striscia bianca per scrivere a matita. Il preventivo per numero di tavoli lo calcola la pagina e arriva
+// nell'email della prenotazione (listino in public/js/prezzi-segnaposti.js).
 const URL_MENU = /^(https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(\/[^\s<>"']*)?$/i;
 async function generaSegnaposti(req, res) {
   const b = req.body || {};
@@ -182,6 +183,8 @@ router.post("/prenota", limitePrenota, async (req, res) => {
   if (!dati.nome || !dati.azienda) return res.status(400).json({ error: "Inserisci nome e azienda." });
   if (!EMAIL.test(dati.email)) return res.status(400).json({ error: "Email non valida." });
   if (b.consenso !== true) return res.status(400).json({ error: "Devi accettare le condizioni per prenotare." });
+  const tavoli = b.tavoli == null || b.tavoli === "" ? null : Math.floor(Number(b.tavoli));
+  if (tavoli !== null && !(tavoli >= 1 && tavoli <= 500)) return res.status(400).json({ error: "Il numero di tavoli va da 1 a 500." });
   try {
     const esistente = await RichiestaKit.findOne({ where: { kit_id: b.kit_id } });
     if (esistente) return res.json({ success: true, numero: esistente.numero, gia_prenotato: true });
@@ -190,10 +193,11 @@ router.post("/prenota", limitePrenota, async (req, res) => {
     await api.conserva("kit", b.kit_id).catch(err => console.error("Conserva kit:", err.message));
     const logo_url = await caricaLogoCloudinary(k.logo_id);
     const segnaposti = k.tipo === "segnaposti";
+    if (segnaposti && tavoli === null) return res.status(400).json({ error: "Indica quanti tavoli avete." });
     const r = await RichiestaKit.create({
       numero: k.numero, tipo: "kit", kit_id: b.kit_id, logo_id: k.logo_id, verdetto: k.verdetto,
       ...dati, logo_url, qr_url: k.qr_url, prezzo: k.kit_campione?.prezzo ?? 19.90,
-      kit_tipo: segnaposti ? "segnaposti" : "merch",
+      kit_tipo: segnaposti ? "segnaposti" : "merch", tavoli: segnaposti ? tavoli : null,
     });
     // pagina NFC di prova con i dati di Google Maps (se il cliente ha scelto la sua attività): se Google non
     // risponde la prenotazione va avanti lo stesso

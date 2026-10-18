@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>I tuoi segnaposti in 3D — RoleFigz</title>
-  <meta name="description" content="Carica il logo del tuo locale e in un minuto vedi in 3D i segnaposti con QR e NFC per il menù digitale, in tutte le taglie. Kit campione da 19,90 € con una settimana di menù digitale gratis."/>
+  <meta name="description" content="Carica il logo del tuo locale e in un minuto vedi in 3D i segnaposti con QR e NFC per il menù digitale, in tutte le taglie. Kit campione a prezzo di prova, 19,90 € invece di oltre 90 €, con una settimana di menù digitale gratis."/>
   <meta property="og:title" content="I tuoi segnaposti in 3D — RoleFigz"/>
   <meta property="og:description" content="Carica il logo e vedi subito i segnaposti del tuo locale in 3D, con QR e NFC per il menù. Stampa 3D a Piacenza."/>
   <meta property="og:image" content="https://www.rolefigz.com/assets/llaveros.jpeg"/>
@@ -238,6 +238,33 @@
     .k-book { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
     .k-price { font-family: 'Barlow Condensed', sans-serif; font-size: 96px; font-weight: 900; color: var(--accent); line-height: .9; letter-spacing: -2px; }
     .k-price small { font-size: 22px; color: #888; letter-spacing: 1px; margin-left: 6px; }
+    .k-price-was { margin-top: 14px; font-size: 15px; color: #888; }
+    .k-price-was s { color: #bbb; }
+    .k-price-why { margin-top: 8px; font-size: 14px; color: #bbb; line-height: 1.6; max-width: 420px; }
+    .k-price-why strong { color: #f0ece4; }
+
+    /* preventivo per numero di tavoli */
+    .k-tavoli { display: flex; align-items: end; gap: 16px; flex-wrap: wrap; margin: 24px 0 8px; }
+    .k-tavoli .field { margin: 0; width: 180px; }
+    .k-tavoli input { font-size: 22px; font-weight: 700; }
+    .k-prev-wrap { overflow-x: auto; margin-top: 18px; }
+    .k-prev-table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 14px; }
+    .k-prev-table th { text-align: left; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 2px solid var(--dark); }
+    .k-prev-table td { padding: 14px 12px; border-bottom: 1px solid rgba(0,0,0,.08); vertical-align: top; }
+    .k-prev-table td.num { text-align: right; white-space: nowrap; }
+    .k-prev-table th.num { text-align: right; }
+    .k-prev-table .k-prev-tot { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); }
+    .k-prev-table .k-prev-sub { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .k-prev-table tr.consigliato td { background: rgba(193,127,58,.08); }
+    .k-prev-tag { display: inline-block; margin-left: 8px; padding: 2px 8px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; background: var(--accent); color: #fff; vertical-align: middle; }
+    .k-prev-warn { display: inline-block; margin-top: 4px; font-size: 12px; color: #b5651d; }
+    .k-prev-note { margin-top: 16px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .k-prev-note strong { color: var(--text); }
+    @media print {
+      body.stampa-preventivo > *:not(#k-preventivo) { display: none !important; }
+      body.stampa-preventivo #k-preventivo { padding: 0 !important; }
+      body.stampa-preventivo .k-noprint { display: none !important; }
+    }
     .k-perks { list-style: none; margin-top: 28px; }
     .k-perks li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; color: #bbb; line-height: 1.6; }
     .k-perks li .iconify { color: var(--accent); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
@@ -485,7 +512,7 @@
     </div>
     <p class="k-controllo" id="kControllo" hidden><span class="iconify" data-icon="mdi:account-check-outline"></span> <span>Il nostro controllo qualità vuole ritoccare a mano qualche segnaposto: lo sistemiamo noi prima di stampare, non devi fare nulla.</span></p>
     <a class="k-link-btn k-personalizza" id="kPersonalizza" href="/?ticket=segnaposti"><span class="iconify" data-icon="mdi:palette-swatch-outline"></span> Li voglio su misura (forma, illustrazione, legno…)</a>
-    <p class="k-note">Anteprima generata automaticamente: colori e piccoli dettagli possono variare leggermente nella stampa reale. Il QR e l'NFC aprono il tuo menù digitale; se non ce l'hai ancora, li colleghiamo noi.</p>
+    <p class="k-note">Anteprima generata automaticamente: colori e piccoli dettagli possono variare leggermente nella stampa reale. Sulle taglie più piccole il logo è più piccolo e i dettagli fini si notano meno. Il QR e l'NFC aprono il tuo menù digitale; se non ce l'hai ancora, li colleghiamo noi.</p>
   </div>
 </section>
 
@@ -506,6 +533,31 @@
   </div>
 </section>
 
+<!-- PREVENTIVO PER NUMERO DI TAVOLI -->
+<section class="k-section" id="k-preventivo" hidden style="background:var(--surface2)">
+  <div class="k-wrap">
+    <div class="k-label">// Preventivo</div>
+    <div class="k-title">QUANTO COSTA<br>PER I TUOI TAVOLI</div>
+    <p class="k-lead" style="margin-bottom:0">Scrivi quanti tavoli avete: per ogni taglia calcoliamo quanti pack servono per avere un segnaposto per tavolo e quanto spendi in totale.</p>
+    <div class="k-tavoli k-noprint">
+      <div class="field">
+        <label for="kTavoli">Numero di tavoli</label>
+        <input type="number" id="kTavoli" min="1" max="500" step="1" inputmode="numeric" placeholder="Es. 20"/>
+      </div>
+      <button type="button" class="k-link-btn" id="kStampaPrev" onclick="kStampaPreventivo()" hidden><span class="iconify" data-icon="mdi:file-pdf-box"></span> Scarica il preventivo (PDF)</button>
+    </div>
+    <div class="k-prev-wrap" id="kPrevWrap" hidden>
+      <p class="k-prev-note" id="kPrevPer" style="margin-top:0"></p>
+      <table class="k-prev-table">
+        <thead><tr><th>Taglia</th><th>Cosa include</th><th class="num">Pack</th><th class="num">Totale</th><th class="num">Per tavolo</th></tr></thead>
+        <tbody id="kPrevBody"></tbody>
+      </table>
+    </div>
+    <p class="k-prev-note"><strong>Più è piccolo il segnaposto, più è piccolo il logo.</strong> Sulla taglia S il logo è largo circa 4,5 cm: se ha scritte piccole o dettagli fini, alcuni si perdono e rende meglio su M, L o XL. Guarda le taglie nell'anteprima 3D qui sopra o, meglio ancora, toccale con il kit campione.</p>
+    <p class="k-prev-note">Prezzi finali, senza IVA da aggiungere. Ogni pack è di una sola taglia (puoi combinarne di diverse) e arriva in una scatola personalizzata. I segnaposti in più restano di scorta, se se ne rompe uno.</p>
+  </div>
+</section>
+
 <!-- PASSO 4: PRENOTA -->
 <section class="k-section k-section-dark" id="k-prenota" hidden>
   <div class="k-wrap">
@@ -514,8 +566,11 @@
         <div class="k-label">// Passo 3</div>
         <div class="k-title">TOCCALO<br>CON MANO</div>
         <div class="k-price">19,90<small>€</small></div>
+        <div class="k-price-was">Valore di listino: <s>oltre 90 €</s></div>
+        <p class="k-price-why"><strong>Non ci guadagniamo: è un prezzo di prova.</strong> Te lo diamo a prezzo di costo perché i segnaposti vanno visti e toccati sui tuoi tavoli, non solo in foto.</p>
         <ul class="k-perks">
-          <li><span class="iconify" data-icon="mdi:cube-outline"></span><span><strong>Tutti i segnaposti</strong> stampati con il tuo logo, in tutte le taglie, con la loro base: li provi sui tuoi tavoli.</span></li>
+          <li><span class="iconify" data-icon="mdi:cube-outline"></span><span><strong>5 segnaposti con il tuo logo</strong>, uno per taglia (S, M, L verticale, L orizzontale e XL), con QR, NFC e la loro base: li provi sui tuoi tavoli. <em>Valore 67 €.</em></span></li>
+          <li><span class="iconify" data-icon="mdi:vector-square-edit"></span><span><strong>Preparazione grafica del logo</strong> per la stampa 3D, fatta da noi. <em>Valore 25 €.</em></span></li>
           <li><span class="iconify" data-icon="mdi:gift-outline"></span><span><strong>Menù digitale gratis per 7 giorni</strong> dal ritiro, già configurato.</span></li>
           <li><span class="iconify" data-icon="mdi:map-marker-outline"></span><span><strong>Ritiro a Piacenza</strong>, paghi al ritiro. Nessun pagamento online adesso.</span></li>
           <li><span class="iconify" data-icon="mdi:email-fast-outline"></span><span>Ti scriviamo appena è <strong>pronto</strong>, di solito in 2–3 giorni lavorativi.</span></li>
@@ -530,7 +585,8 @@
           <div class="field"><label for="pEmail">Email *</label><input id="pEmail" type="email" maxlength="120" autocomplete="email"/></div>
           <div class="field"><label for="pTel">Telefono (facoltativo)</label><input id="pTel" maxlength="40" autocomplete="tel"/></div>
         </div>
-        <div class="field"><label for="pNote">Note (facoltativo)</label><textarea id="pNote" maxlength="1000" placeholder="Quanti tavoli avete, colori preferiti, quando vi servono…"></textarea></div>
+        <div class="field"><label for="pTavoli">Numero di tavoli *</label><input id="pTavoli" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Così ti consigliamo la taglia giusta"/></div>
+        <div class="field"><label for="pNote">Note (facoltativo)</label><textarea id="pNote" maxlength="1000" placeholder="Colori preferiti, quando vi servono…"></textarea></div>
         <label class="k-check"><input type="checkbox" id="pConsenso"/> <span>Prenoto il kit campione dei segnaposti a 19,90 € da pagare al ritiro a Piacenza e acconsento al trattamento dei dati (<a href="/privacy.html" target="_blank">privacy</a>, <a href="/termini.html" target="_blank">termini</a>).</span></label>
         <button class="k-btn accent" id="pInvia" onclick="kPrenota()"><span>Prenota il kit</span> <span class="iconify" data-icon="mdi:arrow-right"></span></button>
         <div class="k-err" id="kErrP"></div>
@@ -560,6 +616,7 @@
   </div>
 </section>
 
+<script src="/js/prezzi-segnaposti.js"></script>
 <script>
 (() => {
   const API = '/api/kit';
@@ -681,7 +738,7 @@
 
   const VERDETTI = {
     automatico: { cls: 'ok', icon: 'mdi:check-circle', t: 'Logo perfetto per la stampa 3D', p: 'Colori pieni e forme pulite: lo convertiamo in automatico. Generiamo i tuoi segnaposti…' },
-    revisar: { cls: 'warn', icon: 'mdi:alert-circle', t: 'Si può fare, con qualche compromesso', p: 'Il logo si può stampare, ma alcuni dettagli verranno semplificati. Guarda i consigli: con un file migliore il risultato sarà più bello.' },
+    revisar: { cls: 'warn', icon: 'mdi:alert-circle', t: 'Si può fare, con qualche compromesso', p: 'Il logo si può stampare, ma alcuni dettagli verranno semplificati, soprattutto sulla taglia S, la più piccola. Guarda i consigli: con un file migliore il risultato sarà più bello.' },
     manual: { cls: 'bad', icon: 'mdi:hand-back-right', t: 'Questo logo va preparato a mano', p: 'Così com\'è non si può stampare bene in 3D. Carica un\'altra versione del logo oppure chiedici una revisione: lo prepariamo noi, gratis.' },
   };
 
@@ -800,10 +857,60 @@
     $('kKitTitle').textContent = '';
     $('kKitTitle').append(document.createTextNode('I SEGNAPOSTI DI'), document.createElement('br'), document.createTextNode((k.cliente || '').toUpperCase()));
     $('pAzienda').value = $('kAzienda').value.trim();
-    ['k-kit', 'k-bonus', 'k-prenota'].forEach(id => mostra(id));
+    ['k-kit', 'k-bonus', 'k-preventivo', 'k-prenota'].forEach(id => mostra(id));
+    aggiornaPreventivo();
     mostra('kBookBox'); mostra('kBookOk', false);
     setTimeout(() => scrolla($('k-kit')), 150);
   }
+
+  // ── 3b. preventivo per numero di tavoli ──────────────────
+  // I due campi (preventivo e prenotazione) restano allineati: il cliente scrive il numero una volta sola.
+  function tavoliValidi(v) { const n = Math.floor(Number(v)); return n >= 1 && n <= 500 ? n : null; }
+  ['kTavoli', 'pTavoli'].forEach((id, i, ids) => $(id).addEventListener('input', () => {
+    $(ids[1 - i]).value = $(id).value;
+    aggiornaPreventivo();
+  }));
+
+  function aggiornaPreventivo() {
+    const n = tavoliValidi($('kTavoli').value);
+    mostra('kPrevWrap', !!n); $('kStampaPrev').hidden = !n;
+    if (!n) return;
+    const azienda = $('kAzienda').value.trim();
+    $('kPrevPer').textContent = `Preventivo per ${n} ${n === 1 ? 'tavolo' : 'tavoli'}${azienda ? ' · ' + azienda : ''} — un segnaposto per tavolo.`;
+    const logoDelicato = stato.logo && stato.logo.verdetto !== 'automatico';
+    const corpo = $('kPrevBody'); corpo.innerHTML = '';
+    PrezziSegnaposti.preventivo(n).forEach(t => {
+      const tr = document.createElement('tr');
+      if (t.consigliato) tr.className = 'consigliato';
+      const taglia = document.createElement('td');
+      const nome = document.createElement('strong'); nome.textContent = t.nome; taglia.appendChild(nome);
+      if (t.consigliato) { const tag = document.createElement('span'); tag.className = 'k-prev-tag'; tag.textContent = 'Consigliato'; taglia.appendChild(tag); }
+      if (t.chiave === 'S' && logoDelicato) {
+        const w = document.createElement('span'); w.className = 'k-prev-warn';
+        w.textContent = 'Con il tuo logo meglio una taglia più grande: in S i dettagli si perdono.';
+        taglia.append(document.createElement('br'), w);
+      }
+      const inc = document.createElement('td'); inc.textContent = t.include;
+      const pack = document.createElement('td'); pack.className = 'num';
+      pack.textContent = `${t.pack} × ${t.pezzi} pz`;
+      const sub = document.createElement('span'); sub.className = 'k-prev-sub';
+      sub.textContent = t.scorta ? `${t.pezziTotali} segnaposti, ${t.scorta} di scorta` : `${t.pezziTotali} segnaposti`;
+      pack.appendChild(sub);
+      const tot = document.createElement('td'); tot.className = 'num';
+      const totN = document.createElement('span'); totN.className = 'k-prev-tot'; totN.textContent = euro(t.totale);
+      const totS = document.createElement('span'); totS.className = 'k-prev-sub'; totS.textContent = `${euro(t.prezzo)} a pack`;
+      tot.append(totN, totS);
+      const per = document.createElement('td'); per.className = 'num'; per.textContent = euro(t.perTavolo);
+      tr.append(taglia, inc, pack, tot, per);
+      corpo.appendChild(tr);
+    });
+  }
+
+  window.kStampaPreventivo = () => {
+    document.body.classList.add('stampa-preventivo');
+    window.print();
+  };
+  window.addEventListener('afterprint', () => document.body.classList.remove('stampa-preventivo'));
 
   function iconaPezzo(chiave) {
     return { S: 'mdi:size-s', M: 'mdi:size-m', L: 'mdi:size-l', XL: 'mdi:size-xl', LH: 'mdi:crop-landscape' }[chiave] || 'mdi:tablet';
@@ -821,8 +928,10 @@
     const dati = {
       kit_id: stato.kit && stato.kit.kit_id, nome: $('pNome').value.trim(), azienda: $('pAzienda').value.trim(),
       email: $('pEmail').value.trim(), telefono: $('pTel').value.trim(), note: $('pNote').value.trim(), consenso: $('pConsenso').checked,
+      tavoli: tavoliValidi($('pTavoli').value),
     };
     if (!dati.nome || !dati.azienda) return errore('kErrP', 'Inserisci nome e azienda.');
+    if (!dati.tavoli) return errore('kErrP', 'Indica quanti tavoli avete (da 1 a 500): così ti consigliamo la taglia giusta.');
     if (!EMAIL.test(dati.email)) return errore('kErrP', "Controlla l'email: non sembra valida.");
     if (!dati.consenso) return errore('kErrP', 'Per prenotare devi accettare le condizioni.');
     bloccaBtn('pInvia', true, 'Invio in corso…');
@@ -859,7 +968,7 @@
   };
 
   window.kRicomincia = () => {
-    ['k-kit', 'k-bonus', 'k-prenota'].forEach(id => mostra(id, false));
+    ['k-kit', 'k-bonus', 'k-preventivo', 'k-prenota'].forEach(id => mostra(id, false));
     stato.kit = null; ricarica();
   };
 })();

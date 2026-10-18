@@ -23,6 +23,7 @@ const RichiestaKit = sequelize.define("RichiestaKit", {
   scadenza_sconto: { type: DataTypes.DATE },
   note_admin:      { type: DataTypes.TEXT },
   kit_tipo:        { type: DataTypes.STRING(12), defaultValue: "merch" },                // merch | segnaposti
+  tavoli:          { type: DataTypes.INTEGER },                                      // solo segnaposti: per consigliare la taglia
 }, { tableName: "richieste_kit" });
 
 // Colonne aggiunte dopo la creazione della tabella (sync non altera mai le tabelle esistenti, vedi server.js):
@@ -31,6 +32,7 @@ RichiestaKit.assicuraColonne = async function () {
   const qi = sequelize.getQueryInterface();
   const colonne = await qi.describeTable("richieste_kit");
   if (!colonne.kit_tipo) await qi.addColumn("richieste_kit", "kit_tipo", { type: DataTypes.STRING(12), defaultValue: "merch" });
+  if (!colonne.tavoli) await qi.addColumn("richieste_kit", "tavoli", { type: DataTypes.INTEGER });
 };
 
 module.exports = RichiestaKit;
