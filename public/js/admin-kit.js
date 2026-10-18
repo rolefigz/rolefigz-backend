@@ -21,9 +21,10 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
 
     const righe = lista.map(k => {
       const [ic, pill] = VERDETTO_KIT[k.verdetto] || ['', 'pill'];
+      const segnaposti = k.kit_tipo === 'segnaposti';
       const file = k.tipo === 'kit' && k.kit_id ? `
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
-          <button class="action-btn" onclick="kitScarica('${k.kit_id}','preventivo.pdf')">PREVENTIVO</button>
+          ${segnaposti ? '' : `<button class="action-btn" onclick="kitScarica('${k.kit_id}','preventivo.pdf')">PREVENTIVO</button>`}
           <button class="action-btn" onclick="kitScarica('${k.kit_id}','hoja_montaje.html')">MONTAGGIO</button>
           <button class="action-btn" onclick="kitScarica3mf('${k.kit_id}')" style="border-color:var(--accent);color:var(--accent)">3MF ⬇</button>
         </div>` : `
@@ -32,7 +33,7 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
       return `
       <tr>
         <td><strong style="font-family:'DM Mono',monospace">${escKit(k.numero)}</strong><br><span style="color:var(--muted);font-size:10px">${dataKit(k.createdAt)}</span><br>
-            <span class="pill">${k.tipo === 'kit' ? 'KIT CAMPIONE' : 'REVISIONE'}</span></td>
+            <span class="pill">${k.tipo !== 'kit' ? 'REVISIONE' : k.kit_tipo === 'segnaposti' ? 'KIT SEGNAPOSTI' : 'KIT MERCH'}</span></td>
         <td>${k.logo_url ? `<a href="${escKit(k.logo_url)}" target="_blank"><img src="${escKit(k.logo_url)}" alt="" style="width:72px;height:48px;object-fit:contain;background:#fff;border:1px solid var(--border)"></a>` : '—'}
             <div style="margin-top:4px"><span class="${pill}">${ic} ${escKit((k.verdetto || '').toUpperCase())}</span></div></td>
         <td><strong>${escKit(k.azienda)}</strong><br>${escKit(k.nome)}<br>
@@ -130,7 +131,8 @@ async function kitScarica3mf(kitId) {
     const r = await fetch(`${API}/kit/admin/file/${kitId}/kit.json`, { headers: { Authorization: `Bearer ${token}` } });
     const info = await r.json();
     if (!r.ok) throw new Error(info.error);
-    kitApriBlob(`${API}/kit/admin/file/${kitId}/${info.file_3mf}`, info.file_3mf, false);
+    // i segnaposti hanno due 3MF (placche e basi): si scaricano entrambi
+    [].concat(info.file_3mf).forEach(f => kitApriBlob(`${API}/kit/admin/file/${kitId}/${f}`, f, false));
   } catch (e) { alert('Errore: ' + e.message); }
 }
 
@@ -141,7 +143,7 @@ function kitScaricaLogo(logoId, numero) {
 // ── Video kit: kit con il logo di un locale da visitare + video da mandare su WhatsApp ──
 // Stessi passi di /kit (analisi del logo e generazione) ma dalle rotte admin, senza limiti orari; il video lo
 // registra kit-video.js direttamente dal visore 3D.
-const videoKit = { pezzi: null, azienda: '', url: null };
+const videoKit = { pezzi: null, azienda: '', url: null, tipo: 'merch' };
 
 function adminTabKitVideo(content) {
   const supportato = !!KitVideo.formato();
@@ -151,9 +153,18 @@ function adminTabKitVideo(content) {
     di circa 20 secondi da mandargli su WhatsApp prima della visita. Il kit non compare tra le prenotazioni.</p>
     ${supportato ? '' : '<div class="msg err" style="margin-bottom:14px">Questo browser non può registrare video: usa Chrome.</div>'}
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+      <div class="field" style="min-width:160px"><label>Kit</label>
+        <select id="kvTipo" onchange="document.getElementById('kvSegnaposti').style.display = this.value === 'segnaposti' ? 'flex' : 'none'">
+          <option value="merch">Merch (aziende)</option><option value="segnaposti">Segnaposti (locali)</option>
+        </select></div>
       <div class="field" style="flex:1;min-width:200px"><label>Nome del locale *</label><input id="kvAzienda" type="text" placeholder="Pizzeria Da Mario"/></div>
       <div class="field" style="flex:1;min-width:200px"><label>Logo * (PNG, SVG, PDF, JPG)</label><input id="kvLogo" type="file" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp"/></div>
       <button class="btn-submit" id="kvGenera" onclick="kitVideoGenera()" style="width:auto;padding:12px 22px">GENERA KIT</button>
+    </div>
+    <div id="kvSegnaposti" style="display:none;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+      <div class="field" style="flex:1;min-width:200px"><label>Link del menù (vuoto = 4bytemenu.it/demo)</label><input id="kvMenu" type="text" placeholder="4bytemenu.it/il-locale"/></div>
+      <div class="field" style="min-width:180px"><label>Scritta sotto il QR (max 14)</label><input id="kvTesto" type="text" maxlength="14" placeholder="Scopri il menù"/></div>
+      <label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="kvStriscia"/> Striscia per scrivere</label>
     </div>
     <div id="kvStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px"></div>
     <div id="kvRisultato" style="display:none">
@@ -187,17 +198,23 @@ async function kitVideoGenera() {
     let r = await fetch(`${API}/kit/admin/analizza`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
     const logo = await r.json();
     if (!r.ok) throw new Error(logo.error || `HTTP ${r.status}`);
-    kitVideoStato('Genero il kit in 3D… (fino a un minuto)');
-    r = await fetch(`${API}/kit/admin/genera`, {
+    const segnaposti = document.getElementById('kvTipo').value === 'segnaposti';
+    kitVideoStato(segnaposti ? 'Genero i segnaposti in 3D… (fino a un minuto)' : 'Genero il kit in 3D… (fino a un minuto)');
+    r = await fetch(`${API}/kit/admin/${segnaposti ? 'segnaposti' : 'genera'}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ logo_id: logo.logo_id, azienda }),
+      body: JSON.stringify(segnaposti
+        ? { logo_id: logo.logo_id, azienda, qr_url: document.getElementById('kvMenu').value.trim(),
+            testo: document.getElementById('kvTesto').value.trim(), striscia: document.getElementById('kvStriscia').checked }
+        : { logo_id: logo.logo_id, azienda }),
     });
     const k = await r.json();
     if (!r.ok) throw new Error(k.error || `HTTP ${r.status}`);
 
     // i pezzi uno per uno e, per chiudere, tutto il kit
+    videoKit.tipo = segnaposti ? 'segnaposti' : 'merch';
     videoKit.pezzi = k.pezzi.map(p => ({ nome: p.nome, misure: p.misure, glb: p.glb }))
-      .concat({ nome: 'Tutto il kit', misure: 'Tutti i pezzi del kit campione', glb: k.piatto_glb });
+      .concat(segnaposti ? { nome: 'Tutti i segnaposti', misure: 'Tutte le taglie del kit campione', glb: k.piatto_glb }
+                         : { nome: 'Tutto il kit', misure: 'Tutti i pezzi del kit campione', glb: k.piatto_glb });
     videoKit.azienda = k.cliente || azienda;
     const [ic, pill] = VERDETTO_KIT[logo.verdetto] || ['', 'pill'];
     const motivi = (logo.motivi || []).map(escKit).join(' · ');
@@ -206,7 +223,9 @@ async function kitVideoGenera() {
     document.getElementById('kvAvviso').innerHTML = `<div style="margin-bottom:10px">
       <span class="${pill}">${ic} ${escKit((logo.verdetto || '').toUpperCase())}</span> <strong>${escKit(k.numero)}</strong>
       ${daGuardare ? `<div class="msg err" style="margin-top:8px">Controlla bene il kit prima di mandarlo: il logo potrebbe non essere venuto bene.${motivi ? ' ' + motivi : ''}</div>` : ''}</div>`;
-    document.getElementById('kvPdf').href = k.preventivo_pdf;
+    // i segnaposti non hanno ancora il preventivo (prezzi da rifare)
+    document.getElementById('kvPdf').style.display = k.preventivo_pdf ? '' : 'none';
+    if (k.preventivo_pdf) document.getElementById('kvPdf').href = k.preventivo_pdf;
     document.getElementById('kvViewer').src = videoKit.pezzi[videoKit.pezzi.length - 1].glb;
     ['kvAnteprima', 'kvCondividi', 'kvScarica'].forEach(id => { document.getElementById(id).style.display = 'none'; });
     document.getElementById('kvRisultato').style.display = '';
@@ -220,7 +239,9 @@ async function kitVideoCrea() {
   const btn = document.getElementById('kvCrea'), mv = document.getElementById('kvViewer');
   btn.disabled = true; document.getElementById('kvGenera').disabled = true; mv.style.pointerEvents = 'none';
   try {
-    const file = await KitVideo.crea({ mv, pezzi: videoKit.pezzi, azienda: videoKit.azienda, onStato: kitVideoStato });
+    const testi = videoKit.tipo === 'segnaposti' ? { titolo: 'I SEGNAPOSTI DI', url: 'rolefigz.com/kit/segnaposti' }
+                                                 : { titolo: 'IL KIT DI', url: 'rolefigz.com/kit/merch' };
+    const file = await KitVideo.crea({ mv, pezzi: videoKit.pezzi, azienda: videoKit.azienda, onStato: kitVideoStato, ...testi });
     if (videoKit.url) URL.revokeObjectURL(videoKit.url);
     videoKit.url = URL.createObjectURL(file);
     const anteprima = document.getElementById('kvAnteprima'); anteprima.src = videoKit.url; anteprima.style.display = '';

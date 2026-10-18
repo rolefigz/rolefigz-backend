@@ -25,6 +25,9 @@ const KitVideo = (() => {
 
   const BARLOW = '"Barlow Condensed", sans-serif', MONO = '"DM Mono", monospace';
 
+  // testi del video: titolo in alto e indirizzo della pagina del kit (merch o segnaposti)
+  let T = { titolo: 'IL KIT DI', url: 'rolefigz.com/kit' };
+
   function disegna(ctx, mv, pezzo, azienda, alfa, chiusura) {
     const { w, h, testa } = V, lato = w, piede = testa + lato;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -44,7 +47,7 @@ const KitVideo = (() => {
     }
     // testata
     ctx.fillStyle = '#C17F3A'; ctx.font = `500 22px ${MONO}`;
-    ctx.fillText('IL KIT DI', 60, 58);
+    ctx.fillText(T.titolo, 60, 58);
     ctx.fillStyle = '#f0ece4'; adatta(ctx, azienda, 900, 66, w - 120, BARLOW);
     ctx.fillText(azienda, 60, 126);
     // piede
@@ -55,7 +58,7 @@ const KitVideo = (() => {
     ctx.fillText(pezzo.misure || '', 60, piede + 92);
     ctx.textAlign = 'right';
     ctx.fillStyle = '#C17F3A'; ctx.font = `700 32px ${BARLOW}`;
-    ctx.fillText('ROLEFIGZ.COM/KIT', w - 60, piede + 55);
+    ctx.fillText(T.url.toUpperCase(), w - 60, piede + 55);
     ctx.fillStyle = '#999'; ctx.font = `400 18px ${MONO}`;
     ctx.fillText('STAMPA 3D · PIACENZA', w - 60, piede + 92);
     // chiusura: invito al kit campione sopra l'ultimo giro
@@ -69,7 +72,7 @@ const KitVideo = (() => {
       ctx.fillStyle = '#C17F3A'; ctx.font = `700 44px ${BARLOW}`;
       ctx.fillText('KIT CAMPIONE 19,90 € · RITIRO A PIACENZA', w / 2, y + 120);
       ctx.fillStyle = '#f0ece4'; ctx.font = `500 28px ${MONO}`;
-      ctx.fillText('rolefigz.com/kit', w / 2, y + 180);
+      ctx.fillText(T.url, w / 2, y + 180);
       ctx.globalAlpha = 1;
     }
   }
@@ -126,7 +129,8 @@ const KitVideo = (() => {
   }
 
   // pezzi: [{ nome, misure, glb }], l'ultimo è «tutto il kit». Restituisce un File (mp4 o webm).
-  async function crea({ mv, pezzi, azienda, onStato = () => {} }) {
+  async function crea({ mv, pezzi, azienda, onStato = () => {}, titolo = 'IL KIT DI', url = 'rolefigz.com/kit' }) {
+    T = { titolo, url };
     const tipo = formato();
     if (!tipo) throw new Error('Questo browser non può creare il video: usa Chrome.');
     azienda = (azienda || 'La tua azienda').toUpperCase();

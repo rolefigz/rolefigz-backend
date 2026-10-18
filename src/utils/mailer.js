@@ -744,6 +744,18 @@ const emailKitCliente = async (r, urlPreventivo, urlPaginaDemo = null) => {
       <p style="margin:0;font-size:20px;font-weight:bold;color:#C17F3A">${r.numero}</p>`,
       "Hai una versione migliore del logo (PNG o SVG, colori pieni)? Rispondi a questa email e allegala."));
   }
+  if (r.kit_tipo === "segnaposti") {
+    return invia(r.email, `🍽️ Kit segnaposti prenotato — RoleFigz ${r.numero}`, cornice("KIT<br>PRENOTATO!", "Kit segnaposti", `
+      <p style="${P}">Ciao <strong style="color:#f0ece4">${nome}</strong>,</p>
+      <p style="${P}">abbiamo ricevuto la prenotazione del kit campione dei segnaposti con il logo di
+      <strong style="color:#f0ece4">${azienda}</strong>: tutte le taglie, da toccare con mano sui tuoi tavoli.
+      Lo stampiamo e ti scriviamo quando è pronto per il ritiro a <strong style="color:#f0ece4">Piacenza</strong>.</p>
+      <p style="margin:0 0 18px;font-size:20px;font-weight:bold;color:#C17F3A">${r.numero} · € ${Number(r.prezzo).toFixed(2).replace(".", ",")} al ritiro</p>
+      <p style="${P}"><strong style="color:#f0ece4">🎁 Bonus:</strong> con il kit hai <strong style="color:#f0ece4">una settimana
+      di menù digitale gratis</strong> dal giorno in cui lo ritiri, già configurato con il tuo menù: basta avvicinare il
+      telefono al segnaposto o inquadrare il QR.</p>`,
+      "Hai domande o vuoi cambiare qualcosa? Rispondi a questa email."));
+  }
   return invia(r.email, `🧰 Kit campione prenotato — RoleFigz ${r.numero}`, cornice("KIT<br>PRENOTATO!", "Kit campione", `
     <p style="${P}">Ciao <strong style="color:#f0ece4">${nome}</strong>,</p>
     <p style="${P}">abbiamo ricevuto la prenotazione del kit campione con il logo di <strong style="color:#f0ece4">${azienda}</strong>.
@@ -769,7 +781,8 @@ const emailKitCliente = async (r, urlPreventivo, urlPaginaDemo = null) => {
 
 const emailKitAdmin = async (r) => {
   const riga = (k, v) => v ? `<p><strong>${k}:</strong> ${v}</p>` : "";
-  await invia(ADMIN, `${r.tipo === "kit" ? "🧰 Kit campione" : "✋ Revisione logo"} ${r.numero} — ${escKit(r.azienda)}`,
+  const titolo = r.tipo !== "kit" ? "✋ Revisione logo" : r.kit_tipo === "segnaposti" ? "🍽️ Kit segnaposti" : "🧰 Kit campione";
+  await invia(ADMIN, `${titolo} ${r.numero} — ${escKit(r.azienda)}`,
     `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
       <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">${r.tipo === "kit" ? "KIT CAMPIONE" : "REVISIONE LOGO"} ${r.numero}</h2>
       ${riga("Nome", escKit(r.nome))}${riga("Azienda", escKit(r.azienda))}

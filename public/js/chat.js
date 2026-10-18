@@ -2,14 +2,15 @@ let chatTicketCorrente = null;
 let chatPollingInterval = null;
 let chatFabInterval    = null;
 
-// ── Ticket da /kit («Voglio qualcosa di più personalizzato») ────────────────
-// /?ticket=kit&azienda=…&kit=… apre il chat con un ticket nuovo già compilato (anche senza account).
+// ── Ticket da /kit/merch e /kit/segnaposti («più personalizzato» / «su misura») ─────────
+// /?ticket=kit|segnaposti&azienda=…&kit=… apre il chat con un ticket nuovo già compilato (anche senza account).
 (function () {
   const q = new URLSearchParams(window.location.search);
-  if (q.get('ticket') !== 'kit') return;
+  const tipo = q.get('ticket');
+  if (tipo !== 'kit' && tipo !== 'segnaposti') return;
   try {
     sessionStorage.setItem('rfTicketKit', JSON.stringify({
-      azienda: (q.get('azienda') || '').slice(0, 80), kit: (q.get('kit') || '').slice(0, 20),
+      tipo, azienda: (q.get('azienda') || '').slice(0, 80), kit: (q.get('kit') || '').slice(0, 20),
       logo: (q.get('logo') || '').slice(0, 40),
     }));
   } catch (e) {}
@@ -24,10 +25,13 @@ function apriTicketKitInSospeso() {
   try { sessionStorage.removeItem('rfTicketKit'); } catch (e) {}
   apriChat();
   chatMostraNuovoForm();
-  document.getElementById('chatAsunto').value = 'Kit personalizzato' + (dati.azienda ? ' — ' + dati.azienda : '');
+  const segnaposti = dati.tipo === 'segnaposti';
+  document.getElementById('chatAsunto').value = (segnaposti ? 'Segnaposti su misura' : 'Kit personalizzato') +
+    (dati.azienda ? ' — ' + dati.azienda : '');
   document.getElementById('chatPrimerMsg').value =
-    'Ciao! Ho provato il kit merch' + (dati.kit ? ' (' + dati.kit + ')' : '') + ' su rolefigz.com/kit' +
-    (dati.logo ? ' (logo ' + dati.logo + ')' : '') + ' e vorrei qualcosa di più personalizzato:\n\n';
+    'Ciao! Ho provato ' + (segnaposti ? 'i segnaposti' : 'il kit merch') + (dati.kit ? ' (' + dati.kit + ')' : '') +
+    ' su rolefigz.com/kit/' + (segnaposti ? 'segnaposti' : 'merch') + (dati.logo ? ' (logo ' + dati.logo + ')' : '') +
+    (segnaposti ? ' e li vorrei su misura (forma, illustrazione, materiale…):\n\n' : ' e vorrei qualcosa di più personalizzato:\n\n');
   setTimeout(() => {
     const t = document.getElementById('chatPrimerMsg');
     t.focus(); t.setSelectionRange(t.value.length, t.value.length);

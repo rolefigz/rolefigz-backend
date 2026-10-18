@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Il tuo kit in 3D — RoleFigz</title>
+  <meta name="description" content="Carica il logo e vedi in 3D il tuo kit: gadget aziendali con NFC per la tua azienda o segnaposti con QR e NFC per il menù del tuo locale. Kit campione da 19,90 €."/>
+  <meta property="og:title" content="Il tuo kit in 3D — RoleFigz"/>
+  <meta property="og:description" content="Gadget aziendali o segnaposti per il tuo locale: carica il logo e vedili subito in 3D. Stampa 3D a Piacenza."/>
+  <meta property="og:image" content="https://www.rolefigz.com/assets/llaveros.jpeg"/>
+  <link rel="canonical" href="https://www.rolefigz.com/kit"/>
+  <link rel="icon" type="image/png" href="/assets/logo.png"/>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <style>
+    body { background: var(--dark); color: #f0ece4; }
+    .k-nav { position: sticky; top: 0; z-index: 10; background: rgba(247,245,240,.97); border-bottom: 1px solid var(--border);
+             display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; }
+    .k-nav-logo { height: 34px; filter: invert(1); }
+    .k-nav-badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted);
+                   border: 1px solid var(--border); padding: 4px 12px; text-transform: uppercase; }
+    .k-nav-badge span { color: var(--accent); }
+    .ki { max-width: 1040px; margin: 0 auto; padding: 80px 48px 96px; }
+    .ki-eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 4px;
+                  text-transform: uppercase; margin-bottom: 20px; }
+    .ki-h1 { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(52px, 8vw, 96px); font-weight: 900; line-height: .9;
+             letter-spacing: -2px; text-transform: uppercase; margin: 0 0 20px; }
+    .ki-h1 em { font-style: italic; color: var(--accent); }
+    .ki-sub { font-size: 16px; color: #999; line-height: 1.7; max-width: 560px; margin: 0 0 48px; }
+    .ki-scelte { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .ki-card { display: flex; flex-direction: column; gap: 14px; padding: 32px; text-decoration: none; color: #f0ece4;
+               background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); transition: border-color .2s, transform .2s; }
+    .ki-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .ki-ico { font-size: 40px; color: var(--accent); }
+    .ki-per { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #888; }
+    .ki-t { font-family: 'Barlow Condensed', sans-serif; font-size: 38px; font-weight: 900; text-transform: uppercase; line-height: .95; }
+    .ki-d { font-size: 14px; color: #aaa; line-height: 1.7; flex: 1; }
+    .ki-cta { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; background: var(--accent); color: #fff;
+              padding: 13px 24px; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 2px;
+              text-transform: uppercase; }
+    .ki-nota { margin-top: 32px; font-size: 13px; color: #888; }
+    @media (max-width: 760px) {
+      .k-nav { padding: 0 16px; }
+      .ki { padding: 48px 16px 64px; }
+      .ki-scelte { grid-template-columns: 1fr; }
+      .ki-card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="k-nav">
+  <a href="/"><img src="/assets/logo.png" alt="RoleFigz" class="k-nav-logo"/></a>
+  <div class="k-nav-badge">Stampa 3D · <span>Piacenza</span></div>
+</nav>
+
+<main class="ki">
+  <div class="ki-eyebrow">// Carica il logo, vedilo in 3D</div>
+  <h1 class="ki-h1">SCEGLI IL<br>TUO <em>KIT</em></h1>
+  <p class="ki-sub">In un minuto vedi in 3D i pezzi con il tuo logo. Poi prenoti il kit campione da 19,90 € e lo tocchi con mano, con ritiro a Piacenza.</p>
+
+  <div class="ki-scelte">
+    <a class="ki-card" href="/kit/merch">
+      <span class="ki-ico"><span class="iconify" data-icon="mdi:key-chain"></span></span>
+      <div class="ki-per">Per la tua azienda</div>
+      <div class="ki-t">Kit merch</div>
+      <div class="ki-d">Portachiavi NFC, magnete, badge, biglietto da visita NFC e stand da banco con QR. Con il preventivo, subito.</div>
+      <span class="ki-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
+    </a>
+    <a class="ki-card" href="/kit/segnaposti">
+      <span class="ki-ico"><span class="iconify" data-icon="mdi:silverware-fork-knife"></span></span>
+      <div class="ki-per">Per il tuo locale</div>
+      <div class="ki-t">Kit segnaposti</div>
+      <div class="ki-d">Segnaposti da tavolo con QR e NFC per il menù digitale, in tutte le taglie. Con una settimana di menù digitale gratis.</div>
+      <span class="ki-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
+    </a>
+  </div>
+  <p class="ki-nota">Domande? Scrivici a <a href="mailto:rolefigz@gmail.com" style="color:var(--accent)">rolefigz@gmail.com</a>.</p>
+</main>
+
+</body>
+</html>

@@ -73,8 +73,12 @@ app.get("/blog",       serveApp);
 app.get("/blog/:slug", serveApp);
 app.get("/checkout",   serveApp);
 
-// Kit merch: carica il logo → kit in 3D + preventivo + prenotazione del kit campione
-app.get("/kit", (req, res) => res.sendFile(path.join(__dirname, "public", "kit.html")));
+// Kit: /kit è la porta d'ingresso (merch o segnaposti) — così i link a /kit già inviati non si rompono.
+// /kit/merch: carica il logo → kit in 3D + preventivo + prenotazione del kit campione
+// /kit/segnaposti: carica il logo → segnaposti in 3D + prenotazione del kit campione dei segnaposti
+app.get("/kit", (req, res) => res.sendFile(path.join(__dirname, "public", "kit-index.html")));
+app.get("/kit/merch", (req, res) => res.sendFile(path.join(__dirname, "public", "kit.html")));
+app.get("/kit/segnaposti", (req, res) => res.sendFile(path.join(__dirname, "public", "segnaposti.html")));
 
 app.get("/producto/:slug", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -131,6 +135,8 @@ app.listen(PORT, () => {
     .then(() => syncSicuro(sequelize))
     .then(() => require("./src/models/PaginaDemo").assicuraColonne()
       .catch(err => console.error("pagine_demo, colonne foto:", err.message)))
+    .then(() => require("./src/models/RichiestaKit").assicuraColonne()
+      .catch(err => console.error("richieste_kit, colonna kit_tipo:", err.message)))
     .then(() => console.log("db sincronizzato"))
     .then(() => {
       // Job giornaliero di analytics (aggregazione + purga retention) nello

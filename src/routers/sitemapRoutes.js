@@ -14,6 +14,8 @@ router.get("/sitemap.xml", async (req, res) => {
       { loc: base, priority: "1.0", changefreq: "weekly" },
       { loc: `${base}/blog`,    priority: "0.7", changefreq: "weekly" },
       { loc: `${base}/kit`,     priority: "0.8", changefreq: "monthly" },
+      { loc: `${base}/kit/merch`,      priority: "0.8", changefreq: "monthly" },
+      { loc: `${base}/kit/segnaposti`, priority: "0.8", changefreq: "monthly" },
     ];
 
     const urls = [

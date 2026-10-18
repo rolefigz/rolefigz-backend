@@ -55,6 +55,17 @@ async function generaKit(logoId, azienda) {
   return r.json();
 }
 
+// Segnaposti (pagina /kit/segnaposti): stessi passi del kit, con URL del menù, testo e striscia per scrivere
+async function generaSegnaposti(logoId, azienda, opzioni = {}) {
+  const r = await chiama("/segnaposti", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ logo_id: logoId, azienda: azienda || "", qr_url: opzioni.qr_url || "",
+                           testo: opzioni.testo || "", striscia: !!opzioni.striscia }),
+  }, 240000);
+  return r.json();
+}
+
 // Response grezza (per inoltrare il file in streaming al browser)
 async function fileKit(kitId, nomeFile) {
   return chiama(`/kit/${encodeURIComponent(kitId)}/${encodeURIComponent(nomeFile)}`, {}, 60000);
@@ -74,4 +85,4 @@ async function conserva(tipo, id) {
   await chiama(percorso, { method: "POST" }, 30000);
 }
 
-module.exports = { analizzaLogo, generaKit, fileKit, infoKit, logoPng, conserva, ErroreServizio };
+module.exports = { analizzaLogo, generaKit, generaSegnaposti, fileKit, infoKit, logoPng, conserva, ErroreServizio };

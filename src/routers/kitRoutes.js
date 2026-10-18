@@ -49,7 +49,7 @@ const upload = multer({
 const ID_LOGO = /^[a-f0-9]{24}$/;
 const ID_KIT  = /^[a-f0-9]{16}$/;
 const FILE_PUBBLICI = /^(pezzo_[a-z_]+\.glb|piatto\.glb|preventivo\.pdf)$/;
-const FILE_ADMIN    = /^(pezzo_[a-z_]+\.glb|piatto\.glb|preventivo\.pdf|kit_[a-z0-9-]+\.3mf|hoja_montaje\.html|aptitud\.json|analisis_ia\.json|logo_original\.png|kit\.json)$/;
+const FILE_ADMIN    = /^(pezzo_[a-z_]+\.glb|piatto\.glb|preventivo\.pdf|kit_[a-z0-9-]+\.3mf|segnaposti_[a-z0-9-]+_(placas|basi)\.3mf|hoja_montaje\.html|aptitud\.json|analisis_ia\.json|logo_original\.png|kit\.json)$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function testo(v, max) {
@@ -130,6 +130,28 @@ async function genera(req, res) {
 }
 router.post("/genera", limiteGenera, genera);
 
+// ── 2b. Generazione dei segnaposti (pagina /kit/segnaposti) ─────────
+// URL del menù facoltativo (vuoto → 4bytemenu.it/demo), testo sotto il QR (max 14 caratteri, come «Scopri il menù»)
+// e striscia bianca per scrivere a matita. Ancora senza preventivo: i prezzi li sta rifacendo Oskar.
+const URL_MENU = /^(https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(\/[^\s<>"']*)?$/i;
+async function generaSegnaposti(req, res) {
+  const b = req.body || {};
+  if (!ID_LOGO.test(b.logo_id || "")) return res.status(400).json({ error: "Logo non valido: caricalo di nuovo." });
+  const qr_url = testo(b.qr_url, 300);
+  if (qr_url && !URL_MENU.test(qr_url)) return res.status(400).json({ error: "L'indirizzo del menù non è valido." });
+  try {
+    const k = await api.generaSegnaposti(b.logo_id, testo(b.azienda, 80),
+      { qr_url, testo: testo(b.testo, 14), striscia: b.striscia === true });
+    const url = f => `/api/kit/file/${k.kit_id}/${f}`;
+    res.json({
+      kit_id: k.kit_id, numero: k.numero, cliente: k.cliente, verdetto: k.verdetto, qr_url: k.qr_url, testo: k.testo,
+      pezzi: k.pezzi.map(p => ({ chiave: p.chiave, nome: p.nome, misure: p.misure, glb: url(p.glb) })),
+      piatto_glb: url(k.piatto_glb), tipo: "segnaposti",
+    });
+  } catch (err) { rispondiErrore(res, err); }
+}
+router.post("/segnaposti", limiteGenera, generaSegnaposti);
+
 // ── 3. File pubblici del kit (3D e preventivo) ──────────────────────
 router.get("/file/:kitId/:file", async (req, res) => {
   const { kitId, file } = req.params;
@@ -167,14 +189,16 @@ router.post("/prenota", limitePrenota, async (req, res) => {
     const k = await api.infoKit(b.kit_id);
     await api.conserva("kit", b.kit_id).catch(err => console.error("Conserva kit:", err.message));
     const logo_url = await caricaLogoCloudinary(k.logo_id);
+    const segnaposti = k.tipo === "segnaposti";
     const r = await RichiestaKit.create({
       numero: k.numero, tipo: "kit", kit_id: b.kit_id, logo_id: k.logo_id, verdetto: k.verdetto,
       ...dati, logo_url, qr_url: k.qr_url, prezzo: k.kit_campione?.prezzo ?? 19.90,
+      kit_tipo: segnaposti ? "segnaposti" : "merch",
     });
     // pagina NFC di prova con i dati di Google Maps (se il cliente ha scelto la sua attività): se Google non
     // risponde la prenotazione va avanti lo stesso
     let demo = null;
-    if (places.ID_PLACE.test(b.place_id || "")) {
+    if (!segnaposti && places.ID_PLACE.test(b.place_id || "")) {
       demo = await creaPaginaDemo(r, b.place_id).catch(err => { console.error("Pagina demo:", err.message); return null; });
     }
     const base = process.env.BASE_URL || "https://www.rolefigz.com";
@@ -183,7 +207,7 @@ router.post("/prenota", limitePrenota, async (req, res) => {
       r.note_admin = `Pagina NFC di prova: ${pagina_demo} (scade il ${new Date(demo.scadenza).toLocaleDateString("it-IT")})`;
       await r.save();
     }
-    const preventivo = `${base}/api/kit/file/${b.kit_id}/preventivo.pdf`;
+    const preventivo = segnaposti ? null : `${base}/api/kit/file/${b.kit_id}/preventivo.pdf`;
     emailKitCliente(r, preventivo, pagina_demo).catch(err => console.error("Email kit cliente:", err.message));
     emailKitAdmin(r).catch(err => console.error("Email kit admin:", err.message));
     notifica(r, pagina_demo ? `\n🌐 ${pagina_demo}` : "");
@@ -278,6 +302,7 @@ router.delete("/admin/richieste/:id", verifyToken, soloAdmin, async (req, res) =
 // Pannello admin → Video kit: stessi passi della pagina pubblica ma senza limiti orari (kit per i locali da visitare)
 router.post("/admin/analizza", verifyToken, soloAdmin, caricaLogo, analizza);
 router.post("/admin/genera", verifyToken, soloAdmin, genera);
+router.post("/admin/segnaposti", verifyToken, soloAdmin, generaSegnaposti);
 
 router.get("/admin/file/:kitId/:file", verifyToken, soloAdmin, async (req, res) => {
   const { kitId, file } = req.params;

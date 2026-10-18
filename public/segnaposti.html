@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>I tuoi segnaposti in 3D — RoleFigz</title>
+  <meta name="description" content="Carica il logo del tuo locale e in un minuto vedi in 3D i segnaposti con QR e NFC per il menù digitale, in tutte le taglie. Kit campione da 19,90 € con una settimana di menù digitale gratis."/>
+  <meta property="og:title" content="I tuoi segnaposti in 3D — RoleFigz"/>
+  <meta property="og:description" content="Carica il logo e vedi subito i segnaposti del tuo locale in 3D, con QR e NFC per il menù. Stampa 3D a Piacenza."/>
+  <meta property="og:image" content="https://www.rolefigz.com/assets/llaveros.jpeg"/>
+  <link rel="canonical" href="https://www.rolefigz.com/kit/segnaposti"/>
+  <link rel="icon" type="image/png" href="/assets/logo.png"/>
+  <link rel="stylesheet" href="/css/shared.css"/>
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--accent); }
+    [hidden] { display: none !important; }
+
+    /* ── NAV ── */
+    .k-nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(247,245,240,.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+    }
+    .k-nav-logo { height: 34px; filter: invert(1); }
+    .k-nav-badge {
+      font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+      color: var(--muted); border: 1px solid var(--border); padding: 4px 12px; text-transform: uppercase;
+    }
+    .k-nav-badge span { color: var(--accent); }
+
+    /* ── HERO ── */
+    .k-hero { background: var(--dark); color: #f0ece4; padding: 96px 48px 76px; position: relative; overflow: hidden; }
+    .k-hero::before {
+      content: 'KIT'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 340px; font-weight: 900;
+      color: rgba(255,255,255,.03); letter-spacing: -8px; pointer-events: none; line-height: 1;
+    }
+    .k-hero-inner { max-width: 780px; position: relative; z-index: 2; }
+    .k-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent);
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .k-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    .k-h1 {
+      font-family: 'Barlow Condensed', sans-serif; font-size: clamp(60px, 9vw, 112px); font-weight: 900;
+      line-height: .88; letter-spacing: -2px; text-transform: uppercase; margin-bottom: 24px;
+    }
+    .k-h1 em { font-style: italic; color: var(--accent); }
+    .k-sub { font-size: 16px; color: #999; line-height: 1.8; max-width: 520px; margin-bottom: 40px; }
+    .k-cta {
+      display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: #fff; border: none;
+      padding: 16px 36px; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: background .2s; text-decoration: none;
+    }
+    .k-cta:hover { background: var(--accent2); }
+    .k-stats { display: flex; gap: 48px; margin-top: 56px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,.08); }
+    .k-stat-n { font-family: 'Barlow Condensed', sans-serif; font-size: 52px; font-weight: 900; color: var(--accent); line-height: 1; }
+    .k-stat-l { font-family: 'DM Mono', monospace; font-size: 9px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+    /* ── SEZIONI ── */
+    .k-section { padding: 80px 48px; border-bottom: 1px solid var(--border); }
+    .k-section-dark { background: var(--dark2); color: #f0ece4; }
+    .k-wrap { max-width: 1100px; margin: 0 auto; }
+    .k-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px; }
+    .k-title {
+      font-family: 'Barlow Condensed', sans-serif; font-size: clamp(40px, 5vw, 60px); font-weight: 900;
+      text-transform: uppercase; letter-spacing: -1px; line-height: .9; margin-bottom: 20px; color: var(--dark);
+    }
+    .k-section-dark .k-title { color: #f0ece4; }
+    .k-lead { font-size: 15px; color: var(--muted); line-height: 1.8; max-width: 640px; margin-bottom: 44px; }
+    .k-section-dark .k-lead { color: #888; }
+
+    /* ── GUIDA SÌ / NO ── */
+    .k-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(255,255,255,.07); }
+    .k-guide-col { background: var(--dark); padding: 32px 28px; }
+    .k-guide-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .k-guide-head .iconify { font-size: 30px; }
+    .k-si .k-guide-head { color: #6fbf87; }
+    .k-no .k-guide-head { color: #e0766a; }
+    .k-examples { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .k-ex { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); padding: 14px; }
+    .k-ex svg { width: 100%; height: auto; display: block; margin-bottom: 12px; border-radius: 2px; }
+    .k-ex-t { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #f0ece4; margin-bottom: 4px; }
+    .k-ex-d { font-size: 12px; color: #888; line-height: 1.6; }
+
+    /* ── STEP ── */
+    .k-step-panel { max-width: 760px; margin: 0 auto; }
+    .k-upload {
+      border: 1.5px dashed var(--border); padding: 40px 20px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s; background: var(--surface);
+    }
+    .k-upload:hover, .k-upload.dragover { border-color: var(--accent); background: rgba(193,127,58,.04); }
+    .k-upload-icon { font-size: 44px; color: var(--muted); margin-bottom: 12px; display: block; }
+    .k-upload-text { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dark); margin-bottom: 6px; }
+    .k-upload-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+    .k-preview { display: none; gap: 20px; align-items: center; padding: 16px; border: 1px solid var(--border); background: var(--surface); margin-top: 10px; }
+    .k-preview.on { display: flex; }
+    .k-preview-img {
+      width: 140px; height: 100px; object-fit: contain; flex-shrink: 0;
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 16px 16px; border: 1px solid var(--border);
+    }
+    .k-preview-name { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dark); word-break: break-all; }
+    .k-preview-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 6px; }
+    .k-hint { margin-top: 8px; font-size: 12px; line-height: 1.6; padding: 10px 12px; display: none; }
+    .k-hint.on { display: block; }
+    .k-hint.warn { background: rgba(230,160,32,.08); border: 1px solid rgba(230,160,32,.3); color: #8a5d07; }
+    .k-hint.err { background: rgba(192,57,43,.07); border: 1px solid rgba(192,57,43,.25); color: var(--red); }
+    .k-nfc-demo { margin: 6px 0 14px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
+    .k-nfc-demo p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #b9b6ae; }
+    .k-nfc-demo p strong { color: #f0ece4; }
+    .k-nfc-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .k-nfc-row .field { flex: 1; min-width: 180px; margin: 0; }
+    .k-nfc-cerca { padding: 12px 16px; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; }
+    .k-nfc-cerca:disabled { opacity: .5; cursor: wait; }
+    .k-attivita { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .k-attivita label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #b9b6ae; border: 1px solid rgba(255,255,255,.10); cursor: pointer; }
+    .k-attivita label:has(input:checked) { border-color: var(--accent); background: rgba(193,127,58,.08); }
+    .k-attivita input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+    .k-attivita strong { color: #f0ece4; }
+    .k-attivita .msg { font-size: 12px; color: #b9b6ae; }
+    .k-check { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--text); line-height: 1.6; margin: 18px 0 4px; cursor: pointer; }
+    .k-check input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+    .k-check a { color: var(--accent); }
+    .k-btn {
+      width: 100%; background: var(--dark); border: none; color: #fff; padding: 18px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; transition: background .2s; margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .k-btn:hover { background: var(--dark2); }
+    .k-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .k-btn.accent { background: var(--accent); }
+    .k-btn.accent:hover { background: var(--accent2); }
+    .k-btn.ghost { background: none; color: var(--dark); border: 1px solid var(--dark); }
+    .k-btn.ghost:hover { background: var(--surface2); }
+    .k-btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .k-btn-row .k-btn { flex: 1; min-width: 220px; }
+    .k-err {
+      display: none; margin-top: 16px; padding: 14px 16px; background: rgba(192,57,43,.07); border: 1px solid rgba(192,57,43,.25);
+      font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); letter-spacing: .5px; line-height: 1.6;
+    }
+    .k-err.on { display: block; }
+    @keyframes k-spin { to { transform: rotate(360deg); } }
+    .k-spin { animation: k-spin .8s linear infinite; display: inline-block; }
+
+    /* ── ATTESA ── */
+    .k-wait { text-align: center; padding: 48px 20px; }
+    .k-wait-icon { font-size: 54px; color: var(--accent); display: inline-block; margin-bottom: 18px; }
+    .k-wait-t { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 900; text-transform: uppercase; letter-spacing: -.5px; color: var(--dark); }
+    .k-wait-s { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 10px; min-height: 18px; }
+    .k-bar { height: 3px; background: var(--border); margin: 26px auto 0; max-width: 360px; overflow: hidden; }
+    .k-bar div { height: 100%; width: 0; background: var(--accent); transition: width .6s ease; }
+
+    /* ── VERDETTO ── */
+    .k-verdict { border: 1px solid var(--border); background: var(--surface); padding: 28px; margin-top: 24px; }
+    .k-verdict-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+    .k-verdict-head .iconify { font-size: 40px; flex-shrink: 0; }
+    .k-verdict-t { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+    .k-verdict.ok { border-color: rgba(74,122,90,.35); } .k-verdict.ok .k-verdict-head { color: var(--green); }
+    .k-verdict.warn { border-color: rgba(230,160,32,.45); } .k-verdict.warn .k-verdict-head { color: #b87d10; }
+    .k-verdict.bad { border-color: rgba(192,57,43,.35); } .k-verdict.bad .k-verdict-head { color: var(--red); }
+    .k-verdict p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .k-list { list-style: none; margin-top: 12px; }
+    .k-list li { font-size: 13px; line-height: 1.6; padding: 6px 0 6px 26px; position: relative; color: var(--text); }
+    .k-list li .iconify { position: absolute; left: 0; top: 8px; font-size: 16px; }
+    .k-list-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 18px; }
+
+    /* ── KIT 3D ── */
+    .k-kit { display: grid; grid-template-columns: 280px 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+    .k-pieces { background: var(--surface); display: flex; flex-direction: column; }
+    .k-piece {
+      text-align: left; background: none; border: none; border-bottom: 1px solid var(--border); padding: 14px 18px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); transition: background .15s; display: flex; gap: 10px; align-items: center;
+    }
+    .k-piece:hover { background: var(--surface2); }
+    .k-piece.on { background: var(--dark); color: #f0ece4; }
+    .k-piece .iconify { font-size: 18px; color: var(--accent); flex-shrink: 0; }
+    .k-viewer-wrap { background: #e9e5dd; position: relative; min-height: 520px; display: flex; flex-direction: column; }
+    model-viewer { width: 100%; flex: 1; min-height: 460px; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #f7f5f0 0%, #ddd8ce 100%); }
+    .k-viewer-info { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface); border-top: 1px solid var(--border); }
+    .k-viewer-name { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; text-transform: uppercase; }
+    .k-viewer-dim { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; align-self: center; }
+    .k-viewer-tip {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%); pointer-events: none;
+      font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+      background: rgba(247,245,240,.85); padding: 6px 12px; border: 1px solid var(--border); white-space: nowrap;
+    }
+    .k-freccia {
+      position: absolute; top: calc(50% - 30px); transform: translateY(-50%); z-index: 3;
+      width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer;
+      background: rgba(255,255,255,.92); color: var(--dark); font-size: 34px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,.12); transition: background .15s, transform .15s;
+    }
+    .k-freccia:hover { background: var(--dark); color: #fff; }
+    .k-freccia:active { transform: translateY(-50%) scale(.94); }
+    .k-freccia.sx { left: 14px; }
+    .k-freccia.dx { right: 14px; animation: k-invito 1.6s ease-in-out 1.2s 3; }
+    @keyframes k-invito { 0%, 100% { transform: translateY(-50%); } 50% { transform: translate(6px, -50%); } }
+    .k-count {
+      position: absolute; top: 14px; right: 14px; pointer-events: none;
+      font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--dark);
+      background: rgba(247,245,240,.9); padding: 6px 10px; border: 1px solid var(--border);
+    }
+    .k-personalizza { display: flex; justify-content: center; margin-top: 16px; }
+    .k-controllo { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.5; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
+    .k-controllo[hidden] { display: none; }
+    .k-note { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.6; }
+
+    /* ── PREVENTIVO ── */
+    .k-quote { background: var(--surface); border: 1px solid var(--border); }
+    .k-quote td, .k-quote th { padding: 14px 18px; }
+    .k-quote td.n { text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; white-space: nowrap; }
+    .k-quote th.n { text-align: right; }
+    .k-quote td.v { color: var(--accent); }
+    .k-quote td.top, .k-quote th.top { color: var(--accent); font-weight: 700; }
+    .k-quote th small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; letter-spacing: .5px; color: var(--muted); }
+    .k-quote th.top small { color: var(--accent); font-weight: 700; }
+    .k-quote td .nota { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); }
+    .k-quote-risparmio { margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--accent); }
+    .k-quote-foot { padding: 16px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.8; }
+    .k-quote-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+    .k-link-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      border: 1px solid var(--dark); color: var(--dark); background: none; cursor: pointer;
+    }
+    .k-link-btn:hover { background: var(--surface2); }
+
+    /* ── PRENOTA ── */
+    .k-book { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .k-price { font-family: 'Barlow Condensed', sans-serif; font-size: 96px; font-weight: 900; color: var(--accent); line-height: .9; letter-spacing: -2px; }
+    .k-price small { font-size: 22px; color: #888; letter-spacing: 1px; margin-left: 6px; }
+    .k-perks { list-style: none; margin-top: 28px; }
+    .k-perks li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; color: #bbb; line-height: 1.6; }
+    .k-perks li .iconify { color: var(--accent); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .k-perks strong { color: #f0ece4; }
+    .k-form-dark .field label { color: #888; }
+    .k-form-dark .field input, .k-form-dark .field textarea { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); color: #f0ece4; }
+    .k-form-dark .field input:focus, .k-form-dark .field textarea:focus { border-color: var(--accent); }
+    .k-form-dark .k-check { color: #aaa; }
+    .k-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── SUCCESSO ── */
+    .k-success { text-align: center; padding: 40px 20px; }
+    .k-success .iconify { font-size: 72px; color: #6fbf87; }
+    .k-success-h { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; line-height: 1; margin: 16px 0 10px; }
+    .k-success-id { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); letter-spacing: 3px; margin-bottom: 14px; }
+    .k-success-sub { font-size: 14px; color: #999; line-height: 1.8; max-width: 520px; margin: 0 auto; }
+
+    .k-restart { background: none; border: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 18px; text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .k-nav { padding: 0 24px; }
+      .k-hero { padding: 64px 24px 56px; }
+      .k-section { padding: 56px 24px; }
+      .k-guide { grid-template-columns: 1fr; }
+      .k-kit { grid-template-columns: 1fr; }
+      .k-pieces { flex-direction: row; overflow-x: auto; }
+      .k-piece { border-bottom: none; border-right: 1px solid var(--border); white-space: nowrap; flex-shrink: 0; }
+      .k-book { grid-template-columns: 1fr; gap: 32px; }
+    }
+    @media (max-width: 640px) {
+      .k-nav { padding: 0 16px; height: 56px; }
+      .k-nav-badge { display: none; }
+      .k-hero { padding: 44px 16px 40px; }
+      .k-hero::before { display: none; }
+      .k-h1 { font-size: 54px; letter-spacing: -1px; }
+      .k-sub { font-size: 14px; }
+      .k-cta { padding: 14px 24px; font-size: 17px; }
+      .k-stats { flex-wrap: wrap; gap: 22px; margin-top: 36px; padding-top: 28px; }
+      .k-stat-n { font-size: 40px; }
+      .k-section { padding: 40px 16px; }
+      .k-title { font-size: 38px; }
+      .k-guide-col { padding: 24px 16px; }
+      .k-examples { gap: 10px; }
+      .k-ex { padding: 10px; }
+      .k-ex-t { font-size: 15px; }
+      .k-preview { flex-direction: column; align-items: flex-start; }
+      .k-preview-img { width: 100%; height: 140px; }
+      .k-viewer-wrap { min-height: 380px; }
+      model-viewer { min-height: 330px; }
+      .k-quote td, .k-quote th { padding: 10px 8px; font-size: 11px; }
+      .k-quote .hide-sm { display: none; }
+      .k-price { font-size: 72px; }
+      .k-row2 { grid-template-columns: 1fr; gap: 0; }
+      .k-btn { font-size: 18px; padding: 16px; }
+      .k-btn-row .k-btn { min-width: 100%; }
+      .k-success-h { font-size: 42px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="k-nav">
+  <a href="/"><img src="/assets/logo.png" alt="RoleFigz" class="k-nav-logo"/></a>
+  <div class="k-nav-badge">Stampa 3D · <span>Piacenza</span></div>
+</nav>
+
+<!-- HERO -->
+<section class="k-hero">
+  <div class="k-hero-inner">
+    <div class="k-eyebrow"><span class="iconify" data-icon="mdi:silverware-fork-knife" style="font-size:14px"></span> Per ristoranti, bar e locali</div>
+    <h1 class="k-h1">I TUOI<br>SEGNAPOSTI IN <em>3D</em></h1>
+    <p class="k-sub">Carica il logo del tuo locale: in un minuto vedi in 3D i segnaposti da tavolo con QR e NFC per il menù digitale, in tutte le taglie. I clienti avvicinano il telefono e il menù si apre.</p>
+    <a href="#k-guida" class="k-cta">Inizia <span class="iconify" data-icon="mdi:arrow-down"></span></a>
+    <div class="k-stats">
+      <div><div class="k-stat-n">5</div><div class="k-stat-l">segnaposti in 3D</div></div>
+      <div><div class="k-stat-n">60s</div><div class="k-stat-l">per vederli</div></div>
+      <div><div class="k-stat-n">7 gg</div><div class="k-stat-l">di menù digitale gratis</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GUIDA -->
+<section class="k-section k-section-dark" id="k-guida">
+  <div class="k-wrap">
+    <div class="k-label">// Prima di caricare</div>
+    <div class="k-title">COM'È UN LOGO<br>CHE FUNZIONA</div>
+    <p class="k-lead">Stampiamo il logo in rilievo, a colori pieni, su pezzi piccoli (il segnaposto più piccolo è largo meno di 5 cm). Per questo serve la versione più semplice e pulita del tuo logo: quella che useresti per un timbro o un ricamo.</p>
+    <div class="k-guide">
+      <div class="k-guide-col k-si">
+        <div class="k-guide-head"><span class="iconify" data-icon="mdi:check-circle"></span> Sì</div>
+        <div class="k-examples">
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><rect width="160" height="90" fill="#fff"/><circle cx="40" cy="45" r="22" fill="#C12E1F"/><rect x="72" y="30" width="66" height="12" fill="#141412"/><rect x="72" y="50" width="44" height="10" fill="#141412"/></svg>
+            <div class="k-ex-t">Colori pieni</div>
+            <div class="k-ex-d">Da 1 a 3 colori, senza sfumature. Ogni colore diventa un filamento.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><defs><pattern id="sc" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#fff"/><rect width="5" height="5" fill="#e6e6e6"/><rect x="5" y="5" width="5" height="5" fill="#e6e6e6"/></pattern></defs><rect width="160" height="90" fill="url(#sc)"/><path d="M50 20h60l-30 50z" fill="#0A66C2"/></svg>
+            <div class="k-ex-t">PNG o SVG</div>
+            <div class="k-ex-d">Ancora meglio PDF o AI vettoriale. Sfondo trasparente o di un colore unico, almeno 1000 px.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><rect width="160" height="90" fill="#fff"/><rect x="28" y="28" width="104" height="18" fill="#141412"/><rect x="28" y="52" width="70" height="12" fill="#141412"/></svg>
+            <div class="k-ex-t">Solo il logotipo</div>
+            <div class="k-ex-d">Il marchio e il nome. Niente slogan, indirizzi o siti web.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><rect width="160" height="90" fill="#fff"/><rect x="34" y="22" width="92" height="46" rx="4" fill="none" stroke="#141412" stroke-width="7"/><rect x="58" y="38" width="44" height="14" fill="#141412"/></svg>
+            <div class="k-ex-t">Tratti spessi</div>
+            <div class="k-ex-d">Linee e lettere ben visibili anche in piccolo (minimo 0,8 mm stampati).</div>
+          </div>
+        </div>
+      </div>
+      <div class="k-guide-col k-no">
+        <div class="k-guide-head"><span class="iconify" data-icon="mdi:close-circle"></span> No</div>
+        <div class="k-examples">
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><defs><linearGradient id="gr" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#F4D03F"/><stop offset=".5" stop-color="#e05a2a"/><stop offset="1" stop-color="#7b2cbf"/></linearGradient><filter id="om"><feDropShadow dx="4" dy="5" stdDeviation="3" flood-opacity=".45"/></filter></defs><rect width="160" height="90" fill="#fff"/><circle cx="80" cy="45" r="27" fill="url(#gr)" filter="url(#om)"/></svg>
+            <div class="k-ex-t">Sfumature e ombre</div>
+            <div class="k-ex-d">Degradé, riflessi ed effetti 3D non si stampano: diventano macchie.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><defs><filter id="bl"><feGaussianBlur stdDeviation="2.4"/></filter></defs><rect width="160" height="90" fill="#8a9a7b"/><g filter="url(#bl)"><rect x="0" y="55" width="160" height="35" fill="#5b4a3a"/><circle cx="118" cy="26" r="14" fill="#f2d39b"/><rect x="40" y="32" width="46" height="30" fill="#c9c3b6"/><rect x="50" y="40" width="26" height="9" fill="#a33"/></g></svg>
+            <div class="k-ex-t">Foto o screenshot</div>
+            <div class="k-ex-d">Foto dell'insegna, del biglietto o screenshot del sito: serve il file originale.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true"><rect width="160" height="90" fill="#fff"/><rect x="30" y="18" width="100" height="16" fill="#141412"/><g fill="#666"><rect x="30" y="42" width="100" height="3"/><rect x="30" y="49" width="88" height="3"/><rect x="30" y="56" width="96" height="3"/><rect x="30" y="63" width="70" height="3"/><rect x="30" y="70" width="84" height="3"/></g></svg>
+            <div class="k-ex-t">Testi piccoli</div>
+            <div class="k-ex-d">Slogan, indirizzi o scritte sottili spariscono a 4 cm di larghezza.</div>
+          </div>
+          <div class="k-ex">
+            <svg viewBox="0 0 160 90" aria-hidden="true" shape-rendering="crispEdges"><rect width="160" height="90" fill="#fff"/><g fill="#0A66C2"><rect x="56" y="22" width="16" height="16"/><rect x="72" y="22" width="16" height="16"/><rect x="88" y="22" width="16" height="16"/><rect x="56" y="38" width="16" height="16"/><rect x="88" y="38" width="16" height="16"/><rect x="56" y="54" width="16" height="16"/><rect x="72" y="54" width="16" height="16"/></g><rect x="72" y="38" width="16" height="16" fill="#6aa3e0"/><rect x="88" y="54" width="16" height="16" fill="#9bc0ea"/></svg>
+            <div class="k-ex-t">Immagini sgranate</div>
+            <div class="k-ex-d">Loghi piccoli, presi da WhatsApp o dai social: i bordi escono a scalini.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PASSO 1: CARICA -->
+<section class="k-section" id="k-carica">
+  <div class="k-step-panel">
+    <div class="k-label">// Passo 1</div>
+    <div class="k-title">CARICA<br>IL TUO LOGO</div>
+
+    <div id="kUploadBox">
+      <div class="k-row2">
+        <div class="field">
+          <label for="kAzienda">Nome dell'azienda *</label>
+          <input type="text" id="kAzienda" maxlength="80" placeholder="Es. Bar Stella" autocomplete="organization"/>
+        </div>
+        <div class="field">
+          <label for="kMenu">Link del tuo menù (facoltativo)</label>
+          <input type="url" id="kMenu" maxlength="300" placeholder="Es. 4bytemenu.it/il-mio-locale" autocomplete="url"/>
+        </div>
+      </div>
+      <div class="k-row2">
+        <div class="field">
+          <label for="kTesto">Scritta sotto il QR (max 14 caratteri)</label>
+          <input type="text" id="kTesto" maxlength="14" placeholder="Scopri il menù"/>
+        </div>
+        <label class="k-check" style="align-self:end"><input type="checkbox" id="kStriscia"/> <span>Spazio bianco per scrivere a matita il nome degli ospiti</span></label>
+      </div>
+      <div class="k-upload" id="kUpload" tabindex="0" role="button" aria-label="Carica il logo">
+        <span class="k-upload-icon"><span class="iconify" data-icon="mdi:cloud-upload-outline"></span></span>
+        <div class="k-upload-text">Trascina il logo qui o clicca per scegliere</div>
+        <div class="k-upload-sub">PNG, SVG, PDF, AI, JPG o WEBP · max 10 MB · il vettoriale (SVG/PDF) è il migliore</div>
+        <input type="file" id="kFile" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp,image/svg+xml,application/pdf" hidden/>
+      </div>
+      <div class="k-preview" id="kPreview">
+        <img id="kPreviewImg" class="k-preview-img" alt="Anteprima del logo"/>
+        <div>
+          <div class="k-preview-name" id="kPreviewName"></div>
+          <div class="k-preview-meta" id="kPreviewMeta"></div>
+          <button type="button" class="k-restart" style="margin-top:8px" onclick="kScegliFile()">Cambia file</button>
+        </div>
+      </div>
+      <div class="k-hint" id="kHint"></div>
+      <label class="k-check"><input type="checkbox" id="kDiritti"/> <span>Confermo di poter usare questo logo (è della mia azienda o ho l'autorizzazione).</span></label>
+      <button class="k-btn accent" id="kAnalizza" onclick="kAnalizza()" disabled>
+        <span>Controlla il logo</span> <span class="iconify" data-icon="mdi:arrow-right"></span>
+      </button>
+      <div class="k-err" id="kErr1"></div>
+    </div>
+
+    <div class="k-wait" id="kWait" hidden>
+      <span class="k-wait-icon"><span class="iconify k-spin" data-icon="mdi:loading"></span></span>
+      <div class="k-wait-t" id="kWaitT">Analizziamo il logo…</div>
+      <div class="k-wait-s" id="kWaitS"></div>
+      <div class="k-bar"><div id="kBar"></div></div>
+    </div>
+
+    <div id="kVerdict" hidden></div>
+
+    <!-- revisione manuale -->
+    <div id="kRevisione" hidden>
+      <div class="k-verdict" style="margin-top:16px">
+        <div class="k-list-title" style="margin-top:0">Revisione gratuita del logo</div>
+        <p style="margin:8px 0 18px">Lo prepariamo noi a mano per la stampa 3D e ti mandiamo anteprima e preventivo entro 2 giorni lavorativi. Nessun impegno.</p>
+        <div class="k-row2">
+          <div class="field"><label for="rNome">Nome e cognome *</label><input id="rNome" maxlength="100" autocomplete="name"/></div>
+          <div class="field"><label for="rEmail">Email *</label><input id="rEmail" type="email" maxlength="120" autocomplete="email"/></div>
+        </div>
+        <div class="field"><label for="rTel">Telefono (facoltativo)</label><input id="rTel" maxlength="40" autocomplete="tel"/></div>
+        <div class="field"><label for="rNote">Cosa ti serve? (facoltativo)</label><textarea id="rNote" maxlength="1000" placeholder="Quanti pezzi, per quale evento, colori preferiti…"></textarea></div>
+        <label class="k-check"><input type="checkbox" id="rConsenso"/> <span>Acconsento al trattamento dei dati per ricevere la proposta (<a href="/privacy.html" target="_blank">privacy</a>).</span></label>
+        <button class="k-btn" id="rInvia" onclick="kInviaRevisione()"><span>Chiedi la revisione</span> <span class="iconify" data-icon="mdi:send"></span></button>
+        <div class="k-err" id="kErrR"></div>
+      </div>
+    </div>
+    <div class="k-success" id="kRevOk" hidden style="color:var(--dark)">
+      <span class="iconify" data-icon="mdi:check-decagram"></span>
+      <div class="k-success-h">RICHIESTA<br>INVIATA!</div>
+      <div class="k-success-id" id="kRevNum"></div>
+      <div class="k-success-sub" style="color:var(--muted)">Ti scriviamo entro 2 giorni lavorativi con l'anteprima del logo preparato per la stampa 3D. Controlla la tua email.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PASSO 2: KIT 3D -->
+<section class="k-section" id="k-kit" hidden style="background:var(--surface2)">
+  <div class="k-wrap">
+    <div class="k-label">// Passo 2</div>
+    <div class="k-title" id="kKitTitle">I TUOI SEGNAPOSTI<br>IN 3D</div>
+    <p class="k-lead">Ruota ogni segnaposto: davanti il logo con il QR, dietro il logo con l'NFC o il numero del tavolo. Sono le misure reali: il colore lo confermiamo insieme prima di stampare.</p>
+    <div class="k-kit">
+      <div class="k-pieces" id="kPieces"></div>
+      <div class="k-viewer-wrap">
+        <model-viewer id="kViewer" camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg"
+          shadow-intensity="0.8" shadow-softness="0.9" exposure="1.05" environment-image="neutral" interaction-prompt="none"
+          camera-orbit="0deg 75deg auto" alt="Anteprima 3D del segnaposto con il tuo logo"></model-viewer>
+        <div class="k-viewer-tip"><span class="iconify" data-icon="mdi:rotate-3d-variant"></span> Trascina per ruotare</div>
+        <button type="button" class="k-freccia sx" id="kPrev" aria-label="Pezzo precedente"><span class="iconify" data-icon="mdi:chevron-left"></span></button>
+        <button type="button" class="k-freccia dx" id="kNext" aria-label="Pezzo successivo"><span class="iconify" data-icon="mdi:chevron-right"></span></button>
+        <div class="k-count" id="kCount"></div>
+        <div class="k-viewer-info">
+          <div class="k-viewer-name" id="kPieceName"></div>
+          <div class="k-viewer-dim" id="kPieceDim"></div>
+        </div>
+      </div>
+    </div>
+    <p class="k-controllo" id="kControllo" hidden><span class="iconify" data-icon="mdi:account-check-outline"></span> <span>Il nostro controllo qualità vuole ritoccare a mano qualche segnaposto: lo sistemiamo noi prima di stampare, non devi fare nulla.</span></p>
+    <a class="k-link-btn k-personalizza" id="kPersonalizza" href="/?ticket=segnaposti"><span class="iconify" data-icon="mdi:palette-swatch-outline"></span> Li voglio su misura (forma, illustrazione, legno…)</a>
+    <p class="k-note">Anteprima generata automaticamente: colori e piccoli dettagli possono variare leggermente nella stampa reale. Il QR e l'NFC aprono il tuo menù digitale; se non ce l'hai ancora, li colleghiamo noi.</p>
+  </div>
+</section>
+
+<!-- PASSO 3: BONUS MENÙ DIGITALE -->
+<section class="k-section" id="k-bonus" hidden>
+  <div class="k-wrap">
+    <div class="k-label">// Bonus</div>
+    <div class="k-title">IL MENÙ DIGITALE<br>GRATIS PER 7 GIORNI</div>
+    <p class="k-lead">Con il kit campione ti diamo una settimana di menù digitale gratis, dal giorno in cui lo ritiri: lo configuriamo noi con i tuoi piatti e lo colleghiamo al QR e all'NFC dei segnaposti. Così lo provi con i tuoi clienti, sui tuoi tavoli.</p>
+    <ul class="k-perks" style="color:var(--text)">
+      <li><span class="iconify" data-icon="mdi:cellphone-nfc"></span><span>I clienti <strong>avvicinano il telefono</strong> al segnaposto (NFC) o inquadrano il QR e il menù si apre.</span></li>
+      <li><span class="iconify" data-icon="mdi:pencil-outline"></span><span><strong>Lo modifichi tu</strong> quando vuoi: prezzi, piatti del giorno, foto, allergeni.</span></li>
+      <li><span class="iconify" data-icon="mdi:translate"></span><span>Menù in più lingue, ordini su WhatsApp e altro, in base al piano che scegli dopo la prova.</span></li>
+    </ul>
+    <div class="k-quote-actions">
+      <a class="k-link-btn" href="#k-prenota" style="background:var(--dark);color:#fff;border-color:var(--dark)"><span class="iconify" data-icon="mdi:package-variant-closed"></span> Prenota il kit campione</a>
+    </div>
+  </div>
+</section>
+
+<!-- PASSO 4: PRENOTA -->
+<section class="k-section k-section-dark" id="k-prenota" hidden>
+  <div class="k-wrap">
+    <div id="kBookBox" class="k-book">
+      <div>
+        <div class="k-label">// Passo 3</div>
+        <div class="k-title">TOCCALO<br>CON MANO</div>
+        <div class="k-price">19,90<small>€</small></div>
+        <ul class="k-perks">
+          <li><span class="iconify" data-icon="mdi:cube-outline"></span><span><strong>Tutti i segnaposti</strong> stampati con il tuo logo, in tutte le taglie, con la loro base: li provi sui tuoi tavoli.</span></li>
+          <li><span class="iconify" data-icon="mdi:gift-outline"></span><span><strong>Menù digitale gratis per 7 giorni</strong> dal ritiro, già configurato.</span></li>
+          <li><span class="iconify" data-icon="mdi:map-marker-outline"></span><span><strong>Ritiro a Piacenza</strong>, paghi al ritiro. Nessun pagamento online adesso.</span></li>
+          <li><span class="iconify" data-icon="mdi:email-fast-outline"></span><span>Ti scriviamo appena è <strong>pronto</strong>, di solito in 2–3 giorni lavorativi.</span></li>
+        </ul>
+      </div>
+      <div class="k-form-dark">
+        <div class="k-row2">
+          <div class="field"><label for="pNome">Nome e cognome *</label><input id="pNome" maxlength="100" autocomplete="name"/></div>
+          <div class="field"><label for="pAzienda">Azienda *</label><input id="pAzienda" maxlength="100" autocomplete="organization"/></div>
+        </div>
+        <div class="k-row2">
+          <div class="field"><label for="pEmail">Email *</label><input id="pEmail" type="email" maxlength="120" autocomplete="email"/></div>
+          <div class="field"><label for="pTel">Telefono (facoltativo)</label><input id="pTel" maxlength="40" autocomplete="tel"/></div>
+        </div>
+        <div class="field"><label for="pNote">Note (facoltativo)</label><textarea id="pNote" maxlength="1000" placeholder="Quanti tavoli avete, colori preferiti, quando vi servono…"></textarea></div>
+        <label class="k-check"><input type="checkbox" id="pConsenso"/> <span>Prenoto il kit campione dei segnaposti a 19,90 € da pagare al ritiro a Piacenza e acconsento al trattamento dei dati (<a href="/privacy.html" target="_blank">privacy</a>, <a href="/termini.html" target="_blank">termini</a>).</span></label>
+        <button class="k-btn accent" id="pInvia" onclick="kPrenota()"><span>Prenota il kit</span> <span class="iconify" data-icon="mdi:arrow-right"></span></button>
+        <div class="k-err" id="kErrP"></div>
+      </div>
+    </div>
+    <div class="k-success" id="kBookOk" hidden>
+      <span class="iconify" data-icon="mdi:check-decagram"></span>
+      <div class="k-success-h">KIT<br>PRENOTATO!</div>
+      <div class="k-success-id" id="kBookNum"></div>
+      <div class="k-success-sub">Ti abbiamo mandato una email con il riepilogo. Ti scriviamo quando il kit è pronto per il ritiro a Piacenza.</div>
+      <button class="k-restart" onclick="kRicomincia()">Prova con un altro logo</button>
+    </div>
+  </div>
+</section>
+
+<!-- CONTATTI -->
+<section style="background:var(--dark);padding:48px;border-top:2px solid var(--accent)">
+  <div style="max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px">// Domande?</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:#f0ece4;letter-spacing:-1px;text-transform:uppercase">Scrivici</div>
+    </div>
+    <a href="mailto:rolefigz@gmail.com" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(193,127,58,.3);padding:16px 24px;text-decoration:none">
+      <span style="font-size:26px;color:var(--accent)"><span class="iconify" data-icon="mdi:email-outline"></span></span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f0ece4">rolefigz@gmail.com</span>
+    </a>
+  </div>
+</section>
+
+<script>
+(() => {
+  const API = '/api/kit';
+  const $ = id => document.getElementById(id);
+  const stato = { file: null, logo: null, kit: null, timer: null };
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // ── utilità ──────────────────────────────────────────────
+  function mostra(id, on = true) { $(id).hidden = !on; }
+  function errore(id, msg) { const e = $(id); e.textContent = msg || ''; e.classList.toggle('on', !!msg); }
+  function scrolla(el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  function euro(v) { return '€ ' + Number(v).toFixed(2).replace('.', ','); }
+  function icona(nome) { const s = document.createElement('span'); s.className = 'iconify'; s.dataset.icon = nome; return s; }
+  async function leggi(r) {
+    let j = {};
+    try { j = await r.json(); } catch (_) {}
+    if (!r.ok) throw new Error(j.error || 'Errore del server. Riprova tra qualche minuto.');
+    return j;
+  }
+  function erroreRete(err) {
+    return err.message === 'Failed to fetch' ? 'Connessione assente. Controlla la rete e riprova.' : err.message;
+  }
+
+  // ── attesa con passi ─────────────────────────────────────
+  function attendi(titolo, passi, durataMs) {
+    clearTimeout(stato.nascondiAttesa);                 // un fineAttesa appena chiamato non deve nascondere questa
+    mostra('kWait'); $('kWaitT').textContent = titolo;
+    let i = 0, t0 = Date.now();
+    $('kBar').style.width = '4%';
+    $('kWaitS').textContent = passi[0];
+    clearInterval(stato.timer);
+    stato.timer = setInterval(() => {
+      // avanza veloce all'inizio e poi rallenta: non si ferma mai del tutto anche se ci vuole più del previsto
+      const p = 95 * (1 - Math.exp(-(Date.now() - t0) / durataMs * 1.6));
+      $('kBar').style.width = p + '%';
+      const nuovo = Math.min(passi.length - 1, Math.floor(p / 95 * passi.length));
+      if (nuovo !== i) { i = nuovo; $('kWaitS').textContent = passi[i]; }
+    }, 400);
+  }
+  function fineAttesa() {
+    clearInterval(stato.timer); $('kBar').style.width = '100%';
+    stato.nascondiAttesa = setTimeout(() => mostra('kWait', false), 250);
+  }
+
+  // ── 1. scelta del file, con controlli immediati ──────────
+  const area = $('kUpload'), input = $('kFile');
+  window.kScegliFile = () => input.click();
+  area.addEventListener('click', () => input.click());
+  area.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+  area.addEventListener('drop', e => { e.preventDefault(); area.classList.remove('dragover'); if (e.dataTransfer.files[0]) scegli(e.dataTransfer.files[0]); });
+  input.addEventListener('change', () => { if (input.files[0]) scegli(input.files[0]); input.value = ''; });
+  ['kAzienda', 'kDiritti'].forEach(id => $(id).addEventListener('input', aggiornaPulsante));
+  $('kDiritti').addEventListener('change', aggiornaPulsante);
+
+  function hint(tipo, msg) { const h = $('kHint'); h.className = 'k-hint' + (msg ? ' on ' + tipo : ''); h.textContent = msg || ''; }
+
+  function aggiornaPulsante() {
+    $('kAnalizza').disabled = !(stato.file && $('kAzienda').value.trim() && $('kDiritti').checked);
+  }
+
+  function scegli(file) {
+    errore('kErr1');
+    stato.file = null; aggiornaPulsante();
+    const nome = file.name.toLowerCase();
+    const ok = /\.(png|jpe?g|webp|svg|pdf|ai)$/.test(nome) || ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'application/pdf'].includes(file.type);
+    $('kPreview').classList.remove('on');
+    if (!ok) return hint('err', 'Formato non supportato. Carica il logo in PNG, SVG, PDF, AI, JPG o WEBP (non Word, EPS o foto HEIC).');
+    if (file.size > 10 * 1024 * 1024) return hint('err', 'Il file supera i 10 MB. Esporta il logo in PNG o SVG: pesa molto meno.');
+    if (/\.(pdf|ai)$/.test(nome) || file.type === 'application/pdf') {
+      // PDF/AI: il browser non li mostra come immagine; sono vettoriali, il formato migliore
+      $('kPreviewImg').removeAttribute('src');
+      $('kPreviewImg').alt = nome.split('.').pop().toUpperCase();
+      $('kPreviewName').textContent = file.name;
+      $('kPreviewMeta').textContent = 'File vettoriale · perfetto · ' + (file.size / 1024).toFixed(0) + ' KB';
+      $('kPreview').classList.add('on');
+      hint();
+      stato.file = file; aggiornaPulsante();
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      $('kPreviewImg').src = url;
+      $('kPreviewName').textContent = file.name;
+      const svg = nome.endsWith('.svg') || file.type === 'image/svg+xml';
+      const lato = Math.max(img.naturalWidth, img.naturalHeight);
+      $('kPreviewMeta').textContent = svg ? 'SVG vettoriale · perfetto' : `${img.naturalWidth} × ${img.naturalHeight} px · ${(file.size / 1024).toFixed(0)} KB`;
+      $('kPreview').classList.add('on');
+      if (!svg && lato < 150) {
+        return hint('err', `L'immagine è troppo piccola (${lato} px): i bordi uscirebbero a scalini. Cerca il file originale del logo, ad almeno 1000 px di larghezza, o in SVG.`);
+      }
+      if (!svg && lato < 400) hint('warn', `L'immagine è piccola (${lato} px). Possiamo provarci, ma con un file più grande (1000 px o SVG) il risultato è molto migliore.`);
+      else if (/\.jpe?g$/.test(nome)) hint('warn', 'I JPG hanno spesso rumore intorno al logo. Se hai la versione PNG con sfondo trasparente, usa quella.');
+      else hint();
+      stato.file = file; aggiornaPulsante();
+    };
+    img.onerror = () => hint('err', "Non riusciamo a leggere questo file come immagine. Prova a esportarlo di nuovo in PNG.");
+    img.src = url;
+  }
+
+  // ── 2. analisi del logo ──────────────────────────────────
+  window.kAnalizza = async () => {
+    if ($('kAnalizza').disabled) return;
+    errore('kErr1');
+    mostra('kUploadBox', false); mostra('kVerdict', false); mostra('kRevisione', false);
+    attendi('Analizziamo il logo…', ['Contiamo i colori…', 'Cerchiamo sfumature e ombre…', 'Controlliamo risoluzione e dettagli…', 'Quasi fatto…'], 20000);
+    try {
+      const fd = new FormData();
+      fd.append('logo', stato.file);
+      stato.logo = await leggi(await fetch(API + '/analizza', { method: 'POST', body: fd }));
+      fineAttesa();
+      verdetto(stato.logo);
+    } catch (err) {
+      fineAttesa(); mostra('kUploadBox'); errore('kErr1', erroreRete(err));
+    }
+  };
+
+  const VERDETTI = {
+    automatico: { cls: 'ok', icon: 'mdi:check-circle', t: 'Logo perfetto per la stampa 3D', p: 'Colori pieni e forme pulite: lo convertiamo in automatico. Generiamo i tuoi segnaposti…' },
+    revisar: { cls: 'warn', icon: 'mdi:alert-circle', t: 'Si può fare, con qualche compromesso', p: 'Il logo si può stampare, ma alcuni dettagli verranno semplificati. Guarda i consigli: con un file migliore il risultato sarà più bello.' },
+    manual: { cls: 'bad', icon: 'mdi:hand-back-right', t: 'Questo logo va preparato a mano', p: 'Così com\'è non si può stampare bene in 3D. Carica un\'altra versione del logo oppure chiedici una revisione: lo prepariamo noi, gratis.' },
+  };
+
+  function lista(titolo, voci, iconaVoce, colore) {
+    const frag = document.createDocumentFragment();
+    if (!voci || !voci.length) return frag;
+    const t = document.createElement('div'); t.className = 'k-list-title'; t.textContent = titolo; frag.appendChild(t);
+    const ul = document.createElement('ul'); ul.className = 'k-list';
+    voci.forEach(v => { const li = document.createElement('li'); const i = icona(iconaVoce); i.style.color = colore; li.append(i, document.createTextNode(v)); ul.appendChild(li); });
+    frag.appendChild(ul);
+    return frag;
+  }
+
+  function bottone(testo, cls, fn, ic) {
+    const b = document.createElement('button'); b.className = 'k-btn ' + (cls || ''); b.type = 'button';
+    const s = document.createElement('span'); s.textContent = testo; b.appendChild(s);
+    if (ic) b.appendChild(icona(ic));
+    b.addEventListener('click', fn); return b;
+  }
+
+  function verdetto(r) {
+    const v = VERDETTI[r.verdetto] || VERDETTI.revisar;
+    const box = $('kVerdict'); box.innerHTML = ''; mostra('kVerdict');
+    const card = document.createElement('div'); card.className = 'k-verdict ' + v.cls;
+    const head = document.createElement('div'); head.className = 'k-verdict-head';
+    const tit = document.createElement('div'); tit.className = 'k-verdict-t'; tit.textContent = v.t;
+    head.append(icona(v.icon), tit);
+    const p = document.createElement('p'); p.textContent = v.p;
+    card.append(head, p);
+    card.appendChild(lista('Perché', r.motivi, 'mdi:information-outline', 'var(--muted)'));
+    card.appendChild(lista('Come migliorarlo', r.consigli, 'mdi:lightbulb-on-outline', 'var(--accent)'));
+    box.appendChild(card);
+    const riga = document.createElement('div'); riga.className = 'k-btn-row';
+    if (r.verdetto === 'automatico') {
+      box.appendChild(riga);
+      genera();
+      return;
+    }
+    if (r.verdetto === 'revisar') {
+      riga.append(bottone('Genera comunque i segnaposti', 'accent', genera, 'mdi:cube-outline'),
+                  bottone("Carica un'altra versione", 'ghost', ricarica, 'mdi:upload'));
+    } else {
+      riga.append(bottone("Carica un'altra versione", 'accent', ricarica, 'mdi:upload'),
+                  bottone('Chiedi una revisione gratuita', 'ghost', () => { mostra('kRevisione'); scrolla($('kRevisione')); }, 'mdi:account-edit-outline'));
+    }
+    box.appendChild(riga);
+    scrolla(box);
+  }
+
+  function ricarica() {
+    mostra('kVerdict', false); mostra('kRevisione', false); mostra('kUploadBox');
+    stato.file = null; $('kPreview').classList.remove('on'); hint(); aggiornaPulsante();
+    scrolla($('k-carica'));
+    setTimeout(() => input.click(), 400);
+  }
+
+  // ── 3. generazione del kit ───────────────────────────────
+  async function genera() {
+    mostra('kVerdict', stato.logo.verdetto !== 'automatico' ? false : true);
+    attendi('Stampiamo i tuoi segnaposti in 3D…', ['Vettorializziamo il logo…', 'Prepariamo il QR del menù…', 'Modelliamo le taglie S e M…', 'Modelliamo le taglie L e XL…', 'Montiamo ogni segnaposto nella sua base…'], 30000);
+    scrolla($('k-carica'));
+    try {
+      stato.kit = await leggi(await fetch(API + '/segnaposti', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo_id: stato.logo.logo_id, azienda: $('kAzienda').value.trim(), qr_url: $('kMenu').value.trim(),
+                               testo: $('kTesto').value.trim(), striscia: $('kStriscia').checked }),
+      }));
+      fineAttesa();
+      mostraKit(stato.kit);
+    } catch (err) {
+      fineAttesa(); mostra('kVerdict');
+      const e = document.createElement('div'); e.className = 'k-err on'; e.textContent = erroreRete(err);
+      $('kVerdict').appendChild(e);
+      $('kVerdict').appendChild(bottone('Riprova', 'accent', () => { e.remove(); genera(); }, 'mdi:refresh'));
+    }
+  }
+
+  function mostraKit(k) {
+    $('kPersonalizza').href = '/?' + new URLSearchParams({ ticket: 'segnaposti', azienda: $('kAzienda').value.trim(),
+      kit: k.numero || '', logo: (stato.logo && stato.logo.logo_id) || '' }).toString();
+    $('kControllo').hidden = k.controllo !== 'da_rivedere';
+    const pezzi = [{ nome: 'Tutti i segnaposti', misure: 'Tutte le taglie del kit campione', glb: k.piatto_glb, icon: 'mdi:view-grid-outline' }]
+      .concat(k.pezzi.map(p => ({ ...p, icon: iconaPezzo(p.chiave) })));
+    const lista = $('kPieces'); lista.innerHTML = '';
+    pezzi.forEach((p, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'k-piece';
+      const s = document.createElement('span'); s.textContent = p.nome;
+      b.append(icona(p.icon), s);
+      b.addEventListener('click', () => seleziona(i));
+      lista.appendChild(b);
+    });
+    let attuale = 0;
+    function seleziona(i) {
+      attuale = (i + pezzi.length) % pezzi.length;
+      [...lista.children].forEach((b, j) => b.classList.toggle('on', j === attuale));
+      // da telefono la lista dei pezzi scorre in orizzontale: si porta al centro il pezzo attivo (solo la lista,
+      // mai la pagina)
+      const chip = lista.children[attuale];
+      if (lista.scrollWidth > lista.clientWidth) {
+        lista.scrollTo({ left: chip.offsetLeft - (lista.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+      }
+      $('kViewer').src = pezzi[attuale].glb;
+      $('kPieceName').textContent = pezzi[attuale].nome;
+      $('kPieceDim').textContent = pezzi[attuale].misure;
+      $('kCount').textContent = `${attuale + 1} / ${pezzi.length}`;
+    }
+    // frecce sul visore: si capisce subito che ci sono altri pezzi (anche da telefono)
+    $('kPrev').onclick = () => seleziona(attuale - 1);
+    $('kNext').onclick = () => seleziona(attuale + 1);
+    document.onkeydown = e => {
+      if ($('k-kit').hidden || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'ArrowLeft') seleziona(attuale - 1);
+      if (e.key === 'ArrowRight') seleziona(attuale + 1);
+    };
+    seleziona(1);
+    $('kKitTitle').textContent = '';
+    $('kKitTitle').append(document.createTextNode('I SEGNAPOSTI DI'), document.createElement('br'), document.createTextNode((k.cliente || '').toUpperCase()));
+    $('pAzienda').value = $('kAzienda').value.trim();
+    ['k-kit', 'k-bonus', 'k-prenota'].forEach(id => mostra(id));
+    mostra('kBookBox'); mostra('kBookOk', false);
+    setTimeout(() => scrolla($('k-kit')), 150);
+  }
+
+  function iconaPezzo(chiave) {
+    return { S: 'mdi:size-s', M: 'mdi:size-m', L: 'mdi:size-l', XL: 'mdi:size-xl', LH: 'mdi:crop-landscape' }[chiave] || 'mdi:tablet';
+  }
+
+  // ── 4. prenotazione ──────────────────────────────────────
+  function bloccaBtn(id, on, testo) {
+    const b = $(id); b.disabled = on;
+    b.querySelector('span').textContent = testo;
+  }
+
+  // Ricerca dell'attività su Google Maps: il cliente sceglie la sua (o nessuna)
+  window.kPrenota = async () => {
+    errore('kErrP');
+    const dati = {
+      kit_id: stato.kit && stato.kit.kit_id, nome: $('pNome').value.trim(), azienda: $('pAzienda').value.trim(),
+      email: $('pEmail').value.trim(), telefono: $('pTel').value.trim(), note: $('pNote').value.trim(), consenso: $('pConsenso').checked,
+    };
+    if (!dati.nome || !dati.azienda) return errore('kErrP', 'Inserisci nome e azienda.');
+    if (!EMAIL.test(dati.email)) return errore('kErrP', "Controlla l'email: non sembra valida.");
+    if (!dati.consenso) return errore('kErrP', 'Per prenotare devi accettare le condizioni.');
+    bloccaBtn('pInvia', true, 'Invio in corso…');
+    try {
+      const r = await leggi(await fetch(API + '/prenota', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dati) }));
+      mostra('kBookBox', false); mostra('kBookOk');
+      $('kBookNum').textContent = 'PRENOTAZIONE ' + r.numero;
+      scrolla($('k-prenota'));
+    } catch (err) {
+      errore('kErrP', erroreRete(err));
+    }
+    bloccaBtn('pInvia', false, 'Prenota il kit');
+  };
+
+  window.kInviaRevisione = async () => {
+    errore('kErrR');
+    const dati = {
+      logo_id: stato.logo && stato.logo.logo_id, nome: $('rNome').value.trim(), azienda: $('kAzienda').value.trim(),
+      email: $('rEmail').value.trim(), telefono: $('rTel').value.trim(), note: $('rNote').value.trim(), consenso: $('rConsenso').checked,
+    };
+    if (!dati.nome) return errore('kErrR', 'Inserisci il tuo nome.');
+    if (!EMAIL.test(dati.email)) return errore('kErrR', "Controlla l'email: non sembra valida.");
+    if (!dati.consenso) return errore('kErrR', "Per inviare la richiesta devi accettare l'informativa privacy.");
+    bloccaBtn('rInvia', true, 'Invio in corso…');
+    try {
+      const r = await leggi(await fetch(API + '/revisione', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dati) }));
+      mostra('kRevisione', false); mostra('kVerdict', false); mostra('kRevOk');
+      $('kRevNum').textContent = 'RICHIESTA ' + r.numero;
+      scrolla($('kRevOk'));
+    } catch (err) {
+      errore('kErrR', erroreRete(err));
+    }
+    bloccaBtn('rInvia', false, 'Chiedi la revisione');
+  };
+
+  window.kRicomincia = () => {
+    ['k-kit', 'k-bonus', 'k-prenota'].forEach(id => mostra(id, false));
+    stato.kit = null; ricarica();
+  };
+})();
+</script>
+</body>
+</html>
