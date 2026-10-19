@@ -4,8 +4,8 @@
   const TAGLIE = [
     { chiave: "S",  nome: "S",             include: "QR",       pezzi: 14, prezzo: 89 },
     { chiave: "M",  nome: "M",             include: "QR + NFC", pezzi: 10, prezzo: 99, consigliato: true },
-    { chiave: "L",  nome: "L verticale",   include: "QR + NFC", pezzi: 8,  prezzo: 119 },
-    { chiave: "LH", nome: "L orizzontale", include: "QR + NFC", pezzi: 8,  prezzo: 119 },
+    { chiave: "L",  nome: "L verticale",   include: "QR + NFC", pezzi: 8,  prezzo: 109 },
+    { chiave: "LH", nome: "L orizzontale", include: "QR + NFC", pezzi: 8,  prezzo: 109 },
     { chiave: "XL", nome: "XL",            include: "QR + NFC", pezzi: 6,  prezzo: 129 },
   ];
 
