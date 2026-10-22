@@ -1,3 +1,6 @@
+// valore sicuro dentro value="…" (link del video YouTube della pagina)
+function escYt(v) { return String(v || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 const API_NFC_CLIENT = `${API}/nfc`;
 
 const TIPI_LINK_NFC = [
@@ -223,6 +226,17 @@ async function tabNfcPagina(content) {
       </details>
 
       <details class="pg-sezione">
+        <summary><span><iconify-icon icon="mdi:youtube" width="15"></iconify-icon> Video YouTube</span></summary>
+        <div class="pg-sezione-body">
+          <div class="field">
+            <label>Link del video</label>
+            <input id="cpYoutube" type="url" placeholder="https://www.youtube.com/watch?v=… oppure https://youtu.be/…" value="${escYt(p.design?.youtube)}"/>
+            <div class="note">Parte da solo ogni volta che si apre la pagina (senza audio: chi guarda può attivarlo). Vale anche un video «Shorts». Lascia vuoto per non mostrare nessun video.</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="pg-sezione">
         <summary><span><iconify-icon icon="mdi:map-marker-outline" width="15"></iconify-icon> Mappa</span></summary>
         <div class="pg-sezione-body">
           <div class="field">
@@ -319,6 +333,7 @@ async function nfcSalvaContenuto() {
       buttonOpacity:     parseInt(document.getElementById('cpButtonOpacity')?.value, 10),
       loadingColor:      document.getElementById('cpLoadingColor')?.value,
       allergeni:         [...document.querySelectorAll('input[name="cpAllergene"]:checked')].map(c => Number(c.value)),
+      youtube:           document.getElementById('cpYoutube')?.value.trim() || '',
     },
   };
   try {

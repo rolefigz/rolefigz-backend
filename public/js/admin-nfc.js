@@ -1,3 +1,6 @@
+// valore sicuro dentro value="…" (link del video YouTube della pagina)
+function escYt(v) { return String(v || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 const API_NFC = `${API}/admin/nfc`;
 
 function euroACentesimi(v) { return Math.round(parseFloat(v || 0) * 100); }
@@ -338,6 +341,18 @@ async function adminTabNfcAziendaDettaglio(id) {
           </div>
         </details>
 
+
+        <details class="pg-sezione">
+          <summary>▶️ VIDEO YOUTUBE</summary>
+          <div class="pg-sezione-body">
+            <div class="field">
+              <label>Link del video</label>
+              <input id="pgYoutube" type="url" placeholder="https://www.youtube.com/watch?v=… oppure https://youtu.be/…" value="${escYt(pagina.design?.youtube)}"/>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Parte da solo ogni volta che si apre la pagina (senza audio: il visitatore può attivarlo). Vale anche un video «Shorts». Vuoto = nessun video.</div>
+            </div>
+          </div>
+        </details>
+
         <details class="pg-sezione">
           <summary>📍 MAPPA</summary>
           <div class="pg-sezione-body">
@@ -446,6 +461,7 @@ async function nfcPgSalvaContenuto(id) {
       buttonOpacity:     parseInt(document.getElementById('pgButtonOpacity')?.value, 10),
       loadingColor:      document.getElementById('pgLoadingColor')?.value,
       allergeni:         [...document.querySelectorAll('input[name="pgAllergene"]:checked')].map(c => Number(c.value)),
+      youtube:           document.getElementById('pgYoutube')?.value.trim() || '',
     },
   };
   try {

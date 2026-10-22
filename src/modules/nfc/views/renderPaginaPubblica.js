@@ -47,6 +47,15 @@ const ICONA_ALLERGENI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 
 const DIMENSIONI_LOGO = { piccolo: { centro: 84, header: 48 }, medio: { centro: 120, header: 68 }, grande: { centro: 162, header: 92 } };
 
+// ID di un video di YouTube da qualsiasi link (youtu.be/ID, watch?v=ID, shorts/ID, embed/ID) o dall'ID stesso.
+// Solo 11 caratteri [A-Za-z0-9_-]: nient'altro finisce nella pagina.
+function idYoutube(valore) {
+  const v = String(valore || "").trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(v)) return { id: v, verticale: false };
+  const m = v.match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([A-Za-z0-9_-]{11})/);
+  return m ? { id: m[1], verticale: /\/shorts\//.test(v) } : null;
+}
+
 function colorEsadecimaleValido(v) { return /^#[0-9a-f]{6}$/i.test(v || ""); }
 
 function esColoreChiaro(hex) {
@@ -162,6 +171,15 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   </ol>
 </dialog>` : "";
 
+  // video di YouTube: parte da solo a ogni apertura, senza audio (i browser bloccano l'autoplay con il suono;
+  // il visitatore lo attiva dal player) e in loop
+  const yt = idYoutube(d.youtube);
+  const blocVideo = yt ? `
+    <div class="video${yt.verticale ? " video--verticale" : ""}">
+      <iframe src="https://www.youtube-nocookie.com/embed/${yt.id}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${yt.id}&rel=0&modestbranding=1"
+        title="Video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="eager"></iframe>
+    </div>` : "";
+
   const blocMappa = pagina?.map_embed_url ? `
     <div class="mappa">
       <iframe src="${escapeAttr(pagina.map_embed_url)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
@@ -255,6 +273,10 @@ body.content-in .link{opacity:1;transform:translateY(0)}
 .allergeni__tag{flex:none;margin-left:auto;padding:2px 8px;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent)}
 .link:hover .link__go{transform:translateX(3px)}
 
+.video{width:100%;max-width:var(--card-w);margin-top:24px;aspect-ratio:16/9;border:1px solid var(--line);background:#000;opacity:0;transition:opacity .9s ease .2s}
+.video--verticale{max-width:300px;aspect-ratio:9/16}
+.video iframe{width:100%;height:100%;border:0;display:block}
+body.content-in .video{opacity:1}
 .mappa{width:100%;max-width:var(--card-w);margin-top:24px;opacity:0;transition:opacity .9s ease .3s}
 body.content-in .mappa{opacity:1}
 .mappa iframe{width:100%;height:220px;border:1px solid var(--line);display:block}
@@ -276,6 +298,7 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
     ${pagina?.description ? `<p class="descr">${escapeHtml(pagina.description)}</p>` : ""}
     ${pagina?.hours ? `<p class="hours">🕒 ${escapeHtml(pagina.hours)}</p>` : ""}
   </section>
+  ${blocVideo}
   <nav class="links" aria-label="Link">${righeLink}${bloccoAllergeni}</nav>
   ${blocMappa}
   <p class="foot">Powered by RoleFigz NFC${creditoFoto ? ` · ${escapeHtml(creditoFoto)}` : ""}</p>
