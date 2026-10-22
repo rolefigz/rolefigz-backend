@@ -109,11 +109,44 @@ function renderPaginaDemo(p) {
   });
 }
 
+// Da pagina di prova ad azienda del modulo NFC (Aziende nel pannello), quando lo decide l'admin dal bottone
+// «Crea azienda» del Kit campione: azienda attiva con la pagina pubblicata (logo, mappa, link e recensione),
+// abbonamento in prova fino alla scadenza della pagina di prova. `ownerUserId`: chi ha scelto l'admin.
+async function aziendaDaDemo(p, ownerUserId, actorUserId, transaction) {
+  const { CompanyPage, PageLink, Subscription, Plan } = require("../models");
+  const { registraAzione } = require("../modules/nfc/services/auditLogService");
+  const ErroreAzienda = require("../modules/nfc/utils/erroreAzienda");
+  const t = { transaction };
+  if (await Company.findOne({ where: { slug: p.slug }, paranoid: false, ...t })) {
+    throw new ErroreAzienda(`Esiste già un'azienda con lo slug «${p.slug}»`, 400);
+  }
+  const piano = await Plan.findOne({ where: { active: true }, order: [["monthly_price_cents", "ASC"], ["id", "ASC"]], ...t });
+  if (!piano) throw new ErroreAzienda("Nessun piano attivo: creane uno in NFC → Piani", 400);
+  const fondo = coloreSfondo(p.logo_url);
+  const azienda = await Company.create({ owner_user_id: ownerUserId, name: p.nome, slug: p.slug,
+                                         sector: p.categoria || null }, t);
+  await CompanyPage.create({
+    company_id: azienda.id, is_published: true, published_at: new Date(),
+    logo_url: p.logo_url, map_embed_url: places.mappaEmbed(p), description: p.indirizzo || null, seo_title: p.nome,
+    design: { backgroundType: "colore", backgroundColor: fondo, logoSize: "grande",
+              buttonColor: fondo === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6, loadingColor: fondo },
+  }, t);
+  for (const [i, l] of linkDemo(p).entries()) {
+    await PageLink.create({ company_id: azienda.id, type: l.type, label: l.label, url: l.url, position: i }, t);
+  }
+  const fine = new Date(p.scadenza) > new Date() ? p.scadenza : new Date(Date.now() + GIORNI_VALIDITA * 864e5);
+  await Subscription.create({ company_id: azienda.id, plan_id: piano.id, status: "trial", started_at: new Date(),
+                              trial_ends_at: fine }, t);
+  await registraAzione({ actorUserId, companyId: azienda.id, action: "company_created",
+                         details: { da: "pagina di prova del kit campione", richiesta_id: p.richiesta_id } }, transaction);
+  return azienda;
+}
+
 // La pagina di prova attiva per questo slug, o null
 async function trovaPaginaDemo(slug) {
   const p = await PaginaDemo.findOne({ where: { slug, attiva: true } });
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
+module.exports = { creaPaginaDemo, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
                    logoSuPiastrella };

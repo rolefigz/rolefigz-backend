@@ -29,6 +29,14 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
           <button class="action-btn" onclick="kitScarica3mf('${k.kit_id}')" style="border-color:var(--accent);color:var(--accent)">3MF ⬇</button>
         </div>` : `
         <div style="margin-top:6px"><button class="action-btn" onclick="kitScaricaLogo('${k.logo_id}','${escKit(k.numero)}')">LOGO PNG</button></div>`;
+      // pagina NFC di prova: link e, se non è ancora un'azienda, il bottone per crearla
+      const demo = k.pagina_demo ? `
+        <div style="margin-top:6px;font-size:10px">
+          <a href="/nfc/${escKit(k.pagina_demo.slug)}" target="_blank" style="color:var(--accent)">/nfc/${escKit(k.pagina_demo.slug)} ↗</a>
+          ${k.azienda_id
+            ? `<button class="action-btn" onclick="adminTabNfcAziendaDettaglio(${k.azienda_id})" style="display:block;margin-top:4px">IN AZIENDE ✓ · MODIFICA</button>`
+            : `<button class="action-btn" onclick="kitCreaAzienda(${k.id}, '${escKit(k.pagina_demo.slug)}', '${escKit(k.email)}')" style="display:block;margin-top:4px;border-color:var(--accent);color:var(--accent)">CREA AZIENDA</button>`}
+        </div>` : '';
       const sconto = k.codice_sconto ? `<div style="font-size:10px;margin-top:4px"><span class="pill blue">${escKit(k.codice_sconto)}</span> fino al ${dataKit(k.scadenza_sconto)}</div>` : '';
       return `
       <tr>
@@ -39,7 +47,7 @@ async function adminTabKit(content, filtroStato = '', filtroTipo = '') {
         <td><strong>${escKit(k.azienda)}</strong><br>${escKit(k.nome)}<br>
             <a href="mailto:${escKit(k.email)}">${escKit(k.email)}</a>${k.telefono ? `<br><span style="color:var(--muted);font-size:10px">${escKit(k.telefono)}</span>` : ''}
             ${k.note ? `<div style="max-width:260px;white-space:normal;font-size:11px;color:var(--muted);margin-top:6px">${escKit(k.note)}</div>` : ''}</td>
-        <td>${k.tipo === 'kit' ? '€ ' + Number(k.prezzo).toFixed(2).replace('.', ',') : '—'}${sconto}${file}</td>
+        <td>${k.tipo === 'kit' ? '€ ' + Number(k.prezzo).toFixed(2).replace('.', ',') : '—'}${sconto}${file}${demo}</td>
         <td>
           <select onchange="kitCambiaStato(${k.id}, this.value, '${filtroStato}', '${filtroTipo}')">
             ${STATI_KIT.map(s => `<option value="${s}" ${k.stato === s ? 'selected' : ''}>${s.replace('_', ' ').toUpperCase()}</option>`).join('')}
@@ -96,6 +104,27 @@ async function kitElimina(id, cosa) {
     if (!r.ok) throw new Error(d.error);
   } catch (e) { alert('Errore: ' + e.message); }
   adminTabKit(document.getElementById('adminContent'), 'annullato', '');
+}
+
+// La pagina NFC di prova diventa un'azienda (Aziende): si sceglie il proprietario
+async function kitCreaAzienda(id, slug, email) {
+  const perCliente = confirm(`Creare l'azienda «${slug}» da questa pagina di prova.\n\n` +
+    `OK = proprietario il CLIENTE (${email}): se non ha un account si crea, con una password da consegnargli.\n` +
+    `Annulla = proprietario TU (admin), in modo provvisorio.`);
+  if (!perCliente && !confirm(`Creare l'azienda «${slug}» con te (admin) come proprietario provvisorio?`)) return;
+  try {
+    const r = await fetch(`${API}/kit/admin/richieste/${id}/azienda`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ proprietario: perCliente ? 'cliente' : 'admin' }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    alert(`Azienda creata: /nfc/${d.slug}` + (d.passwordGenerata
+      ? `\n\nAccount del cliente: ${d.email}\nPassword (si mostra solo ora, annotala): ${d.passwordGenerata}`
+      : (d.email ? `\n\nProprietario: ${d.email} (account già esistente)` : '')));
+    adminTabNfcAziendaDettaglio(d.azienda_id);
+  } catch (e) { alert('Errore: ' + e.message); }
 }
 
 async function kitNota(id, note_admin) {

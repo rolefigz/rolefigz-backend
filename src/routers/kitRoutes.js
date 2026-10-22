@@ -8,13 +8,14 @@ const crypto    = require("crypto");
 const { Readable } = require("stream");
 const cloudinary = require("cloudinary").v2;
 const { Op } = require("sequelize");
-const { RichiestaKit, PaginaDemo } = require("../models");
+const { sequelize, RichiestaKit, PaginaDemo, Company } = require("../models");
+const { risolviProprietario } = require("../modules/nfc/services/ownerService");
 const { verifyToken, soloAdmin } = require("../middleware/auth");
 const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
-const { creaPaginaDemo } = require("../utils/paginaDemo");
+const { creaPaginaDemo, aziendaDaDemo } = require("../utils/paginaDemo");
 
 const router = express.Router();
 
@@ -258,8 +259,44 @@ router.get("/admin/richieste", verifyToken, soloAdmin, async (req, res) => {
   else where.stato = { [Op.ne]: "annullato" };
   if (["kit", "revisione"].includes(req.query.tipo)) where.tipo = req.query.tipo;
   try {
-    res.json(await RichiestaKit.findAll({ where, order: [["createdAt", "DESC"]], limit: 300 }));
+    const lista = await RichiestaKit.findAll({ where, order: [["createdAt", "DESC"]], limit: 300 });
+    // per ogni prenotazione: la sua pagina NFC di prova e, se c'è già, l'azienda del modulo NFC con quello slug
+    const demo = await PaginaDemo.findAll({ where: { richiesta_id: { [Op.in]: lista.map(r => r.id) } } });
+    const aziende = demo.length
+      ? await Company.findAll({ where: { slug: { [Op.in]: demo.map(d => d.slug) } }, attributes: ["id", "slug"] })
+      : [];
+    res.json(lista.map(r => {
+      const d = demo.find(x => x.richiesta_id === r.id);
+      const a = d && aziende.find(x => x.slug === d.slug);
+      return { ...r.toJSON(), pagina_demo: d ? { slug: d.slug, nome: d.nome } : null, azienda_id: a ? a.id : null };
+    }));
   } catch (err) { rispondiErrore(res, err); }
+});
+
+// «Crea azienda» (lo decide l'admin): la pagina di prova della prenotazione diventa un'azienda del modulo NFC
+// (si modifica da Aziende). proprietario: "admin" (chi clicca, provvisorio) o "cliente" (account con l'email della
+// prenotazione: se non esiste si crea, e la password generata si mostra una sola volta all'admin).
+router.post("/admin/richieste/:id/azienda", verifyToken, soloAdmin, async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const r = await RichiestaKit.findByPk(req.params.id, { transaction: t });
+    const demo = r && await PaginaDemo.findOne({ where: { richiesta_id: r.id }, transaction: t });
+    if (!demo) throw Object.assign(new Error("Questa prenotazione non ha una pagina NFC di prova."), { status: 400 });
+    let owner = { id: req.usuario.id }, passwordGenerata = null, email = null;
+    if (req.body?.proprietario === "cliente") {
+      const p = await risolviProprietario({ owner_nombre: r.nome, owner_email: r.email }, t);
+      owner = p.utente; passwordGenerata = p.passwordGenerata; email = p.utente.email;
+    }
+    const azienda = await aziendaDaDemo(demo, owner.id, req.usuario.id, t);
+    await demo.update({ attiva: false }, { transaction: t });            // ora c'è la pagina vera dell'azienda
+    await t.commit();
+    console.log(`🏢 Pagina di prova /nfc/${demo.slug} → azienda #${azienda.id} (${r.numero})`);
+    res.json({ azienda_id: azienda.id, slug: azienda.slug, email, passwordGenerata });
+  } catch (err) {
+    await t.rollback();
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    rispondiErrore(res, err);
+  }
 });
 
 router.patch("/admin/richieste/:id", verifyToken, soloAdmin, async (req, res) => {
