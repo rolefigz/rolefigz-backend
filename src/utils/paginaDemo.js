@@ -5,7 +5,8 @@ const places = require("./googlePlaces");
 const { renderPaginaPubblica } = require("../modules/nfc/views/renderPaginaPubblica");
 
 const GIORNI_VALIDITA = parseInt(process.env.NFC_DEMO_GIORNI || "60", 10);
-const SLUG = /^[a-z0-9-]{3,50}$/;
+// anche 2 caratteri: il QR del kit usa il nome dell'azienda così com'è (es. «2M» → /nfc/2m)
+const SLUG = /^[a-z0-9-]{2,50}$/;
 
 // slug del QR del kit: «rolefigz.com/nfc/bar-stella» → «bar-stella»
 function slugDaQr(qrUrl) {
