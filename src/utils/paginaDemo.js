@@ -1,6 +1,6 @@
 // Pagina NFC di prova del kit campione: /nfc/<slug> con i dati di Google Maps dell'attività, il suo logo come
 // sfondo, la mappa e il bottone per lasciare una recensione su Google. Il QR dello stand campione la apre.
-const { PaginaDemo, Company } = require("../models");
+const { PaginaDemo, Company, RichiestaKit } = require("../models");
 const places = require("./googlePlaces");
 const { renderPaginaPubblica } = require("../modules/nfc/views/renderPaginaPubblica");
 
@@ -44,7 +44,7 @@ function coloreSfondo(logoUrl) {
 }
 
 // Crea (o aggiorna) la pagina di prova per una prenotazione. Ritorna la PaginaDemo o null se non si può
-// (slug già usato da un'azienda vera del modulo NFC, o da un'altra prova ancora attiva di un'altra prenotazione).
+// (slug già usato da un'azienda vera del modulo NFC, o da un'altra prova ancora attiva di un altro cliente).
 async function creaPaginaDemo(richiesta, placeId) {
   const slug = slugDaQr(richiesta.qr_url);
   if (!slug || slug === "rolefigz") return null;
@@ -60,12 +60,21 @@ async function creaPaginaDemo(richiesta, placeId) {
   };
   const esistente = await PaginaDemo.findOne({ where: { slug } });
   if (esistente) {
-    if (esistente.attiva && new Date(esistente.scadenza) > new Date() && esistente.richiesta_id !== richiesta.id) {
+    if (esistente.attiva && new Date(esistente.scadenza) > new Date() && esistente.richiesta_id !== richiesta.id &&
+        !(await prenotazioneLibera(esistente.richiesta_id, richiesta.email))) {
       return null;                                                      // è di un altro cliente
     }
     return esistente.update(dati);
   }
   return PaginaDemo.create(dati);
+}
+
+// La pagina di prova di un'altra prenotazione si può riprendere se quella prenotazione è annullata o non esiste
+// più, o se è dello stesso cliente (stessa email): così rifare la prova per la stessa attività non resta bloccato
+async function prenotazioneLibera(richiestaId, email) {
+  const precedente = richiestaId ? await RichiestaKit.findByPk(richiestaId) : null;
+  return !precedente || precedente.stato === "annullato" ||
+    String(precedente.email || "").toLowerCase() === String(email || "").toLowerCase();
 }
 
 // L'orario di oggi (fuso di Roma) dalla lista settimanale di Google, es. «Oggi: 9:00–13:00, 15:00–19:30»
