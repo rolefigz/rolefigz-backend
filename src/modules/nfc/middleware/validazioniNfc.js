@@ -14,8 +14,8 @@ const valida = (req, res, next) => {
 
 const validaCreaAzienda = [
   body("name").trim().notEmpty().withMessage("Il nome dell'azienda e' obbligatorio"),
-  body("slug").trim().toLowerCase().matches(/^[a-z0-9-]{3,50}$/)
-    .withMessage("Slug non valido: minuscole, numeri e trattini, 3-50 caratteri"),
+  body("slug").trim().toLowerCase().matches(/^[a-z0-9-]{2,50}$/)
+    .withMessage("Slug non valido: minuscole, numeri e trattini, 2-50 caratteri"),
   body("plan_id").isInt({ min: 1 }).withMessage("Piano non valido"),
   body("owner_user_id").optional({ checkFalsy: true }).isInt({ min: 1 }),
   body("owner_email").optional({ checkFalsy: true }).isEmail().withMessage("Email proprietario non valida").normalizeEmail(),

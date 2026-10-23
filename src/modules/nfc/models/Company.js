@@ -17,8 +17,8 @@ const Company = sequelize.define("Company", {
   paranoid: true,
   validate: {
     slugFormatoValido() {
-      if (this.slug && !/^[a-z0-9-]{3,50}$/.test(this.slug)) {
-        throw new Error("Slug non valido: solo minuscole, numeri e trattini, 3-50 caratteri");
+      if (this.slug && !/^[a-z0-9-]{2,50}$/.test(this.slug)) {
+        throw new Error("Slug non valido: solo minuscole, numeri e trattini, 2-50 caratteri");
       }
     },
   },
