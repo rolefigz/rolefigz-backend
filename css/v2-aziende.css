@@ -81,3 +81,65 @@
   .v2-biz header .v2-btn-sm { display: none; }
 }
 .v2-biz .header-actions .v2-switch { display: inline-flex; }
+
+/* ══ INGRESSO "CHE ATTIVITÀ HAI?" (quattro opzioni) ══ */
+.v2-gate-4 .v2-gate-half { padding: clamp(24px, 3vw, 44px); padding-bottom: calc(clamp(28px, 4vw, 56px) + env(safe-area-inset-bottom, 0px)); }
+.v2-gate-4 .v2-gate-half:hover, .v2-gate-4 .v2-gate-half:focus-visible { flex-grow: 1.55; }
+.v2-gate-4 .v2-gate-copy { max-width: 300px; gap: 12px; }
+.v2-gate-4 .v2-gate-title { font-size: clamp(48px, 5.4vw, 96px); letter-spacing: -1px; }
+.v2-gate-4 .v2-gate-text { font-size: 14px; }
+.v2-gate-4 .v2-gate-eyebrow { color: #b9c0c7; }
+.v2-gate-4 .v2-gate-half:hover .v2-gate-eyebrow { color: var(--accent); }
+.v2-gate-4 .v2-gate-half:hover .v2-gate-cta { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v2-gate-4 .v2-gate-center { top: 40%; width: min(24vw, 340px); }
+.v2-gate-4 .v2-gate-half::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(70% 50% at 50% 100%, rgba(242,106,27,0), transparent 70%); transition: background .6s; }
+.v2-gate-4 .v2-gate-half:hover::before { background: radial-gradient(70% 50% at 50% 100%, rgba(242,106,27,.3), transparent 70%); }
+.v2-gate.v2-gate-4:has(.v2-gate-half:hover) .v2-gate-center { left: 50%; }
+@media (max-width: 1024px) {
+  .v2-gate-4 .v2-gate-text { display: none; }
+}
+@media (max-width: 768px) {
+  .v2-gate-4 .v2-gate-half { padding: 14px max(20px, env(safe-area-inset-left, 0px)); align-items: center; }
+  .v2-gate-4 .v2-gate-half:first-of-type { padding-top: 76px; }
+  .v2-gate-4 .v2-gate-copy { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; max-width: none; gap: 10px; flex-wrap: wrap; }
+  .v2-gate-4 .v2-gate-eyebrow { flex-basis: 100%; font-size: 11px; }
+  .v2-gate-4 .v2-gate-title { font-size: clamp(40px, 12vw, 60px); }
+  .v2-gate-4 .v2-gate-cta { margin: 0; padding: 9px 14px; font-size: 13px; }
+  .v2-gate-4 .v2-gate-center { display: none; }
+}
+
+/* ══ HERO: selettore di attività + logo 3D ══ */
+.v2-seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.v2-seg button {
+  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: #cfc9be;
+  padding: 7px 14px; border-radius: 999px; font: 600 13px/1 var(--sans); cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+}
+.v2-seg button:hover { color: #fff; border-color: rgba(255,255,255,.35); }
+.v2-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v2-biz-hero .v2-hero-3d { grid-column: 2; grid-row: 1; }
+a.v2-biz-3d-hint { pointer-events: auto; text-decoration: none; color: #e8e4dc; }
+a.v2-biz-3d-hint:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* soluzioni consigliate per l'attività scelta */
+.v2-biz-card.is-featured { border-color: rgba(242,106,27,.45); }
+.v2-biz-card.is-featured::before {
+  content: 'Consigliato per te'; position: absolute; top: 12px; left: 12px; z-index: 2;
+  padding: 5px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600;
+}
+.v2-biz-sector { transition: background .3s, box-shadow .3s; }
+.v2-biz-sector.is-active { background: var(--dark); color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.v2-biz-sector.is-active p { color: #bdb7ab; }
+.v2-biz-sector.is-active iconify-icon { color: var(--accent); }
+
+/* lavori reali: il collage di foto su nero */
+.v2-biz-works { background: var(--dark); color: #fff; }
+.v2-biz-works .v2-h2 { color: #fff; }
+.v2-biz-works .v2-eyebrow { color: var(--accent); }
+.v2-biz-works .v2-lead { color: #bdb7ab; }
+.v2-biz-works-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+.v2-biz-works .v2-biz-collage { grid-column: auto; grid-row: auto; height: min(62vh, 560px); margin: 0; }
+@media (max-width: 900px) {
+  .v2-biz-works-grid { grid-template-columns: 1fr; }
+  .v2-biz-works .v2-biz-collage { height: 360px; }
+  .v2-biz-hero .v2-hero-3d { grid-column: 1; grid-row: auto; }
+}

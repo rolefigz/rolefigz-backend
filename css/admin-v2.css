@@ -139,3 +139,13 @@ header {
   .admin-menu-item.active { background: var(--accent); }
   .admin-content { border-radius: 16px; }
 }
+
+/* contenuti generati inline: niente scroll laterale sul telefono */
+.admin-grid > * { min-width: 0; }
+@media (max-width: 640px) {
+  #adminContent div[style*="display:flex"][style*="space-between"] { flex-wrap: wrap; gap: 8px; }
+  #adminContent div[style*="display:flex"][style*="gap:10px"] { flex-wrap: wrap; }
+  #adminContent select, #adminContent input { max-width: 100%; }
+  .admin-content { padding: 16px; }
+  header nav .nav-btn { padding: 7px 12px; font-size: 12px; }
+}

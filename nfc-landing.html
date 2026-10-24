@@ -167,6 +167,48 @@ details p{color:var(--ink-dim);font-size:.88rem;line-height:1.6;margin:12px 0 0;
 .lead-form-esito.err{color:#c0392b}
 
 footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-size:.72rem;color:var(--ink-dim)}
+
+/* ══ v2: hero scuro, anelli NFC, titoli grandi, piani e contatti più curati ══ */
+main.hero{position:relative;isolation:isolate;color:#f6f5f2;padding:96px 24px 110px}
+main.hero::before{content:"";position:absolute;inset:0 calc(50% - 50vw);z-index:-1;
+  background:radial-gradient(55% 70% at 85% 30%,rgba(242,106,27,.22),transparent 65%),radial-gradient(40% 60% at 0% 100%,rgba(242,106,27,.1),transparent 60%),#0b0b0a}
+main.hero::after{content:"";position:absolute;inset:0 calc(50% - 50vw);z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 6px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 70%);mask-image:linear-gradient(180deg,transparent,#000 70%)}
+.hero-chip{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#e8e4dc;font-size:.82rem;margin-bottom:22px;opacity:0;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .05s both}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:#F26A1B;box-shadow:0 0 0 4px rgba(242,106,27,.2)}
+.hero h1{font-size:clamp(2.8rem,6vw,5.2rem);line-height:.95;max-width:12ch;color:#fff}
+.hero h1 em{font-style:normal;color:#F26A1B}
+.hero p{color:#cfc9be}
+.hero .btn--ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.hero .btn--primary{background:#F26A1B;box-shadow:0 10px 28px -10px rgba(242,106,27,.7)}
+.phone-caption{color:#8d877c}
+.phone-stage{position:relative;display:flex;flex-direction:column;align-items:center}
+.nfc-ring{position:absolute;left:50%;top:42%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;border:1.5px solid rgba(242,106,27,.55);opacity:0;pointer-events:none;animation:nfcPulse 3.6s cubic-bezier(.2,.7,.2,1) infinite}
+.nfc-ring.r2{animation-delay:1.2s}.nfc-ring.r3{animation-delay:2.4s}
+@keyframes nfcPulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion: reduce){.nfc-ring{display:none}.hero-chip{animation:none;opacity:1}}
+.phone{position:relative;z-index:1;box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06)}
+section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;font-size:clamp(2.1rem,4vw,3.2rem)!important;line-height:1;letter-spacing:-.01em}
+.eyebrow{font-family:"DM Mono",ui-monospace,monospace;letter-spacing:.14em;font-weight:500}
+.step{padding:24px 22px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+.step .n{font-family:"DM Mono",ui-monospace,monospace;font-size:.9rem;font-weight:500}
+.incluso-voce{border:1px solid var(--line);box-shadow:none}
+.merch-carousel{border-radius:24px;background:#111110}
+.merch-slide img{height:440px}
+.piano-card{border-radius:24px}
+.piano-card--evidenza{background:#111110;color:#f6f5f2;box-shadow:0 0 0 2px #F26A1B,0 30px 60px -30px rgba(242,106,27,.6)}
+.piano-card--evidenza .piano-crediti,.piano-card--evidenza .piano-features li{color:#bdb7ab}
+.piano-card--evidenza .piano-cta{background:#F26A1B;color:#fff}
+.piano-prezzo{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800}
+.contatti{position:relative;isolation:isolate;color:#fff;text-align:center;border-top:0!important;border-radius:28px;margin:40px auto 80px;padding:64px 28px!important;
+  background:#F26A1B repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 7px)}
+.contatti h2{color:#fff}
+.contatti p{color:rgba(255,255,255,.9)!important}
+.contatti .btn--primary{background:#111110}
+.contatti .btn--ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6)}
+.contatti .lead-form input,.contatti .lead-form textarea{background:rgba(255,255,255,.95);border-color:transparent}
+.contatti .lead-form button{background:#111110;color:#fff}
+.contatti .lead-intro, .contatti label{color:rgba(255,255,255,.9)}
 </style>
 </head><body>
 
@@ -180,8 +222,8 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 
 <main class="wrap hero">
   <div>
-    <img class="hero-logo" src="assets/LogoSfondoNero.png" alt="RoleFigz">
-    <h1>I tuoi clienti, a un tocco di distanza.</h1>
+    <span class="hero-chip"><span class="hero-dot"></span>RoleFigz NFC · Piacenza</span>
+    <h1>I tuoi clienti, <em>a un tocco</em> di distanza.</h1>
     <p>Pagina web, tag NFC/QR fisici e merchandising personalizzato ogni mese. Un abbonamento pagato in contanti, di persona.</p>
     <div class="hero-cta">
       <a class="btn btn--primary" href="#piani">Vedi i piani</a>
@@ -189,7 +231,8 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
     </div>
   </div>
   <div class="phone-wrap">
-    <div>
+    <div class="phone-stage">
+      <span class="nfc-ring r1" aria-hidden="true"></span><span class="nfc-ring r2" aria-hidden="true"></span><span class="nfc-ring r3" aria-hidden="true"></span>
       <div class="phone">
         <div class="phone-top">
           <div class="phone-badge">B</div>
@@ -255,8 +298,8 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
   <p class="reveal" style="color:var(--ink-dim);margin-bottom:36px;max-width:50ch">Nessuna carta, nessun addebito automatico. Paghi di persona quando passi in negozio.</p>
   <div class="piani">
     
-    <div class="piano-card piano-card--evidenza reveal">
-      <div class="piano-badge">Piu scelto</div>
+    <div class="piano-card reveal">
+      
       <div class="piano-nome">Base</div>
       <div class="piano-prezzo">€19,00<span>/mese</span></div>
       <div class="piano-crediti">5 crediti merchandising al mese</div>
@@ -271,8 +314,8 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
       <ul class="piano-features"><li>Statistiche</li><li>3 tag NFC</li></ul>
       <a class="piano-cta" href="#contatti">Contattaci</a>
     </div>
-    <div class="piano-card piano-card--evidenza reveal">
-      <div class="piano-badge">Piu scelto</div>
+    <div class="piano-card reveal">
+      
       <div class="piano-nome">Business</div>
       <div class="piano-prezzo">€79,00<span>/mese</span></div>
       <div class="piano-crediti">40 crediti merchandising al mese</div>

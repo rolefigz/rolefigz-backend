@@ -13,7 +13,7 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
 
   const sel = [
-    '.k-hero-inner > *', '.g3d-hero-inner > *', '.ki > *', '.ki-card',
+    '.k-hero-inner > *', '.g3d-hero-inner > *', '.ki > *', '.ki-card', '.k-split-head > *', '.k-split-opt', '.k-contact-inner',
     '.k-label', '.k-title', '.k-lead', '.k-guide-col', '.k-ex', '.k-step-panel', '.k-book > *',
     '.g3d-label', '.g3d-title', '.g3d-step', '.g3d-card', '.g3d-chi-sono > *', '.g3d-form-wrap',
     '.v2-legal > *'
