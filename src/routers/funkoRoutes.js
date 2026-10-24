@@ -91,6 +91,7 @@ function pubblico(id, l) {
     immagine: (l.urlImmagine || l.immagineBuf) ? `/api/funko/${id}/immagine.png` : null,
     modello:  l.urlModello  ? `/api/funko/${id}/modello.glb`  : null,
     errore:   l.stato === "errore" ? l.errore : null,
+    whatsapp: l.stato === "errore" && !!l.whatsapp,   // servizio esaurito o giù: la Funko la facciamo noi
   };
 }
 
@@ -136,6 +137,8 @@ async function eseguiLavoro(id, foto) {
   } catch (e) {
     console.error(`Funko ${id}:`, e.message);
     l.stato = "errore";
+    // quota finita o servizio non disponibile: si passa a WhatsApp, non è colpa della foto
+    l.whatsapp = /\b(429|5\d\d)\b|quota|RESOURCE_EXHAUSTED|UNAVAILABLE|tempo scaduto|timeout|fetch failed/i.test(e.message);
     // il filtro di sicurezza del modello rifiuta alcune foto: messaggio chiaro, senza dettagli tecnici
     l.errore = /nsfw|safety|content|moderat/i.test(e.message)
       ? "Questa foto non può essere usata. Prova con un'altra, ben illuminata e con il viso visibile."

@@ -148,7 +148,7 @@ function segui(id) {
       if (d.immagine && !immagine2d) mostra2d(d.immagine);
       else if (!d.immagine) fase(Date.now() - inizio > 5000 ? 2 : 1);
       if (d.stato === 'pronto') return risultato(d);
-      if (d.stato === 'errore') return torna(d.errore);
+      if (d.stato === 'errore') return d.whatsapp && foto ? mostraWhatsapp() : torna(d.errore);
     }
     attesa = setTimeout(giro, 2500);
   };
