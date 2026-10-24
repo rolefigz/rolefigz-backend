@@ -68,20 +68,25 @@
   if (hero) {
     hero.classList.add('is-animated');
     const words = splitWords(hero.querySelector('.v2-hero-h1'));
-    const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
-    tl.from(hero.querySelector('.v2-hero-bg'), { scale: 1.18, opacity: 0, duration: 2.2, ease: 'power2.out' }, 0)
-      .from(hero.querySelector('.v2-chip'), { y: 20, opacity: 0, duration: 1 }, 0.15)
+    const tl = gsap.timeline({ defaults: { ease: 'expo.out' }, paused: true });
+    const bg = hero.querySelector('.v2-hero-bg');
+    if (bg) tl.from(bg, { scale: 1.18, opacity: 0, duration: 2.2, ease: 'power2.out' }, 0);
+    tl.from(hero.querySelector('.v2-chip'), { y: 20, opacity: 0, duration: 1 }, 0.15)
       .from(words, { yPercent: 115, rotate: 4, duration: 1.3, stagger: 0.06 }, 0.25)
       .from(hero.querySelector('.v2-hero-p'), { y: 24, opacity: 0, duration: 1.1 }, 0.6)
       .from(hero.querySelectorAll('.v2-hero-ctas .v2-btn'), { y: 20, opacity: 0, duration: 1, stagger: 0.08 }, 0.75)
       .from(hero.querySelectorAll('.v2-stat'), { y: 30, opacity: 0, duration: 1, stagger: 0.07 }, 0.9);
+    // con l'ingresso aperto, l'hero parte quando si sceglie "Privati"
+    if (document.documentElement.classList.contains('gate-open')) {
+      window.addEventListener('v2:gate-closed', () => { tl.play(0); ScrollTrigger.refresh(); }, { once: true });
+    } else tl.play(0);
 
     // parallasse in uscita + rotazione del modello 3D
     gsap.to(hero.querySelector('.v2-hero-copy'), {
       yPercent: -18, opacity: 0.2, ease: 'none',
       scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
     });
-    gsap.to(hero.querySelector('.v2-hero-bg'), {
+    if (bg) gsap.to(bg, {
       yPercent: 12, ease: 'none',
       scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
     });

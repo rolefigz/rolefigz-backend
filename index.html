@@ -166,12 +166,55 @@
     ]
   }
   </script>
+  <script>
+    // Ingresso: scelta privati / aziende, all'inizio della visita e solo sulla home
+    (function () {
+      try {
+        var deep = /\/(producto|blog|checkout)(\/|$)/.test(location.pathname);
+        var scelto = null;
+        try { scelto = sessionStorage.getItem('rf_percorso'); } catch (e) {}
+        if (!deep && !location.hash && !scelto) document.documentElement.classList.add('gate-open');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="css/shared.css"/>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2-tokens.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   </head>
 <body>
+
+<!-- ══ INGRESSO: PRIVATI O AZIENDE ══ -->
+<div class="v2-gate" id="v2Gate">
+  <div class="v2-gate-top">
+    <img class="v2-gate-logo" src="assets/logo.png" alt="RoleFigz">
+    <p class="v2-gate-q">Per chi stampiamo oggi?</p>
+    <span class="v2-gate-place">Stampa 3D · Piacenza</span>
+  </div>
+  <a class="v2-gate-half is-b2c" href="#privati" data-percorso="privati">
+    <img class="v2-gate-bg" src="assets/llaveros.jpeg" alt="" aria-hidden="true">
+    <div class="v2-gate-copy">
+      <span class="v2-gate-eyebrow">Per te</span>
+      <h2 class="v2-gate-title">Privati</h2>
+      <p class="v2-gate-text">Figure dalla tua foto, regali su misura, portachiavi con il tuo nome e circuiti in scala.</p>
+      <ul class="v2-gate-chips"><li>Figure</li><li>Regali</li><li>Circuiti F1</li></ul>
+      <span class="v2-gate-cta">Entra nel negozio <i aria-hidden="true">→</i></span>
+    </div>
+  </a>
+  <a class="v2-gate-half is-b2b" href="aziende.html" data-percorso="aziende">
+    <img class="v2-gate-bg" src="assets/standnfcpiccolo.jpeg" alt="" aria-hidden="true">
+    <div class="v2-gate-copy">
+      <span class="v2-gate-eyebrow">Per la tua attività</span>
+      <h2 class="v2-gate-title">Aziende</h2>
+      <p class="v2-gate-text">Merchandising con NFC, segnaposti con QR per il menù e gadget con il tuo logo, dal campione alla produzione in volume.</p>
+      <ul class="v2-gate-chips"><li>Merch NFC</li><li>Segnaposti</li><li>Eventi</li></ul>
+      <span class="v2-gate-cta">Scopri le soluzioni <i aria-hidden="true">→</i></span>
+    </div>
+  </a>
+  <div class="v2-gate-center" aria-hidden="true">
+    <div class="v2-gate-3d" id="gate3d"></div>
+  </div>
+</div>
 
 <!-- ══ BANNER MANUTENZIONE ══ -->
 <div class="v2-topbar"><span class="v2-dot"></span>Sito in costruzione — alcune sezioni potrebbero non essere disponibili.</div>
@@ -300,7 +343,7 @@
 <div class="view active" id="view-tienda">
 
   <!-- HERO -->
-  <section class="v2-hero">
+  <section class="v2-hero" id="privati">
     <div class="v2-hero-inner">
       <div class="v2-hero-copy">
         <span class="v2-chip"><span class="v2-dot"></span>Stampa 3D per te · Piacenza</span>
@@ -965,6 +1008,7 @@
 <script src="vendor/ScrollTrigger.min.js"></script>
 <script src="vendor/lenis.min.js"></script>
 <script src="js/v2-motion.js"></script>
+<script src="js/v2-gate.js"></script>
 <script type="module" src="js/hero3d.js"></script>
 
 <!-- ══ COOKIE BANNER ══ -->

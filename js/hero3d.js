@@ -5,13 +5,19 @@ import * as THREE from '../vendor/three/three.module.min.js';
 import { SVGLoader } from '../vendor/three/addons/loaders/SVGLoader.js';
 import { RoomEnvironment } from '../vendor/three/addons/environments/RoomEnvironment.js';
 
-const host = document.getElementById('hero3d');
+// Se all'ingresso c'è la scelta privati/aziende, il logo si stampa lì e poi
+// passa nell'hero del negozio (stesso canvas, la stampa continua).
+const heroHost = document.getElementById('hero3d');
+const gateHost = document.documentElement.classList.contains('gate-open') ? document.getElementById('gate3d') : null;
+let host = gateHost || heroHost;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function fallback() {
-  if (!host) return;
-  host.classList.add('is-fallback');
-  host.innerHTML = '<img src="assets/logo.png" alt="" aria-hidden="true">';
+  [heroHost, gateHost].forEach(h => {
+    if (!h) return;
+    h.classList.add('is-fallback');
+    h.innerHTML = '<img src="assets/logo.png" alt="" aria-hidden="true">';
+  });
 }
 
 function webglOk() {
@@ -37,6 +43,8 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.localClippingEnabled = true;
+  // se la scelta all'ingresso è già stata fatta mentre caricavamo, si va dritti nell'hero
+  if (host === gateHost && !document.documentElement.classList.contains('gate-open')) host = heroHost;
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -200,11 +208,31 @@ async function init() {
     camera.position.z = w < 600 ? 11.5 : (w / h < 0.9 ? 11.5 : 9.2);
     camera.updateProjectionMatrix();
   };
-  new ResizeObserver(resize).observe(host);
+  const hosts = [heroHost, gateHost].filter(Boolean);
+  const ro = new ResizeObserver(resize);
+  hosts.forEach(h => ro.observe(h));
   resize();
 
   let visible = true;
-  new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) loop(); }, { threshold: 0 }).observe(host);
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => seen.set(en.target, en.isIntersecting));
+    visible = seen.get(host) !== false;
+    if (visible) loop();
+  }, { threshold: 0 });
+  hosts.forEach(h => io.observe(h));
+
+  // chiamato dalla scelta "Privati": il canvas si sposta nell'hero del negozio
+  window.__hero3dMoveTo = target => {
+    if (!target || target === host) return;
+    host.classList.remove('is-ready');
+    target.appendChild(renderer.domElement);
+    host = target;
+    host.classList.add('is-ready');
+    visible = true;
+    resize();
+    loop();
+  };
   document.addEventListener('visibilitychange', () => { if (!document.hidden) loop(); });
 
   // ── loop ──────────────────────────────────────────────────────
