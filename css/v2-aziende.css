@@ -143,3 +143,5 @@ a.v2-biz-3d-hint:hover { background: var(--accent); border-color: var(--accent);
   .v2-biz-works .v2-biz-collage { height: 360px; }
   .v2-biz-hero .v2-hero-3d { grid-column: 1; grid-row: auto; }
 }
+.v2-biz-collage figcaption { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(17,17,16,.85); }
+@media (max-width: 768px), (pointer: coarse) { .v2-biz-collage figure { animation: none; } }

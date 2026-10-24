@@ -266,3 +266,58 @@ body.v2-404 { background: radial-gradient(60% 60% at 50% 30%, rgba(242,106,27,.1
 .k-hero .k-h1 { font-size: clamp(44px, 5.6vw, 96px); }
 .k-split-opt:first-of-type .k-split-bg { object-position: 50% 62%; }
 .k-split-bg { opacity: .58; }
+
+/* prestazioni: didascalie senza vetro (sono su elementi che fluttuano), header pieno su telefono */
+.k-tray-item figcaption, .v2-biz-collage figcaption, .k-viewer-tip, .k-count { backdrop-filter: none; -webkit-backdrop-filter: none; }
+@media (max-width: 768px), (pointer: coarse) {
+  .k-nav, .g3d-nav { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(246,245,242,.98); }
+  .k-tray-item { animation: none; }
+}
+
+/* ══ GADGET 3D ══ */
+.g3d-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
+.g3d-hero::before { content: none; }
+.g3d-hero .g3d-h1 { font-size: clamp(44px, 5.6vw, 96px); }
+.k-tray.is-4 { grid-template-columns: 1fr 1fr; grid-auto-rows: 190px; }
+.k-tray.is-4 .t1, .k-tray.is-4 .t3 { grid-column: auto; grid-row: auto; }
+.k-tray.is-4 .t2, .k-tray.is-4 .t4 { margin-top: 24px; margin-bottom: -24px; }
+
+.g3d-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g3d-step { background: var(--dark2); padding: 28px 24px; transition: border-color .3s, transform .3s; }
+.g3d-step:hover { border-color: rgba(242,106,27,.5); transform: translateY(-3px); }
+.g3d-step-num { font-size: 15px; color: var(--accent); }
+.g3d-step-icon { color: var(--accent); }
+.g3d-step-desc { font-size: 14px; color: #a29d92; line-height: 1.6; }
+
+.g3d-chi-name { text-transform: none; }
+.g3d-chi-role { font-family: var(--mono); font-size: 12px; letter-spacing: 1.5px; }
+.g3d-chi-bio { font-size: 15px; line-height: 1.7; color: #cfc9be; }
+.g3d-chi-tag { font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; padding: 6px 12px; border-color: rgba(255,255,255,.18); color: #e8e4dc; }
+
+/* quattro gadget in una riga (due su tablet) */
+.g3d-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g3d-card-img { aspect-ratio: 4 / 5; background: #111110; }
+.g3d-card-name { font-size: 22px; }
+.g3d-card-desc { font-size: 13px; line-height: 1.55; }
+.g3d-card-check { background: var(--accent); }
+
+/* modulo: una scheda chiara, opzioni come pillole selezionabili */
+.g3d-form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; padding: clamp(24px, 4vw, 44px); box-shadow: var(--shadow); }
+.g3d-form-title { font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text); margin-top: 26px; }
+.g3d-radios { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+.g3d-radio { border-radius: 999px; padding: 10px 16px; font-size: 14px; background: var(--surface); border: 1px solid var(--border); transition: background .2s, border-color .2s, color .2s; }
+.g3d-radio-dot { display: none; }
+.g3d-radio:hover { border-color: var(--dark); background: var(--surface); }
+.g3d-radio.selected { background: var(--dark); border-color: var(--dark); color: #fff; }
+.g3d-success { border-radius: 24px; }
+
+@media (max-width: 1100px) {
+  .g3d-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3d-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .g3d-hero { grid-template-columns: 1fr; }
+  .k-tray.is-4 { grid-auto-rows: 140px; }
+  .k-tray.is-4 .t2, .k-tray.is-4 .t4 { margin: 0; }
+}
+@media (max-width: 560px) { .g3d-steps { grid-template-columns: 1fr; } }

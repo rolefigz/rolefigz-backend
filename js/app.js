@@ -1,3 +1,12 @@
+// Categorie del negozio (prima stava in admin.js, che il negozio non deve scaricare)
+async function caricaCategorie() {
+  try {
+    const r = await fetch(`${API}/categorias`);
+    categorie = await r.json();
+    if (typeof renderCategorie === 'function') renderCategorie();
+  } catch {}
+}
+
 function apriMenuNav() {
   document.getElementById('navPanel').classList.add('on');
   document.getElementById('navOverlay').classList.add('on');
@@ -26,7 +35,7 @@ function setSd(id, cls) {
 function mostraVista(nome) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${nome}`).classList.add('active');
-  if (nome === 'admin') adminTab('ordenes', document.querySelector('.admin-menu-item'));
+  if (nome === 'admin' && typeof adminTab === 'function') adminTab('ordenes', document.querySelector('.admin-menu-item'));
   if (nome === 'perfil') tabProfilo('ordenes', document.querySelector('.perfil-menu-item'));
 }
 

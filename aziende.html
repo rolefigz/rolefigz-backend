@@ -3,7 +3,6 @@
 <head>
   <meta name="robots" content="noindex, nofollow"/>
   <script src="js/preview-shim.js"></script>
-  <script src="js/iconify-lite.js"></script>
 
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -48,24 +47,28 @@
       if (!location.hash && !scelto) document.documentElement.classList.add('gate-open');
     })();
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"/>
   <link rel="stylesheet" href="css/shared.css"/>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2-tokens.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-aziende.css"/>
-  </head>
+  <script src="js/iconify-lite.js"></script>
+</head>
 <body class="v2-biz">
 <script>try { sessionStorage.setItem('rf_percorso', 'aziende'); } catch (e) {}</script>
 
 <!-- ══ INGRESSO: CHE ATTIVITÀ HAI? ══ -->
 <div class="v2-gate v2-gate-4" id="v2Gate" data-storage="rf_settore">
   <div class="v2-gate-top">
-    <img class="v2-gate-logo" src="assets/logo.png" alt="RoleFigz">
+    <img class="v2-gate-logo" src="assets/opt/logo-white.webp" alt="RoleFigz">
     <p class="v2-gate-q">Che attività hai?</p>
     <span class="v2-gate-place">RoleFigz per le aziende</span>
   </div>
   <a class="v2-gate-half" href="#ristoranti" data-scelta="ristoranti" data-stay>
-    <img class="v2-gate-bg" src="assets/stand.jpeg" alt="" aria-hidden="true">
+    <img class="v2-gate-bg" src="assets/opt/stand.webp" alt="" aria-hidden="true">
     <div class="v2-gate-copy">
       <span class="v2-gate-eyebrow">Ristoranti e bar</span>
       <h2 class="v2-gate-title">Locali</h2>
@@ -74,7 +77,7 @@
     </div>
   </a>
   <a class="v2-gate-half" href="#uffici" data-scelta="uffici" data-stay>
-    <img class="v2-gate-bg" src="assets/presentationbadge2.jpeg" alt="" aria-hidden="true">
+    <img class="v2-gate-bg" src="assets/opt/presentationbadge2.webp" alt="" aria-hidden="true">
     <div class="v2-gate-copy">
       <span class="v2-gate-eyebrow">Aziende e uffici</span>
       <h2 class="v2-gate-title">Uffici</h2>
@@ -83,7 +86,7 @@
     </div>
   </a>
   <a class="v2-gate-half" href="#eventi" data-scelta="eventi" data-stay>
-    <img class="v2-gate-bg" src="assets/gadget/calamitaelim.jpg" alt="" aria-hidden="true">
+    <img class="v2-gate-bg" src="assets/opt/calamitaelim.webp" alt="" aria-hidden="true">
     <div class="v2-gate-copy">
       <span class="v2-gate-eyebrow">Eventi e fiere</span>
       <h2 class="v2-gate-title">Eventi</h2>
@@ -92,7 +95,7 @@
     </div>
   </a>
   <a class="v2-gate-half" href="#negozi" data-scelta="negozi" data-stay>
-    <img class="v2-gate-bg" src="assets/standnfcpiccolo.jpeg" alt="" aria-hidden="true">
+    <img class="v2-gate-bg" src="assets/opt/standnfcpiccolo.webp" alt="" aria-hidden="true">
     <div class="v2-gate-copy">
       <span class="v2-gate-eyebrow">Negozi</span>
       <h2 class="v2-gate-title">Negozi</h2>
@@ -100,14 +103,11 @@
       <span class="v2-gate-cta">Vedi le soluzioni <i aria-hidden="true">→</i></span>
     </div>
   </a>
-  <div class="v2-gate-center" aria-hidden="true">
-    <div class="v2-gate-3d" id="gate3d"></div>
-  </div>
 </div>
 
 
 <header>
-  <a href="aziende.html" aria-label="RoleFigz per le aziende"><img class="logo-img" src="assets/LogoSfondoNero.png" alt="RoleFigz"></a>
+  <a href="aziende.html" aria-label="RoleFigz per le aziende"><img class="logo-img" src="assets/opt/logo-header.webp" alt="RoleFigz"></a>
   <nav class="header-nav">
     <a class="hn-link" href="#soluzioni">Soluzioni</a>
     <a class="hn-link" href="#come-lavoriamo">Come lavoriamo</a>
@@ -142,8 +142,11 @@
           <a class="v2-btn v2-btn-glass" href="#contatti">Richiedi un preventivo</a>
         </div>
       </div>
-      <div class="v2-hero-3d" id="hero3d" aria-hidden="true">
-        <a class="v2-hero-3d-hint v2-biz-3d-hint" href="kit-index.html">Qui ci va il tuo logo · prova il configuratore</a>
+      <div class="v2-biz-collage" aria-hidden="true">
+        <figure class="c1"><img src="assets/opt/standnfcpiccolo.webp" alt="" loading="eager"><figcaption>Stand NFC da banco</figcaption></figure>
+        <figure class="c2"><img src="assets/opt/llaveros.webp" alt="" loading="eager"><figcaption>Portachiavi NFC con logo</figcaption></figure>
+        <figure class="c3"><img src="assets/opt/presentationbadge2.webp" alt="" loading="eager"><figcaption>Biglietto da visita NFC</figcaption></figure>
+        <figure class="c4"><img src="assets/opt/stand.webp" alt="" loading="eager"><figcaption>Stand con QR</figcaption></figure>
       </div>
       <div class="v2-hero-stats">
         <div class="v2-stat"><strong>60<small>s</small></strong><span>per vedere il tuo kit in 3D</span></div>
@@ -163,7 +166,7 @@
     </div>
     <div class="v2-biz-grid">
       <a class="v2-biz-card" data-sol="merch" href="kit.html">
-        <img src="assets/llaveros.jpeg" alt="Portachiavi NFC con logo stampati in 3D" loading="lazy">
+        <img src="assets/opt/llaveros.webp" alt="Portachiavi NFC con logo stampati in 3D" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>Kit merch con il tuo logo</h3>
           <p>Carichi il logo e in un minuto vedi in 3D portachiavi NFC, magnete, badge, biglietto NFC e stand da banco. Con il preventivo, subito.</p>
@@ -171,7 +174,7 @@
         </div>
       </a>
       <a class="v2-biz-card" data-sol="segnaposti" href="segnaposti.html">
-        <img src="assets/stand.jpeg" alt="Segnaposto da tavolo con QR code e NFC" loading="lazy">
+        <img src="assets/opt/stand.webp" alt="Segnaposto da tavolo con QR code e NFC" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>Segnaposti con QR e NFC</h3>
           <p>Per ristoranti e bar: il cliente apre il menù digitale dal tavolo, senza scaricare nulla. Tre taglie, in PETG lavabile.</p>
@@ -179,7 +182,7 @@
         </div>
       </a>
       <a class="v2-biz-card" data-sol="nfc" href="nfc-landing.html">
-        <img src="assets/standnfcpiccolo.jpeg" alt="Stand NFC collegato alla pagina aziendale" loading="lazy">
+        <img src="assets/opt/standnfcpiccolo.webp" alt="Stand NFC collegato alla pagina aziendale" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>RoleFigz NFC in abbonamento</h3>
           <p>Pagina web della tua attività, tag NFC e QR fisici, statistiche e crediti mensili per il merchandising. Senza vincoli.</p>
@@ -187,7 +190,7 @@
         </div>
       </a>
       <a class="v2-biz-card" data-sol="eventi" href="gadget3d.html">
-        <img src="assets/gadget/calamitaelim.jpg" alt="Gadget con logo stampato in 3D per un evento" loading="lazy">
+        <img src="assets/opt/calamitaelim.webp" alt="Gadget con logo stampato in 3D per un evento" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>Gadget per eventi e fiere</h3>
           <p>Trofei, calamite, segnaletica e miniature del tuo prodotto, per career day, fiere, tornei e premiazioni.</p>
@@ -195,7 +198,7 @@
         </div>
       </a>
       <a class="v2-biz-card" data-sol="volume" href="#contatti">
-        <img src="assets/iman.jpeg" alt="Pezzi con logo prodotti in serie" loading="lazy">
+        <img src="assets/opt/iman.webp" alt="Pezzi con logo prodotti in serie" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>Produzione su misura e in volume</h3>
           <p>Token, fiches, portachiavi in forma di logo, insegne luminose: progettiamo il pezzo e lo produciamo in serie, anche migliaia di unità.</p>
@@ -203,7 +206,7 @@
         </div>
       </a>
       <a class="v2-biz-card" data-sol="menu" href="http://4bytemenu.it/" target="_blank" rel="noopener">
-        <img src="assets/Identificador.jpeg" alt="Segnaposto da tavolo per il menù digitale" loading="lazy">
+        <img src="assets/opt/Identificador.webp" alt="Segnaposto da tavolo per il menù digitale" loading="lazy">
         <div class="v2-biz-card-body">
           <h3>Menù digitale 4ByteMenu</h3>
           <p>Il menù del tuo locale sempre aggiornato, da abbinare ai segnaposti QR e NFC. Una settimana di prova gratuita.</p>
@@ -239,23 +242,6 @@
         <div class="step-num">04</div>
         <div class="step-title">Produzione e consegna</div>
         <div class="step-desc">Due settimane di produzione standard, controllo pezzo per pezzo e consegna presso la tua sede.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- LAVORI REALI -->
-  <section class="v2-section v2-biz-works">
-    <div class="v2-biz-works-grid">
-      <div class="v2-section-head">
-        <span class="v2-eyebrow">Lavori reali</span>
-        <h2 class="v2-h2">Pezzi veri, <em>non rendering</em></h2>
-        <p class="v2-lead">Ogni foto è un pezzo stampato nel nostro laboratorio di Piacenza, con il logo in rilievo e il chip NFC dentro.</p>
-      </div>
-      <div class="v2-biz-collage" role="img" aria-label="Esempi di prodotti RoleFigz con logo">
-        <figure class="c1"><img src="assets/standnfcpiccolo.jpeg" alt="" loading="eager"><figcaption>Stand NFC da banco</figcaption></figure>
-        <figure class="c2"><img src="assets/llaveros.jpeg" alt="" loading="eager"><figcaption>Portachiavi NFC con logo</figcaption></figure>
-        <figure class="c3"><img src="assets/presentationbadge2.jpeg" alt="" loading="eager"><figcaption>Biglietto da visita NFC</figcaption></figure>
-        <figure class="c4"><img src="assets/stand.jpeg" alt="" loading="eager"><figcaption>Stand con QR</figcaption></figure>
       </div>
     </div>
   </section>
@@ -311,7 +297,7 @@
 <footer>
   <div class="footer-grid">
     <div>
-      <img class="footer-logo" src="assets/logo.png" alt="RoleFigz">
+      <img class="footer-logo" src="assets/opt/logo-white.webp" alt="RoleFigz">
       <p class="footer-tagline">Merchandising aziendale stampato in 3D, con NFC e QR. Progettato e prodotto a Piacenza.</p>
     </div>
     <div>
@@ -341,6 +327,5 @@
 <script src="js/v2-aziende.js"></script>
 <script src="js/v2-motion.js"></script>
 <script src="js/v2-gate.js"></script>
-<script type="module" src="js/hero3d.js"></script>
 </body>
 </html>

@@ -17,7 +17,7 @@ async function caricaBenchys() {
 
 function aggiornaBannerBenchys() {
   const banner = document.getElementById('benchyBanner');
-  const _b = '<img src="assets/benchy.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle"/>';
+  const _b = '<img src="assets/opt/benchy-icon.webp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle"/>';
   if (banner && utente) {
     banner.innerHTML = `${_b} ${benchySaldo} Benchys`;
     banner.style.display = '';
@@ -69,14 +69,14 @@ function renderTabBenchys() {
       <!-- SALDO -->
       <div style="background:var(--dark);padding:28px 24px;margin-bottom:24px;display:flex;align-items:center;gap:20px">
         <div style="width:64px;height:64px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-          <img id="benchyImg" src="assets/benchy.png" alt="Benchy"
+          <img id="benchyImg" src="assets/opt/benchy-sm.webp" alt="Benchy"
             style="width:100%;height:100%;object-fit:cover"
             onerror="this.style.display='none'"/>
         </div>
         <div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">IL TUO SALDO</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:#fff;line-height:1">${benchySaldo}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;display:flex;align-items:center;gap:6px">BENCHYS <img src="assets/benchy.png" style="width:14px;height:14px;object-fit:contain"/></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;display:flex;align-items:center;gap:6px">BENCHYS <img src="assets/opt/benchy-icon.webp" style="width:14px;height:14px;object-fit:contain"/></div>
         </div>
       </div>
 

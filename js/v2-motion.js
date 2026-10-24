@@ -31,7 +31,7 @@
   // ── scroll fluido ─────────────────────────────────────────────
   let lenis = null;
   if (typeof window.Lenis !== 'undefined') {
-    lenis = new window.Lenis({ duration: 1.1, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+    lenis = new window.Lenis({ lerp: 0.14, smoothWheel: true, wheelMultiplier: 1 });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(time => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -100,7 +100,7 @@
     });
     ScrollTrigger.create({
       trigger: hero, start: 'top top', end: 'bottom top', scrub: true,
-      onUpdate: self => { if (window.__hero3d) window.__hero3d.scroll = self.progress; }
+      onUpdate: self => { const h = window.__hero3d; if (h) { h.scroll = self.progress; if (h.wake) h.wake(); } }
     });
   }
 
@@ -228,11 +228,15 @@
       } else nativeSIV.apply(this, arguments);
     };
     // blocca lo scroll di fondo quando un pannello è aperto
-    const lockers = ['.drawer', '.modal-bg', '.nav-panel'];
-    new MutationObserver(() => {
-      const open = lockers.some(s => [...document.querySelectorAll(s)].some(el => el.classList.contains('on')));
-      open ? lenis.stop() : lenis.start();
-    }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    // si osservano solo carrello, finestre e menu (non tutto il documento)
+    const lockers = [...document.querySelectorAll('.drawer, .modal-bg, .nav-panel')];
+    if (lockers.length) {
+      const mo = new MutationObserver(() => {
+        if (document.documentElement.classList.contains('gate-open')) return;
+        lockers.some(el => el.classList.contains('on')) ? lenis.stop() : lenis.start();
+      });
+      lockers.forEach(el => mo.observe(el, { attributes: true, attributeFilter: ['class'] }));
+    }
   }
 
   // l'altezza cambia quando arrivano immagini e prodotti: ricalcola i limiti dello scroll
