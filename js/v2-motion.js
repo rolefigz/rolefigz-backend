@@ -145,6 +145,7 @@
         start: 'top 95%',
         onEnter: els => gsap.fromTo(els, { y: 50, opacity: 0, rotateX: -8 }, { y: 0, opacity: 1, rotateX: 0, duration: 1.1, ease: 'expo.out', stagger: 0.06 })
       });
+      if (lenis) lenis.resize();
       ScrollTrigger.refresh();
     }).observe(list, { childList: true, subtree: true });
   }
@@ -221,5 +222,7 @@
     }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
   }
 
-  window.addEventListener('load', () => ScrollTrigger.refresh());
+  // l'altezza cambia quando arrivano immagini e prodotti: ricalcola i limiti dello scroll
+  window.addEventListener('load', () => { if (lenis) lenis.resize(); ScrollTrigger.refresh(); });
+  if (lenis && 'ResizeObserver' in window) new ResizeObserver(() => lenis.resize()).observe(document.body);
 })();

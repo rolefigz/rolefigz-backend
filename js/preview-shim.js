@@ -23,30 +23,30 @@
   } catch (_) {}
 
   // ── dati di esempio ─────────────────────────────────────────
-  const cats = [{ id: 1, nombre: 'Portachiavi' }, { id: 2, nombre: 'Gadget' }, { id: 3, nombre: 'Figure' }, { id: 4, nombre: 'Segnaposti' }];
+  const cats = [{ id: 1, nombre: 'Portachiavi' }, { id: 2, nombre: 'Motorsport' }, { id: 3, nombre: 'Casa e regali' }];
   const P = (id, nombre, cat, precio, stock, img, descripcion) => ({
     id, slug: nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
     nombre, precio, stock, descripcion, imagen: img, imagenes: [{ url: img, orden: 0 }], variantes: [],
     categoria_id: cat.id, Categoria: cat, activo: true, giorni_produzione: 7, giorni_spedizione: 3
   });
   const prods = [
-    P(1, 'Portachiavi personalizzato con logo', cats[0], 6, 24, 'assets/llaveros.jpeg', 'Portachiavi stampato in 3D con il tuo logo o nome in rilievo, a colori pieni. Leggero, resistente e pensato per durare.'),
-    P(2, 'Portachiavi NFC 2M', cats[0], 9.5, 2, 'assets/gadget/Portachiave2M.jpg', 'Portachiavi con chip NFC integrato: avvicinalo al telefono e apre il tuo sito, Instagram o WhatsApp.'),
-    P(3, 'Figura personalizzata dalla tua foto', cats[2], 39, 5, 'assets/gadget/MiniaturaProdotto.png', 'Statuina 3D modellata dalla tua foto, anche in stile Funko Pop. Ricevi l\'anteprima 3D prima della stampa.'),
-    P(4, 'Calamita con logo', cats[1], 4.5, 0, 'assets/iman.jpeg', 'Calamita stampata in 3D con il tuo logo, per frigorifero o lavagna magnetica.'),
-    P(5, 'Calamita Emilia', cats[1], 5, 8, 'assets/gadget/calamitaelim.jpg', 'Calamita personalizzata stampata in 3D, perfetta come ricordo o gadget per eventi.'),
-    P(6, 'Badge da presentazione NFC', cats[1], 12, 12, 'assets/presentationbadge2.jpeg', 'Badge con chip NFC: un tocco e condividi i tuoi contatti. Con il tuo logo in rilievo.'),
-    P(7, 'Segnaletica 3D personalizzata', cats[3], 18, 4, 'assets/gadget/Segnaletica.jpg', 'Segnaletica da tavolo o da banco con QR code, stampata in 3D con i colori del tuo locale.'),
-    P(8, 'Trofeo personalizzato', cats[2], 29, 6, 'assets/gadget/Trofeo.png', 'Trofeo stampato in 3D per tornei, eventi aziendali e premiazioni, con targhetta personalizzata.')
+    P(1, 'Portachiavi con il tuo nome', cats[0], 6, 24, 'assets/llaveros.jpeg', 'Portachiavi stampato in 3D con il tuo nome o una scritta in rilievo, a colori pieni. Leggero, resistente e pensato per durare.'),
+    P(2, 'Portachiavi F1 rosso', cats[1], 9.5, 2, 'f1/gadget/portachiavi-f1-rosso.webp', 'Portachiavi in stile motorsport con logo in rilievo e anello in metallo.'),
+    P(3, 'Portachiavi F1 carbon', cats[1], 9.5, 7, 'f1/gadget/portachiavi-f1-nero.webp', 'Portachiavi effetto carbonio con logo rosso in rilievo, per chi vive di motorsport.'),
+    P(4, 'Sottobicchieri circuiti F1', cats[1], 19, 5, 'f1/gadget/sottobicchieri-f1.webp', 'Set di sottobicchieri con i tracciati dei circuiti, effetto carbonio e bordo rosso.'),
+    P(5, 'Sagoma circuito di Spa', cats[1], 24, 0, 'f1/gadget/sagoma-spa.webp', 'Il tracciato di Spa-Francorchamps da appendere o appoggiare, con targhetta del circuito.'),
+    P(6, 'Calamita personalizzata', cats[2], 4.5, 12, 'assets/iman.jpeg', 'Calamita stampata in 3D con nome o scritta a scelta, per frigorifero o lavagna magnetica.'),
+    P(7, 'Benchy rossa luminosa', cats[2], 12, 6, 'assets/benchy.png', 'La barchetta simbolo della stampa 3D, in PLA rosso traslucido: un regalo per maker e appassionati.'),
+    P(8, 'Mensola alettone GT3 RS', cats[1], 39, 3, 'f1/gadget/mensola-alettone-gt3rs.webp', 'Mensola a forma di alettone posteriore, per modellini, caschi e trofei.')
   ];
   const revs = [
     { puntuacion: 5, comentario: 'Qualità ottima, spedizione veloce e super disponibili per le modifiche.', nombre_autor: 'Giulia', Prodotto: { nombre: prods[0].nombre } },
-    { puntuacion: 5, comentario: 'I portachiavi NFC sono stati un successo alla fiera: tutti li provavano.', nombre_autor: 'Marco', Prodotto: { nombre: prods[1].nombre } },
-    { puntuacion: 5, comentario: 'La figura di mio padre è identica. Regalo perfetto per i suoi 60 anni.', nombre_autor: 'Sara', Prodotto: { nombre: prods[2].nombre } }
+    { puntuacion: 5, comentario: 'I sottobicchieri con i circuiti sono stati il regalo perfetto per mio fratello.', nombre_autor: 'Marco', Prodotto: { nombre: prods[3].nombre } },
+    { puntuacion: 5, comentario: 'La figura di mio padre è identica. Regalo perfetto per i suoi 60 anni.', nombre_autor: 'Sara', Prodotto: { nombre: 'Figura personalizzata' } }
   ];
   const articoli = [{
     id: 1, slug: 'come-scegliere-il-filamento', titolo: 'Come scegliere il filamento giusto', estratto: 'PLA, PETG o TPU? Una guida pratica per capire quale materiale usare per ogni oggetto.',
-    contenuto: '<p>Esempio di articolo: nella versione reale qui compare il testo del blog.</p>', immagine: 'assets/impresoras.jpeg', tags: ['materiali'], pubblicato: true,
+    contenuto: '<p>Esempio di articolo: nella versione reale qui compare il testo del blog.</p>', immagine: 'assets/llaveros.jpeg', tags: ['materiali'], pubblicato: true,
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
   }];
   const ordini = [

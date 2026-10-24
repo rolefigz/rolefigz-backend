@@ -263,25 +263,11 @@
   </div>
 
   <div class="nav-panel-section">
-    <div class="nav-panel-label">AZIENDE</div>
-    <a class="nav-panel-btn primary" href="aziende.html"><iconify-icon icon="mdi:domain" width="14"></iconify-icon> ROLEFIGZ PER LE AZIENDE</a>
-    <a class="nav-panel-btn" href="f1/"><iconify-icon icon="mdi:go-kart-track" width="14"></iconify-icon> CIRCUITI F1</a>
-    <a class="nav-panel-btn" href="kit.html"><iconify-icon icon="mdi:briefcase-outline" width="14"></iconify-icon> MERCH AZIENDALE</a>
-    <a class="nav-panel-btn" href="segnaposti.html"><iconify-icon icon="mdi:silverware-fork-knife" width="14"></iconify-icon> SEGNAPOSTI</a>
-    <a class="nav-panel-btn" href="gadget3d.html"><iconify-icon icon="mdi:cube-outline" width="14"></iconify-icon> GADGET 3D</a>
-    <a class="nav-panel-btn" href="nfc-landing.html"><iconify-icon icon="mdi:nfc-variant" width="14"></iconify-icon> NFC PER AZIENDE</a>
-  </div>
-
-  <div class="nav-panel-section">
     <div class="nav-panel-label">PROGETTI</div>
     <a class="nav-panel-btn" href="http://TrovaMyPet.Rolefigz.com" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:10px">
       <iconify-icon icon="mdi:paw" width="14"></iconify-icon>
       <span style="flex:1">TROVAMYPET</span>
       <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--accent);border:1px solid var(--accent);padding:2px 5px">NUOVO</span>
-    </a>
-    <a class="nav-panel-btn" href="http://4bytemenu.it/" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:10px">
-      <iconify-icon icon="mdi:qrcode" width="14"></iconify-icon>
-      <span style="flex:1">4BYTEMENU</span>
     </a>
   </div>
 
@@ -315,7 +301,6 @@
 
   <!-- HERO -->
   <section class="v2-hero">
-    <img class="v2-hero-bg" src="assets/impresoras.jpeg" alt="" aria-hidden="true">
     <div class="v2-hero-inner">
       <div class="v2-hero-copy">
         <span class="v2-chip"><span class="v2-dot"></span>Stampa 3D per te · Piacenza</span>
@@ -355,12 +340,12 @@
         <div class="v2-tile-body">
           <span class="v2-tag">Negozio</span>
           <h3>Catalogo pronto</h3>
-          <p>Portachiavi, calamite, figure e oggetti stampati in 3D, pronti da ordinare online.</p>
+          <p>Portachiavi, calamite e oggetti stampati in 3D, pronti da ordinare online.</p>
         </div>
       </a>
-      <a class="v2-tile" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
-        <img src="assets/gadget/MiniaturaProdotto.png" alt="" loading="lazy">
+      <a class="v2-tile v2-tile-accent" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
         <div class="v2-tile-body">
+          <iconify-icon class="v2-tile-icon" icon="mdi:account-box-outline" width="44"></iconify-icon>
           <span class="v2-tag">Dalla tua foto</span>
           <h3>Figure personalizzate</h3>
           <p>Persone, coppie e animali, anche in stile Funko Pop.</p>
@@ -374,20 +359,20 @@
           <p>F1, GT e circuiti italiani in tre misure.</p>
         </div>
       </a>
+      <a class="v2-tile" href="f1/">
+        <img src="f1/gadget/sottobicchieri-f1.webp" alt="" loading="lazy">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Motorsport</span>
+          <h3>Gadget F1</h3>
+          <p>Portachiavi, sottobicchieri e sagome dei circuiti.</p>
+        </div>
+      </a>
       <a class="v2-tile" href="https://wa.me/393928225406?text=Ciao%20RoleFigz!%20Vorrei%20un%20regalo%20su%20misura" target="_blank" rel="noopener">
-        <img src="assets/gadget/Trofeo.png" alt="" loading="lazy">
+        <img src="assets/benchy.png" alt="" loading="lazy">
         <div class="v2-tile-body">
           <span class="v2-tag">Su misura</span>
           <h3>Regali su misura</h3>
-          <p>Lettere 3D, trofei, cover e cosplay: raccontaci la tua idea.</p>
-        </div>
-      </a>
-      <a class="v2-tile v2-tile-b2b" href="aziende.html">
-        <div class="v2-tile-body">
-          <span class="v2-tag">Aziende e locali</span>
-          <h3>Hai un'attività?</h3>
-          <p>Merchandising NFC, segnaposti con QR e gadget con il tuo logo, dal campione alla produzione in volume.</p>
-          <span class="v2-tile-link">Vai a RoleFigz per le aziende <iconify-icon icon="mdi:arrow-right" width="16"></iconify-icon></span>
+          <p>Hai un'idea? La modelliamo e la stampiamo per te.</p>
         </div>
       </a>
     </div>
@@ -395,10 +380,12 @@
 
   <!-- FIGURE PERSONALIZZATE (SEO: statuine, figure stile Funko Pop) -->
   <section class="v2-section v2-figz" id="figure-personalizzate">
-    <div class="v2-figz-media">
-      <img src="assets/gadget/MiniaturaProdotto.png" alt="Figura personalizzata stampata in 3D da RoleFigz" loading="lazy">
-      <span class="v2-figz-badge b1">Dalla tua foto</span>
-      <span class="v2-figz-badge b2">Anteprima 3D prima di stampare</span>
+    <div class="v2-figz-media v2-figz-flow" aria-hidden="true">
+      <div class="v2-figz-stage"><iconify-icon icon="mdi:camera-outline" width="40"></iconify-icon><span>La tua foto</span></div>
+      <div class="v2-figz-arrow"></div>
+      <div class="v2-figz-stage"><iconify-icon icon="mdi:cube-scan" width="40"></iconify-icon><span>Modello 3D</span></div>
+      <div class="v2-figz-arrow"></div>
+      <div class="v2-figz-stage is-final"><iconify-icon icon="mdi:human-greeting-variant" width="40"></iconify-icon><span>La tua figura</span></div>
     </div>
     <div class="v2-figz-copy">
       <div class="v2-section-head">
@@ -573,16 +560,6 @@
     </div>
   </section>
 
-  <!-- PONTE VERSO LE AZIENDE -->
-  <section class="v2-b2b-band">
-    <div>
-      <span class="v2-eyebrow">Per aziende, locali ed eventi</span>
-      <h2 class="v2-h2">Il tuo logo, <em>in 3D e con NFC</em></h2>
-      <p class="v2-lead">Portachiavi e badge NFC, segnaposti con QR per il menù, stand e gadget per fiere. Preventivo in giornata e kit campione da 19,90 €.</p>
-    </div>
-    <a class="v2-btn v2-btn-primary" href="aziende.html">Scopri le soluzioni per aziende <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon></a>
-  </section>
-
   <!-- CTA FINALE -->
   <section class="v2-cta">
     <div>
@@ -602,7 +579,7 @@
     <div class="footer-grid">
       <div>
         <img class="footer-logo" src="assets/logo.png" alt="Rolefigz">
-        <p class="footer-tagline">Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.</p>
+        <p class="footer-tagline">Figure, regali e oggetti personalizzati, stampati in 3D e rifiniti a mano a Piacenza.</p>
       </div>
       <div>
         <div class="footer-col-title">Privati</div>
@@ -612,15 +589,6 @@
         <a class="footer-link" onclick="mostraVista('blog');loadArticoli()">Blog</a>
         <a class="footer-link" onclick="apriAuth('register')">Crea account</a>
         <a class="footer-link" onclick="apriAuth('login')">Accedi</a>
-      </div>
-      <div>
-        <div class="footer-col-title">Aziende</div>
-        <a class="footer-link" href="aziende.html">Tutte le soluzioni</a>
-        <a class="footer-link" href="kit.html">Kit merch con logo</a>
-        <a class="footer-link" href="segnaposti.html">Segnaposti QR e NFC</a>
-        <a class="footer-link" href="nfc-landing.html">RoleFigz NFC</a>
-        <a class="footer-link" href="gadget3d.html">Gadget per eventi</a>
-        <a class="footer-link" href="http://4bytemenu.it/" target="_blank" rel="noopener">4ByteMenu</a>
       </div>
       <div>
         <div class="footer-col-title">Contatti</div>
