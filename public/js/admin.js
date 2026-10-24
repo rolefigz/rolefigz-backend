@@ -907,7 +907,7 @@ async function adminTabRecensioni(content) {
 // ══ ANALITICHE ══════════════════════════════════════════════════════════════
 
 const NOMI_PAESI = { IT:'🇮🇹 Italia', ES:'🇪🇸 Spagna', US:'🇺🇸 USA', DE:'🇩🇪 Germania', FR:'🇫🇷 Francia', GB:'🇬🇧 UK', AR:'🇦🇷 Argentina', MX:'🇲🇽 Messico', BR:'🇧🇷 Brasile', PT:'🇵🇹 Portogallo', NL:'🇳🇱 Olanda', CH:'🇨🇭 Svizzera', BE:'🇧🇪 Belgio', AU:'🇦🇺 Australia', CA:'🇨🇦 Canada' };
-const COLORI_GRAFICO = { accent:'#c94b2c', light:'#e8a87c', blue:'#5b8db8', green:'#4caf50', muted:'#8b7355', border:'rgba(0,0,0,0.06)' };
+const COLORI_GRAFICO = { accent:'#F26A1B', light:'#F6A06A', blue:'#3E3D3A', green:'#22A06B', muted:'#8A877F', border:'rgba(0,0,0,0.06)' };
 
 let analiticheGiorni = 30;
 
@@ -1070,7 +1070,7 @@ function inizializzaGrafici(visite, incassi, paesi, prodottiVisti, stati) {
   }
 
   // Stato ordini (doughnut)
-  const coloriStato = { pendiente: '#e8a87c', confirmado: '#4caf50', enviado: '#5b8db8', entregado: '#2e7d32', cancelado: '#c94b2c' };
+  const coloriStato = { pendiente: '#C9C6BE', confirmado: '#F26A1B', enviado: '#3E3D3A', entregado: '#22A06B', cancelado: '#D64545' };
   if (stati.length) {
     safeChart('chartEstados', {
       type: 'doughnut',
@@ -1078,7 +1078,7 @@ function inizializzaGrafici(visite, incassi, paesi, prodottiVisti, stati) {
         labels:   stati.map(e => e.estado.toUpperCase()),
         datasets: [{ data: stati.map(e => +e.total), backgroundColor: stati.map(e => coloriStato[e.estado] || '#888'), borderWidth: 0, hoverOffset: 6 }],
       },
-      options: { plugins: { legend: { position: 'bottom', labels: { padding: 14, boxWidth: 10 } } }, cutout: '60%' },
+      options: { aspectRatio: 1.5, plugins: { legend: { position: 'bottom', labels: { padding: 14, boxWidth: 10 } } }, cutout: '64%' },
     });
   }
 }
@@ -1101,7 +1101,7 @@ function aggiornaGraficiTemporali(visite, incassi) {
     type: 'line',
     data: {
       labels: dVisite.labels,
-      datasets: [{ data: dVisite.data, borderColor: COLORI_GRAFICO.accent, backgroundColor: 'rgba(201,75,44,0.08)', fill: true, tension: 0.35 }],
+      datasets: [{ data: dVisite.data, borderColor: COLORI_GRAFICO.accent, backgroundColor: 'rgba(242,106,27,0.10)', fill: true, tension: 0.35 }],
     },
     options: opzioniLinea(COLORI_GRAFICO.accent),
   });
@@ -1110,7 +1110,7 @@ function aggiornaGraficiTemporali(visite, incassi) {
     type: 'line',
     data: {
       labels: dIncassi.labels,
-      datasets: [{ data: dIncassi.data, borderColor: COLORI_GRAFICO.blue, backgroundColor: 'rgba(91,141,184,0.08)', fill: true, tension: 0.35 }],
+      datasets: [{ data: dIncassi.data, borderColor: COLORI_GRAFICO.blue, backgroundColor: 'rgba(17,17,16,0.05)', fill: true, tension: 0.35 }],
     },
     options: opzioniLinea(COLORI_GRAFICO.blue),
   });
@@ -1650,15 +1650,15 @@ async function adminTabBenchys(content) {
 
     if (!pending.length) {
       content.innerHTML = `
-        <div class="admin-form-title"><img src="/assets/benchy.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE</div>
-        <div class="empty-state"><div class="ei"><img src="/assets/benchy.png" style="width:48px;height:48px;object-fit:contain;opacity:.5"/></div><h3>NESSUNA RICHIESTA IN ATTESA</h3></div>`;
+        <div class="admin-form-title"><img src="/assets/opt/benchy-icon.webp" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE</div>
+        <div class="empty-state"><div class="ei"><img src="/assets/opt/benchy-icon.webp" style="width:48px;height:48px;object-fit:contain;opacity:.5"/></div><h3>NESSUNA RICHIESTA IN ATTESA</h3></div>`;
       return;
     }
 
     const TIPO_LABEL = { instagram_follow: '📸 Follow Instagram @rolefigz' };
 
     content.innerHTML = `
-      <div class="admin-form-title"><img src="/assets/benchy.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE IN ATTESA (${pending.length})</div>
+      <div class="admin-form-title"><img src="/assets/opt/benchy-icon.webp" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px"/> BENCHYS — RICHIESTE IN ATTESA (${pending.length})</div>
       <table>
         <thead><tr><th>Utente</th><th>Azione</th><th>Punti</th><th>Data</th><th>Azioni</th></tr></thead>
         <tbody>
@@ -1669,7 +1669,7 @@ async function adminTabBenchys(content) {
                 <span style="font-size:10px;color:var(--muted)">${t.Utente?.email || ''}</span>
               </td>
               <td>${TIPO_LABEL[t.tipo] || t.tipo}</td>
-              <td><strong style="color:var(--green)">+${t.punti} <img src="/assets/benchy.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle"/></strong></td>
+              <td><strong style="color:var(--green)">+${t.punti} <img src="/assets/opt/benchy-icon.webp" style="width:13px;height:13px;object-fit:contain;vertical-align:middle"/></strong></td>
               <td style="font-size:10px;color:var(--muted)">${new Date(t.createdAt).toLocaleDateString('it-IT')}</td>
               <td>
                 <button class="action-btn" onclick="gestisciRichiestaBenchy(${t.id},'approvato')" style="margin-right:6px">✓ APPROVA</button>

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RoleFigz NFC — Il mio account</title>
   <link rel="icon" type="image/png" href="/assets/LogoSfondoNero.png"/>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="/js/iconify-lite.js"></script>
   <script>
     (function() {
       const token = localStorage.getItem('rfToken');
@@ -20,15 +21,15 @@
     /* Stesso sistema di design della landing /nfc (token, tipografia,
        componenti), cosi' il pannello cliente non sembra un'app diversa. */
     :root{
-      --ink:#1D1D1F; --ink-dim:rgba(29,29,31,.62); --void:#FBFBFD; --line:rgba(0,0,0,.08);
-      --accent:#0071E3; --pill:999px; --card:18px; --surface:#FFFFFF;
+      --ink:#161614; --ink-dim:rgba(22,22,20,.62); --void:#F6F5F2; --line:rgba(17,17,16,.08);
+      --accent:#E25A0C; --pill:999px; --card:18px; --surface:#FFFFFF;
       --green:#1a7f4b; --red:#c0392b;
       /* alias per compatibilita' con gli stili inline generati da account-nfc.js */
       --muted:var(--ink-dim); --border:var(--line);
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{background:var(--void);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;min-height:100vh}
+    body{background:var(--void);color:var(--ink);font-family:"DM Sans",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;min-height:100vh}
     ::-webkit-scrollbar{width:8px}
     ::-webkit-scrollbar-track{background:var(--void)}
     ::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
@@ -118,7 +119,7 @@
 <body>
 
 <header>
-  <img class="logo-img" src="/assets/LogoSfondoNero.png" alt="RoleFigz" onclick="window.location.href='/index.html'"/>
+  <img class="logo-img" src="/assets/opt/logo-header.webp" alt="RoleFigz" onclick="window.location.href='/index.html'"/>
   <nav>
     <button class="nav-btn" onclick="window.location.href='/index.html'">← Torna al sito</button>
   </nav>
@@ -138,7 +139,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/vendor/chart.umd.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/account-nfc.js"></script>
 </body>
