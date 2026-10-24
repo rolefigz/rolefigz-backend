@@ -1,0 +1,180 @@
+function apriMenuNav() {
+  document.getElementById('navPanel').classList.add('on');
+  document.getElementById('navOverlay').classList.add('on');
+}
+
+function chiudiMenuNav() {
+  document.getElementById('navPanel').classList.remove('on');
+  document.getElementById('navOverlay').classList.remove('on');
+}
+
+function showMsg(id, testo, tipo) {
+  const el = document.getElementById(id);
+  if (el) { el.className = `msg ${tipo}`; el.textContent = testo; }
+}
+
+function setTxt(id, testo) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = testo;
+}
+
+function setSd(id, cls) {
+  const el = document.getElementById(id);
+  if (el) el.className = `sd ${cls}`;
+}
+
+function mostraVista(nome) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${nome}`).classList.add('active');
+  if (nome === 'admin') adminTab('ordenes', document.querySelector('.admin-menu-item'));
+  if (nome === 'perfil') tabProfilo('ordenes', document.querySelector('.perfil-menu-item'));
+}
+
+async function verificaAPI() {
+  setSd('apiDot', 'ok'); setTxt('apiStatus', 'API CONNESSA');
+}
+
+function renderCategorie() {
+  const el = document.getElementById('catsGrid');
+  if (!el || !categorie.length) return;
+  el.innerHTML =
+    `<button class="filtro-pill active" onclick="filtraPerCategoria(null, this)">TUTTI</button>` +
+    categorie.map(c =>
+      `<button class="filtro-pill" onclick="filtraPerCategoria(${c.id}, this)">${c.nombre.toUpperCase()}</button>`
+    ).join('');
+}
+
+// Scroll reveal — attiva quando l'elemento entra nel viewport
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        entry.target.style.transitionDelay = `${i * 0.07}s`;
+        entry.target.classList.add('in-view');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.step, .why-card, .how-section .section-title, .cats-section .section-title, .why-section .section-title').forEach(el => {
+    el.classList.add('will-animate');
+    observer.observe(el);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  setTimeout(initScrollReveal, 200);
+  const percorso = window.location.pathname;
+  const productMatch = percorso.match(/^\/producto\/([^/]+)/);
+  const blogMatch    = percorso.match(/^\/blog\/([^/]+)/);
+
+  function initAuth() {
+    verificaToken();
+    if (token) {
+      try { utente = JSON.parse(atob(token.split('.')[1])); impostaSessione(utente); }
+      catch(e) { disconnetti(); }
+    } else {
+      const fab = document.getElementById('chatFab');
+      if (fab) fab.classList.add('visible');
+    }
+    setInterval(verificaToken, 5 * 60 * 1000);
+  }
+
+  if (productMatch) {
+    // Prodotto: carica subito senza aspettare il negozio
+    mostraVista('producto');
+    initAuth();
+    await vediProdotto(productMatch[1]);
+    // Store init in background
+    caricaCategorie();
+    caricaProdotti().then(() => aggiornaUICarrello());
+
+  } else if (blogMatch) {
+    mostraVista('blog');
+    initAuth();
+    await vediArticolo(blogMatch[1]);
+    caricaCategorie();
+    caricaProdotti().then(() => aggiornaUICarrello());
+
+  } else {
+    // Auth PRIMA — l'utente vede subito il suo stato senza aspettare il caricamento
+    initAuth();
+
+    if (new URLSearchParams(window.location.search).get('nfcLogin') === '1') {
+      if (token) {
+        fetch(`${API}/nfc/azienda`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => { if (r.ok) window.location.href = '/account-nfc.html'; else apriAuth('login'); })
+          .catch(() => apriAuth('login'));
+      } else {
+        apriAuth('login');
+      }
+    }
+
+    // Poi carica il negozio
+    if (percorso === '/checkout') mostraVista('checkout');
+    await verificaAPI();
+    await caricaCategorie();
+    await caricaProdotti();
+    aggiornaUICarrello();
+    if (document.getElementById('resenasDestacadas')) caricaRecensioniInEvidenza();
+    gestisciRitornoStripe();
+    tracciVisita('home');
+  }
+
+  window.addEventListener('popstate', (e) => {
+    if (e.state?.tipo === 'articolo') {
+      vediArticolo(e.state.slug);
+    } else if (e.state?.tipo === 'producto') {
+      vediProdotto(e.state.slug);
+    } else if (e.state?.tipo === 'checkout') {
+      mostraVista('checkout');
+    } else {
+      mostraVista('tienda');
+      document.title = 'RoleFigz — Stampa 3D & Personalizzazione';
+    }
+  });
+});
+
+function tracciVisita(tipo, prodottoId) {
+  if (utente && utente.rol === 'admin') return;
+  fetch(`${API}/analytics/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tipo, producto_id: prodottoId || null })
+  }).catch(() => {});
+}
+
+function gestisciRitornoStripe() {
+  const params  = new URLSearchParams(window.location.search);
+  const pago    = params.get('pago');
+  if (!pago) return;
+
+  history.replaceState({}, '', 'index.html');
+
+  if (pago === 'ok') {
+    const ordineId = params.get('orden_id');
+    mostraBannerPagamento(true, ordineId);
+    caricaProdotti();
+  } else if (pago === 'cancelado') {
+    mostraBannerPagamento(false, null);
+  }
+}
+
+function mostraBannerPagamento(successo, ordineId) {
+  const banner = document.createElement('div');
+  banner.className = 'stripe-banner ' + (successo ? 'ok' : 'err');
+  banner.innerHTML = successo
+    ? `✅ Ordine <strong>#${ordineId}</strong> ricevuto! Ti contatteremo presto — controlla la tua email.`
+    : `❌ Ordine annullato.`;
+  document.body.prepend(banner);
+  setTimeout(() => banner.remove(), 7000);
+}
+
+function mostraBannerTracking(ordineId, trackingNumber) {
+  const banner = document.createElement('div');
+  banner.className = 'stripe-banner ok';
+  banner.style.cssText = 'top:70px;font-size:13px';
+  banner.innerHTML = `📦 Ordine <strong>#${ordineId}</strong> spedito. Tracking: <strong style="letter-spacing:1px;font-family:monospace">${trackingNumber}</strong>`;
+  document.body.prepend(banner);
+  setTimeout(() => banner.remove(), 12000);
+}
