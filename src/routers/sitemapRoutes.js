@@ -13,9 +13,13 @@ router.get("/sitemap.xml", async (req, res) => {
     const staticPages = [
       { loc: base, priority: "1.0", changefreq: "weekly" },
       { loc: `${base}/blog`,    priority: "0.7", changefreq: "weekly" },
+      { loc: `${base}/aziende`, priority: "0.9", changefreq: "monthly" },
       { loc: `${base}/kit`,     priority: "0.8", changefreq: "monthly" },
       { loc: `${base}/kit/merch`,      priority: "0.8", changefreq: "monthly" },
       { loc: `${base}/kit/segnaposti`, priority: "0.8", changefreq: "monthly" },
+      { loc: `${base}/f1/`,            priority: "0.8", changefreq: "monthly" },
+      { loc: `${base}/nfc`,            priority: "0.7", changefreq: "monthly" },
+      { loc: `${base}/gadget3d.html`,  priority: "0.6", changefreq: "monthly" },
     ];
 
     const urls = [

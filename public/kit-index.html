@@ -10,8 +10,11 @@
   <meta property="og:image" content="https://www.rolefigz.com/assets/llaveros.jpeg"/>
   <link rel="canonical" href="https://www.rolefigz.com/kit"/>
   <link rel="icon" type="image/png" href="/assets/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"/>
   <link rel="stylesheet" href="/css/shared.css"/>
-  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <script src="/js/iconify-lite.js"></script>
   <style>
     body { background: var(--dark); color: #f0ece4; }
     .k-nav { position: sticky; top: 0; z-index: 10; background: rgba(247,245,240,.97); border-bottom: 1px solid var(--border);
@@ -46,37 +49,42 @@
       .ki-card { padding: 24px; }
     }
   </style>
+  <link rel="stylesheet" href="/css/v2-tokens.css"/>
+  <link rel="stylesheet" href="/css/v2-pages.css"/>
 </head>
 <body>
 
 <nav class="k-nav">
-  <a href="/"><img src="/assets/logo.png" alt="RoleFigz" class="k-nav-logo"/></a>
-  <div class="k-nav-badge">Stampa 3D · <span>Piacenza</span></div>
+  <a href="/"><img src="/assets/opt/logo-white.webp" alt="RoleFigz" class="k-nav-logo"/></a>
+  <a class="v2-back" href="/aziende">← RoleFigz per le aziende</a>
 </nav>
 
-<main class="ki">
-  <div class="ki-eyebrow">// Carica il logo, vedilo in 3D</div>
-  <h1 class="ki-h1">SCEGLI IL<br>TUO <em>KIT</em></h1>
-  <p class="ki-sub">In un minuto vedi in 3D i pezzi con il tuo logo. Poi prenoti il kit campione da 19,90 € e lo tocchi con mano, con ritiro a Piacenza.</p>
-
-  <div class="ki-scelte">
-    <a class="ki-card" href="/kit/merch">
-      <span class="ki-ico"><span class="iconify" data-icon="mdi:key-chain"></span></span>
-      <div class="ki-per">Per la tua azienda</div>
-      <div class="ki-t">Kit merch</div>
-      <div class="ki-d">Portachiavi NFC, magnete, badge, biglietto da visita NFC e stand da banco con QR. Con il preventivo, subito.</div>
-      <span class="ki-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
-    </a>
-    <a class="ki-card" href="/kit/segnaposti">
-      <span class="ki-ico"><span class="iconify" data-icon="mdi:silverware-fork-knife"></span></span>
-      <div class="ki-per">Per il tuo locale</div>
-      <div class="ki-t">Kit segnaposti</div>
-      <div class="ki-d">Segnaposti da tavolo con QR e NFC per il menù digitale, in tutte le taglie. Con una settimana di menù digitale gratis.</div>
-      <span class="ki-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
-    </a>
-  </div>
-  <p class="ki-nota">Domande? Scrivici a <a href="mailto:rolefigz@gmail.com" style="color:var(--accent)">rolefigz@gmail.com</a>.</p>
+<main class="k-split">
+  <header class="k-split-head">
+    <span class="k-split-eyebrow">Carica il logo, vedilo in 3D in un minuto</span>
+    <h1 class="k-split-h1">Quale kit <em>ti serve</em>?</h1>
+  </header>
+  <a class="k-split-opt" href="/kit/merch">
+    <img class="k-split-bg" src="/assets/opt/llaveros.webp" alt="" aria-hidden="true">
+    <div class="k-split-copy">
+      <span class="k-split-per">Per la tua azienda</span>
+      <h2 class="k-split-t">Kit merch</h2>
+      <p class="k-split-d">Portachiavi NFC, magnete, badge, biglietto da visita NFC e stand da banco con il tuo logo. Con il preventivo, subito.</p>
+      <span class="k-split-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
+    </div>
+  </a>
+  <a class="k-split-opt" href="/kit/segnaposti">
+    <img class="k-split-bg" src="/assets/opt/stand.webp" alt="" aria-hidden="true">
+    <div class="k-split-copy">
+      <span class="k-split-per">Per il tuo locale</span>
+      <h2 class="k-split-t">Kit segnaposti</h2>
+      <p class="k-split-d">Segnaposti da tavolo con QR e NFC per il menù digitale, in tutte le taglie. Con una settimana di menù digitale gratis.</p>
+      <span class="k-split-cta">Inizia <span class="iconify" data-icon="mdi:arrow-right"></span></span>
+    </div>
+  </a>
+  <p class="k-split-note">Kit campione da 19,90 € con ritiro a Piacenza · Domande? <a href="https://wa.me/393928225406" target="_blank" rel="noopener">WhatsApp +39 392 822 5406</a></p>
 </main>
 
+<script src="/js/v2-reveal.js" defer></script>
 </body>
 </html>

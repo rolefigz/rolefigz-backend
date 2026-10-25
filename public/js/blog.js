@@ -63,11 +63,11 @@ function renderFeatured(a) {
           : `<div class="blog-featured-ph">✍️</div>`}
       </div>
       <div class="blog-featured-body">
-        <div class="bf-label">// IN EVIDENZA</div>
+        <div class="bf-label">In evidenza</div>
         <div class="bf-date">${data} · ${lettura} di lettura</div>
         <div class="bf-title">${a.titolo}</div>
         ${a.estratto ? `<div class="bf-excerpt">${a.estratto}</div>` : ''}
-        <div class="bf-read">LEGGI L'ARTICOLO →</div>
+        <div class="bf-read">Leggi l'articolo →</div>
       </div>
     </div>`;
 }
@@ -125,10 +125,11 @@ function renderDettaglioArticolo(a) {
   const correlati = tuttiGliArticoli.filter(x => x.slug !== a.slug).slice(0, 3);
   const correlatiHtml = correlati.length ? `
     <div class="art-related">
-      <div class="art-related-label">// ALTRI ARTICOLI</div>
+      <div class="art-related-label">Continua a leggere</div>
       <div class="art-related-grid">
         ${correlati.map(c => `
           <div class="art-related-card" onclick="vediArticolo('${c.slug}')">
+            ${c.immagine ? `<img class="arc-img" src="${c.immagine}" alt="" loading="lazy">` : ''}
             <div class="arc-date">${new Date(c.createdAt).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'})}</div>
             <div class="arc-title">${c.titolo}</div>
           </div>`).join('')}
@@ -136,23 +137,27 @@ function renderDettaglioArticolo(a) {
     </div>` : '';
 
   wrap.innerHTML = `
-    <div class="art-wrap">
-      <button class="art-back-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'','/');tagAttivo=null">
-        ← TORNA AL BLOG
-      </button>
-      <div class="art-eyebrow">// Blog · RoleFigz</div>
-      <h1 class="art-h1">${a.titolo}</h1>
-      <div class="art-meta">
-        <span>${data}</span>
-        <span style="color:var(--border)">·</span>
-        <span>${lettura} di lettura</span>
-        ${tags ? `<span style="color:var(--border)">·</span><div style="display:flex;gap:4px;flex-wrap:wrap">${tags}</div>` : ''}
+    <div class="art-hero">
+      <div class="art-hero-inner">
+        <button class="art-back-btn" onclick="mostraVista('blog');loadArticoli();history.pushState({},'','/');tagAttivo=null">
+          ← Torna al blog
+        </button>
+        <div class="art-eyebrow">Blog · RoleFigz</div>
+        <h1 class="art-h1">${a.titolo}</h1>
+        <div class="art-meta">
+          <span>${data}</span>
+          <span class="art-meta-sep">·</span>
+          <span>${lettura} di lettura</span>
+          ${tags ? `<div class="art-meta-tags">${tags}</div>` : ''}
+        </div>
+        ${a.estratto ? `<p class="art-excerpt">${a.estratto}</p>` : ''}
       </div>
-      ${a.estratto ? `<p class="art-excerpt">${a.estratto}</p>` : ''}
+    </div>
+    <div class="art-wrap">
       ${a.immagine ? `<img class="art-hero-img" src="${a.immagine}" alt="${a.titolo}" loading="lazy">` : ''}
       <div class="art-body">${a.contenuto || ''}</div>
       <div class="art-share">
-        <span class="art-share-label">CONDIVIDI</span>
+        <span class="art-share-label">Condividi</span>
         <button class="art-share-btn wa" onclick="window.open('https://wa.me/?text=${encodeURIComponent(a.titolo + ' ' + url)}','_blank')">
           <iconify-icon icon="mdi:whatsapp" width="13"></iconify-icon> WhatsApp
         </button>

@@ -240,6 +240,14 @@ function renderDettaglioProdotto(p) {
           ${p.stock === 0 ? 'ESAURITO' : '+ AGGIUNGI AL CARRELLO'}
         </button>
       </div>
+      <div class="v2-trust">
+        <div><iconify-icon icon="mdi:printer-3d-nozzle-outline" width="20"></iconify-icon><span>Stampato a Piacenza<small>controllato a mano, pezzo per pezzo</small></span></div>
+        <div><iconify-icon icon="mdi:truck-fast-outline" width="20"></iconify-icon><span>Spedizione Italia ed Europa<small>tracciata, con etichetta dedicata</small></span></div>
+        <div><iconify-icon icon="mdi:shield-check-outline" width="20"></iconify-icon><span>Pagamento sicuro<small>Stripe, carte e wallet</small></span></div>
+      </div>
+      <a class="v2-custom-cta" href="https://wa.me/393928225406?text=${encodeURIComponent('Ciao RoleFigz! Vorrei personalizzare: ' + p.nombre)}" target="_blank" rel="noopener">
+        <iconify-icon icon="mdi:whatsapp" width="18"></iconify-icon> Vuoi colori, testo o misure diversi? Chiedi una versione su misura
+      </a>
       <div class="producto-meta">
         <div class="meta-row"><span class="meta-key">CATEGORIA</span><span>${p.Categoria ? p.Categoria.nombre : '—'}</span></div>
         <div class="meta-row"><span class="meta-key">MATERIALE</span><span>PLA Premium</span></div>

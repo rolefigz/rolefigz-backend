@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e) { window.location.href = '/index.html'; return; }
   await verificaAPI();
   await caricaCategorie();
-  adminTab('ordenes', document.querySelector('.admin-menu-item'));
+  adminTab('panoramica');
   setInterval(verificaToken, 5 * 60 * 1000);
   verificaNonLettiAdmin();
   setInterval(verificaNonLettiAdmin, 20000);

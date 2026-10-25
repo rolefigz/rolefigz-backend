@@ -88,6 +88,14 @@
           },
           {
             "@type": "Question",
+            "name": "Fate figure personalizzate in stile Funko Pop?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sì: partiamo da una o più foto, modelliamo la figura in 3D, mandiamo l'anteprima e la stampiamo solo quando piace al cliente. Per persone, coppie, animali e personaggi."
+            }
+          },
+          {
+            "@type": "Question",
             "name": "Realizzate anche progetti su misura non presenti nel catalogo?",
             "acceptedAnswer": {
               "@type": "Answer",
@@ -123,7 +131,7 @@
             "name": "Come posso contattarvi per assistenza?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Puoi scriverci su WhatsApp al 329 822 5406, via email a rolefigz@gmail.com o tramite la chat di supporto del sito."
+              "text": "Puoi scriverci su WhatsApp al 392 822 5406, via email a rolefigz@gmail.com o tramite la chat di supporto del sito."
             }
           }
         ]
@@ -155,37 +163,87 @@
     ]
   }
   </script>
+  <script>
+    // Ingresso: scelta privati / aziende, all'inizio della visita e solo sulla home
+    (function () {
+      try {
+        var deep = /\/(producto|blog|checkout)(\/|$)/.test(location.pathname);
+        var scelto = null;
+        try { scelto = sessionStorage.getItem('rf_percorso'); } catch (e) {}
+        if (!deep && !location.hash && !scelto) document.documentElement.classList.add('gate-open');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"/>
   <link rel="stylesheet" href="/css/shared.css"/>
   <link rel="stylesheet" href="/css/style.css"/>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="stylesheet" href="/css/v2-tokens.css"/>
+  <link rel="stylesheet" href="/css/v2.css"/>
+  <script src="/js/iconify-lite.js"></script>
 </head>
 <body>
 
-<!-- ══ BANNER MANUTENZIONE ══ -->
-<div style="background:#1a1a1a;color:#f0ece4;text-align:center;padding:10px 20px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;border-bottom:2px solid #C17F3A;position:relative;z-index:300">
-  <span style="color:#C17F3A;margin-right:8px">⚙</span>
-  SITO IN COSTRUZIONE — Sto sviluppando nuove funzionalità. Alcune sezioni potrebbero non essere disponibili.
-  <span style="color:#C17F3A;margin-left:8px">⚙</span>
+<!-- ══ INGRESSO: PRIVATI O AZIENDE ══ -->
+<div class="v2-gate" id="v2Gate">
+  <div class="v2-gate-top">
+    <img class="v2-gate-logo" src="/assets/opt/logo-white.webp" alt="RoleFigz">
+    <p class="v2-gate-q">Per chi stampiamo oggi?</p>
+    <span class="v2-gate-place">Stampa 3D · Piacenza</span>
+  </div>
+  <a class="v2-gate-half is-b2c" href="#privati" data-scelta="privati" data-stay>
+    <img class="v2-gate-bg" src="/assets/opt/llaveros.webp" alt="" aria-hidden="true">
+    <div class="v2-gate-copy">
+      <span class="v2-gate-eyebrow">Per te</span>
+      <h2 class="v2-gate-title">Privati</h2>
+      <p class="v2-gate-text">Figure dalla tua foto, regali su misura, portachiavi con il tuo nome e circuiti in scala.</p>
+      <ul class="v2-gate-chips"><li>Figure</li><li>Regali</li><li>Circuiti F1</li></ul>
+      <span class="v2-gate-cta">Entra nel negozio <i aria-hidden="true">→</i></span>
+    </div>
+  </a>
+  <a class="v2-gate-half is-b2b" href="/aziende" data-scelta="aziende">
+    <img class="v2-gate-bg" src="/assets/opt/standnfcpiccolo.webp" alt="" aria-hidden="true">
+    <div class="v2-gate-copy">
+      <span class="v2-gate-eyebrow">Per la tua attività</span>
+      <h2 class="v2-gate-title">Aziende</h2>
+      <p class="v2-gate-text">Merchandising con NFC, segnaposti con QR per il menù e gadget con il tuo logo, dal campione alla produzione in volume.</p>
+      <ul class="v2-gate-chips"><li>Merch NFC</li><li>Segnaposti</li><li>Eventi</li></ul>
+      <span class="v2-gate-cta">Scopri le soluzioni <i aria-hidden="true">→</i></span>
+    </div>
+  </a>
+  <div class="v2-gate-center" aria-hidden="true">
+    <div class="v2-gate-3d" id="gate3d"></div>
+  </div>
 </div>
+
+<!-- ══ BANNER MANUTENZIONE ══ -->
+<div class="v2-topbar"><span class="v2-dot"></span>Sito in costruzione — alcune sezioni potrebbero non essere disponibili.</div>
 
 <!-- ══ HEADER ══ -->
 <header>
   <!-- Logo -->
-  <img class="logo-img" src="/assets/LogoSfondoNero.png" alt="Rolefigz" onclick="tornaAlNegozio()" style="cursor:pointer">
+  <img class="logo-img" src="/assets/opt/logo-header.webp" alt="Rolefigz" onclick="tornaAlNegozio()" style="cursor:pointer">
 
   <!-- Nav centrale (desktop) -->
   <nav class="header-nav">
-    <button class="hn-link" onclick="mostraVista('tienda')">NEGOZIO</button>
-    <button class="hn-link" onclick="mostraVista('blog');loadArticoli()">BLOG</button>
+    <button class="hn-link" onclick="mostraVista('tienda')">Negozio</button>
+    <a class="hn-link" href="#figure-personalizzate" onclick="mostraVista('tienda');setTimeout(()=>document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'}),50);return false">Figure</a>
+    <a class="hn-link" href="/f1/">Circuiti F1</a>
+    <button class="hn-link" onclick="mostraVista('blog');loadArticoli()">Blog</button>
   </nav>
 
   <!-- Azioni destra -->
   <div class="header-actions">
+    <nav class="v2-switch" aria-label="Tipo di cliente">
+      <a class="v2-switch-opt is-on" href="/" aria-current="page">Privati</a>
+      <a class="v2-switch-opt" href="/aziende">Aziende</a>
+    </nav>
     <button class="hn-icon" onclick="apriCarrello()" aria-label="Carrello" style="position:relative">
       <iconify-icon icon="mdi:cart-outline" width="20"></iconify-icon>
       <span class="cart-badge" id="cartBadge"></span>
     </button>
-    <button class="hn-login" onclick="apriAuth('login')" id="headerLoginBtn">ACCEDI</button>
+    <button class="hn-login" onclick="apriAuth('login')" id="headerLoginBtn">Accedi</button>
     <button class="hn-login" id="benchyBanner" onclick="mostraVista('perfil');tabProfilo('benchys',document.getElementById('benchysMenuTab'))" style="display:none;color:var(--accent);font-weight:700"></button>
 
     <!-- Avatar dropdown -->
@@ -207,7 +265,7 @@
           <iconify-icon icon="mdi:account-outline" width="15"></iconify-icon> I miei dati
         </button>
         <button class="avatar-dd-item" onclick="chiudiDropdownProfilo();mostraVista('perfil');tabProfilo('benchys',document.getElementById('benchysMenuTab'))">
-          <img src="/assets/benchy.png" width="15" alt="Benchy" style="vertical-align:middle;opacity:.85"/> Benchys <span id="ddBenchySaldo" style="margin-left:auto;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700"></span>
+          <img src="/assets/opt/benchy-icon.webp" width="15" alt="Benchy" style="vertical-align:middle;opacity:.85"/> Benchys <span id="ddBenchySaldo" style="margin-left:auto;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700"></span>
         </button>
         <div class="avatar-dd-sep"></div>
         <button class="avatar-dd-item danger" onclick="chiudiDropdownProfilo();disconnetti()">
@@ -255,10 +313,6 @@
       <span style="flex:1">TROVAMYPET</span>
       <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--accent);border:1px solid var(--accent);padding:2px 5px">NUOVO</span>
     </a>
-    <a class="nav-panel-btn" href="http://4bytemenu.it/" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:10px">
-      <iconify-icon icon="mdi:qrcode" width="14"></iconify-icon>
-      <span style="flex:1">4BYTEMENU</span>
-    </a>
   </div>
 
   <div class="nav-panel-section">
@@ -290,32 +344,187 @@
 <div class="view active" id="view-tienda">
 
   <!-- HERO -->
-  <div class="hero">
-    <div class="hero-left">
-      <div class="hero-eyebrow">Stampa 3D professionale</div>
-      <h1 class="hero-h1">OGGETTI<br><em>UNICI</em><br>PER TE</h1>
-      <p class="hero-p">Figure, merchandising aziendale, segnaposto personalizzati, lightbox e molto altro. Qualità artigianale con tecnologia di precisione.</p>
-      <div class="hero-ctas">
-        <button class="cta-outline" onclick="apriAuth('register')">CREA ACCOUNT</button>
+  <section class="v2-hero" id="privati">
+    <div class="v2-hero-inner">
+      <div class="v2-hero-copy">
+        <span class="v2-chip"><span class="v2-dot"></span>Stampa 3D per te · Piacenza</span>
+        <h1 class="v2-hero-h1">Oggetti <em>unici</em>,<br>stampati per te.</h1>
+        <p class="v2-hero-p">Figure dalla tua foto, portachiavi con il tuo nome, circuiti in scala e regali che non trovi in nessun negozio. Stampati e rifiniti a mano a Piacenza.</p>
+        <div class="v2-hero-ctas">
+          <button class="v2-btn v2-btn-primary" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
+            Vai al catalogo <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon>
+          </button>
+          <a class="v2-btn v2-btn-glass" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">Crea la tua figura</a>
+        </div>
       </div>
-      <div class="hero-fatto">fatto a mano · stampato in 3D · made in Italy</div>
-    </div>
-    <div class="hero-right">
-      <img class="hero-bg-img" src="/assets/impresoras.jpeg" alt="Hero Background">
-      <div class="hero-overlay"></div>
-      <img class="hero-logo" src="/assets/logo.png" alt="Logo RoleFigz">
-      <div class="hero-counter">
-        <strong id="heroCounter">—</strong>
-        <span>PRODOTTI DISPONIBILI</span>
+      <div class="v2-hero-3d" id="hero3d" aria-hidden="true">
+        <span class="v2-hero-3d-hint"><iconify-icon icon="mdi:gesture-swipe-horizontal" width="16"></iconify-icon> Trascina per ruotare</span>
+      </div>
+      <div class="v2-hero-stats">
+        <div class="v2-stat"><strong id="heroCounter">—</strong><span>prodotti disponibili</span></div>
+        <div class="v2-stat"><strong data-count="6">6</strong><span>stampanti in produzione</span></div>
+        <div class="v2-stat"><strong data-count="0.1">0,1<small>mm</small></strong><span>tolleranza di stampa</span></div>
+        <div class="v2-stat"><strong>EU</strong><span>spedizioni in Italia ed Europa</span></div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- NASTRO -->
+  <div class="v2-marquee" aria-hidden="true"><div class="v2-marquee-track"><span>Figure personalizzate</span><i aria-hidden="true">✦</i><span>Regali unici</span><i aria-hidden="true">✦</i><span>Portachiavi con il tuo nome</span><i aria-hidden="true">✦</i><span>Circuiti in scala</span><i aria-hidden="true">✦</i><span>Lettere 3D</span><i aria-hidden="true">✦</i><span>Cosplay</span><i aria-hidden="true">✦</i><span>Made in Piacenza</span><i aria-hidden="true">✦</i><span>Figure personalizzate</span><i aria-hidden="true">✦</i><span>Regali unici</span><i aria-hidden="true">✦</i><span>Portachiavi con il tuo nome</span><i aria-hidden="true">✦</i><span>Circuiti in scala</span><i aria-hidden="true">✦</i><span>Lettere 3D</span><i aria-hidden="true">✦</i><span>Cosplay</span><i aria-hidden="true">✦</i><span>Made in Piacenza</span><i aria-hidden="true">✦</i></div></div>
+
+  <!-- SERVIZI (privati) -->
+  <section class="v2-section" id="servizi">
+    <div class="v2-section-head">
+      <span class="v2-eyebrow">Per te</span>
+      <h2 class="v2-h2">Cosa possiamo <em>stampare per te</em></h2>
+    </div>
+    <div class="v2-bento">
+      <a class="v2-tile v2-tile-xl" href="#catalogo" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});return false">
+        <img src="/assets/opt/llaveros.webp" alt="" loading="lazy">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Negozio</span>
+          <h3>Catalogo pronto</h3>
+          <p>Portachiavi, calamite e oggetti stampati in 3D, pronti da ordinare online.</p>
+        </div>
+      </a>
+      <a class="v2-tile v2-tile-accent" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
+        <div class="v2-tile-body">
+          <iconify-icon class="v2-tile-icon" icon="mdi:account-box-outline" width="44"></iconify-icon>
+          <span class="v2-tag">Dalla tua foto</span>
+          <h3>Figure personalizzate</h3>
+          <p>Persone, coppie e animali, anche in stile Funko Pop.</p>
+        </div>
+      </a>
+      <a class="v2-tile" href="/f1/">
+        <img src="/f1/circuiti/monza.webp" alt="" loading="lazy" class="v2-tile-contain">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Collezione</span>
+          <h3>Circuiti in scala</h3>
+          <p>F1, GT e circuiti italiani in tre misure.</p>
+        </div>
+      </a>
+      <a class="v2-tile" href="/f1/">
+        <img src="/f1/gadget/sottobicchieri-f1.webp" alt="" loading="lazy">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Motorsport</span>
+          <h3>Gadget F1</h3>
+          <p>Portachiavi, sottobicchieri e sagome dei circuiti.</p>
+        </div>
+      </a>
+      <a class="v2-tile" href="https://wa.me/393928225406?text=Ciao%20RoleFigz!%20Vorrei%20un%20regalo%20su%20misura" target="_blank" rel="noopener">
+        <img src="/assets/opt/benchy.webp" alt="" loading="lazy">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Su misura</span>
+          <h3>Regali su misura</h3>
+          <p>Hai un'idea? La modelliamo e la stampiamo per te.</p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FIGURE PERSONALIZZATE (SEO: statuine, figure stile Funko Pop) -->
+  <section class="v2-section v2-figz" id="figure-personalizzate">
+    <div class="v2-figz-media v2-figz-flow" aria-hidden="true">
+      <div class="v2-figz-stage"><iconify-icon icon="mdi:camera-outline" width="40"></iconify-icon><span>La tua foto</span></div>
+      <div class="v2-figz-arrow"></div>
+      <div class="v2-figz-stage"><iconify-icon icon="mdi:cube-scan" width="40"></iconify-icon><span>Modello 3D</span></div>
+      <div class="v2-figz-arrow"></div>
+      <div class="v2-figz-stage is-final"><iconify-icon icon="mdi:human-greeting-variant" width="40"></iconify-icon><span>La tua figura</span></div>
+    </div>
+    <div class="v2-figz-copy">
+      <div class="v2-section-head">
+        <span class="v2-eyebrow">Il nostro nome viene da qui</span>
+        <h2 class="v2-h2">Figure <em>personalizzate</em>, uniche come te</h2>
+        <p class="v2-lead">Statuine 3D di persone, animali e personaggi, anche in stile Funko Pop: le modelliamo partendo da una foto e le stampiamo in alta definizione. Un regalo che non trovi in nessun negozio.</p>
+      </div>
+      <ol class="v2-figz-steps">
+        <li><strong>Mandaci una foto</strong><span>Anche dal telefono, su WhatsApp. Ci dici stile, misura e dettagli.</span></li>
+        <li><strong>Ricevi l'anteprima 3D</strong><span>Ti mostriamo il modello prima di stampare: si modifica finché non è perfetto.</span></li>
+        <li><strong>Stampiamo e spediamo</strong><span>Stampa ad alta definizione, rifinitura a mano, spedizione in Italia ed Europa.</span></li>
+      </ol>
+      <div class="v2-hero-ctas">
+        <a class="v2-btn v2-btn-primary" href="https://wa.me/393928225406?text=Ciao%20RoleFigz!%20Vorrei%20una%20figura%20personalizzata" target="_blank" rel="noopener"><iconify-icon icon="mdi:whatsapp" width="18"></iconify-icon> Chiedi la tua figura</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATALOGO -->
+  <section class="v2-section v2-catalogo catalogue-section" id="catalogo">
+    <div class="v2-section-head v2-row">
+      <div>
+        <span class="v2-eyebrow">Negozio</span>
+        <h2 class="v2-h2 catalogue-title">Catalogo</h2>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon"><iconify-icon icon="mdi:magnify" width="18"></iconify-icon></span>
+        <input type="text" id="searchInput" placeholder="Cerca prodotto..." oninput="filtraProdotti(this.value)"/>
+      </div>
+    </div>
+    <div class="filtri-bar" id="catsGrid"></div>
+    <div id="productosList"></div>
+  </section>
+
+  <!-- CIRCUITI F1 -->
+  <section class="v2-section v2-dark v2-f1" id="circuiti">
+    <div class="v2-section-head v2-row">
+      <div>
+        <span class="v2-eyebrow">Collezione · in collaborazione con NRG</span>
+        <h2 class="v2-h2">Circuiti <em>in scala</em></h2>
+        <p class="v2-lead">I tracciati di F1, GT e World Challenge stampati in 3D, in tre misure. Da collezione, da regalo o per il tuo sim-rig.</p>
+      </div>
+      <a class="v2-btn v2-btn-primary" href="/f1/">Esplora la collezione <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon></a>
+    </div>
+    <div class="v2-f1-rail">
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/monza.webp" alt="Circuito di Monza stampato in 3D" loading="lazy"></div>
+          <span>Monza</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/spa.webp" alt="Circuito di Spa-Francorchamps stampato in 3D" loading="lazy"></div>
+          <span>Spa-Francorchamps</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/silverstone.webp" alt="Circuito di Silverstone stampato in 3D" loading="lazy"></div>
+          <span>Silverstone</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/monaco.webp" alt="Circuito di Monaco stampato in 3D" loading="lazy"></div>
+          <span>Monaco</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/suzuka.webp" alt="Circuito di Suzuka stampato in 3D" loading="lazy"></div>
+          <span>Suzuka</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/imola.webp" alt="Circuito di Imola stampato in 3D" loading="lazy"></div>
+          <span>Imola</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/interlagos.webp" alt="Circuito di Interlagos stampato in 3D" loading="lazy"></div>
+          <span>Interlagos</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/las-vegas.webp" alt="Circuito di Las Vegas stampato in 3D" loading="lazy"></div>
+          <span>Las Vegas</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/zandvoort.webp" alt="Circuito di Zandvoort stampato in 3D" loading="lazy"></div>
+          <span>Zandvoort</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/baku.webp" alt="Circuito di Baku stampato in 3D" loading="lazy"></div>
+          <span>Baku</span>
+        </a>
+    </div>
+  </section>
 
   <!-- COME FUNZIONA -->
-  <div class="how-section">
-    <div class="section-eyebrow">// Il nostro processo</div>
-    <h2 class="section-title" id="howTitle">COME<br>FUNZIONA</h2>
-    <div class="steps-grid">
+  <section class="v2-section v2-dark how-section">
+    <div class="v2-section-head">
+      <span class="v2-eyebrow">Il nostro processo</span>
+      <h2 class="v2-h2 section-title" id="howTitle">Come funziona</h2>
+    </div>
+    <div class="v2-steps">
       <div class="step">
         <div class="step-num">01</div>
         <div class="step-title">Scegli</div>
@@ -332,129 +541,112 @@
         <div class="step-desc">Stampiamo, controlliamo la qualità e spediamo direttamente a casa tua. Ogni pezzo è unico e certificato.</div>
       </div>
     </div>
-  </div>
-
-  <!-- FAQ -->
-  <div class="how-section" id="faqSection">
-    <div class="section-eyebrow">// Hai domande?</div>
-    <h2 class="section-title">Domande frequenti</h2>
-    <div style="max-width:820px">
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Che materiali usate per la stampa 3D?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Utilizziamo la stampa FDM e SLA, scegliendo il materiale e la tecnica più adatti a resistenza, finitura e uso previsto di ogni oggetto.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Quanto tempo ci vuole per ricevere il mio ordine?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">I tempi di produzione variano in base al prodotto; una volta stampato e controllato, l'ordine viene spedito in tutta Italia ed Europa.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Posso personalizzare qualsiasi prodotto del catalogo?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Sì, la maggior parte dei prodotti può essere personalizzata nel colore, nelle dimensioni o nel design su richiesta.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Realizzate anche progetti su misura non presenti nel catalogo?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Sì, realizziamo oggetti personalizzati a partire dal tuo design o da un semplice brief, dal logo aziendale alla figura di un personaggio.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Come posso pagare il mio ordine?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">I pagamenti si effettuano online in modo sicuro direttamente al checkout del sito.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Spedite fuori dall'Italia?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Sì, spediamo in tutta Italia e in Europa.</p>
-      </details>
-      <details style="border-bottom:1px solid #2a2a28;padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Cosa faccio se il prodotto arriva danneggiato?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Contattaci tramite WhatsApp, email o la chat del sito e troveremo insieme una soluzione.</p>
-      </details>
-      <details style="padding:18px 0">
-        <summary style="cursor:pointer;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Come posso contattarvi per assistenza?</summary>
-        <p style="margin-top:10px;font-size:13px;color:#888;line-height:1.7">Puoi scriverci su WhatsApp al 329 822 5406, via email a rolefigz@gmail.com o tramite la chat di supporto del sito.</p>
-      </details>
-    </div>
-  </div>
-
-  <!-- CATALOGO -->
-  <div class="catalogue-section" id="catalogo">
-    <div class="catalogue-header">
-      <h2 class="catalogue-title">CATALOGO</h2>
-      <div class="search-wrap">
-        <span class="search-icon"><iconify-icon icon="mdi:magnify" width="16"></iconify-icon></span>
-        <input type="text" id="searchInput" placeholder="Cerca prodotto..." oninput="filtraProdotti(this.value)"/>
-      </div>
-    </div>
-    <div class="filtri-bar" id="catsGrid"></div>
-    <div id="productosList"></div>
-  </div>
+  </section>
 
   <!-- PERCHÉ NOI -->
-  <div class="why-section">
-    <div class="section-eyebrow">// La nostra qualità</div>
-    <h2 class="section-title" style="color:var(--dark)" id="whyTitle">PERCHÉ<br>ROLEFIGZ</h2>
+  <section class="v2-section why-section">
+    <div class="v2-section-head">
+      <span class="v2-eyebrow">La nostra qualità</span>
+      <h2 class="v2-h2 section-title" id="whyTitle">Perché <em>Rolefigz</em></h2>
+    </div>
     <div class="why-grid">
       <div class="why-card">
-        <div class="why-icon"><iconify-icon icon="mdi:target" width="32"></iconify-icon></div>
+        <div class="why-icon"><iconify-icon icon="mdi:target" width="26"></iconify-icon></div>
         <div class="why-title">Precisione</div>
         <div class="why-desc">Stampa FDM e SLA con tolleranze al decimo di millimetro. Ogni pezzo è controllato manualmente prima della spedizione.</div>
       </div>
       <div class="why-card">
-        <div class="why-icon"><iconify-icon icon="mdi:lightning-bolt" width="32"></iconify-icon></div>
+        <div class="why-icon"><iconify-icon icon="mdi:lightning-bolt" width="26"></iconify-icon></div>
         <div class="why-title">Velocità</div>
         <div class="why-desc">Tempi di produzione rapidi senza compromettere la qualità. Consegne express disponibili su richiesta.</div>
       </div>
       <div class="why-card">
-        <div class="why-icon"><iconify-icon icon="mdi:pencil-ruler" width="32"></iconify-icon></div>
+        <div class="why-icon"><iconify-icon icon="mdi:pencil-ruler" width="26"></iconify-icon></div>
         <div class="why-title">Personalizzazione</div>
         <div class="why-desc">Dal logo aziendale alla figura di un personaggio: realizziamo qualsiasi oggetto a partire dal tuo design o dal tuo brief.</div>
       </div>
       <div class="why-card">
-        <div class="why-icon"><iconify-icon icon="mdi:handshake-outline" width="32"></iconify-icon></div>
+        <div class="why-icon"><iconify-icon icon="mdi:handshake-outline" width="26"></iconify-icon></div>
         <div class="why-title">Artigianalità</div>
         <div class="why-desc">Ogni prodotto è fatto a mano da un team appassionato. Non siamo una fabbrica: siamo un atelier di stampa 3D.</div>
       </div>
-      <div class="why-card">
-        <div class="why-icon"><iconify-icon icon="mdi:qrcode" width="32"></iconify-icon></div>
-        <div class="why-title">Menù Digitali</div>
-        <div class="why-desc">Menù digitali per ristoranti con <a href="http://4bytemenu.it/" target="_blank" style="color:var(--accent);text-decoration:underline">4ByteMenu</a>: il tuo menù sempre aggiornato, accessibile con un QR code al tavolo.</div>
-      </div>
     </div>
-  </div>
+  </section>
 
   <!-- RECENSIONI IN EVIDENZA -->
-  <div class="resenas-dest-section" id="resenasDestacadas">
-    <div class="section-eyebrow">// Clienti soddisfatti</div>
-    <h2 class="section-title" style="color:#fff">COSA DICONO<br><em>I NOSTRI CLIENTI</em></h2>
+  <section class="v2-section v2-dark resenas-dest-section" id="resenasDestacadas">
+    <div class="v2-section-head">
+      <span class="v2-eyebrow section-eyebrow">Clienti soddisfatti</span>
+      <h2 class="v2-h2 section-title">Cosa dicono <em>i nostri clienti</em></h2>
+    </div>
     <div class="resenas-dest-grid"></div>
-  </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="v2-section v2-faq" id="faqSection">
+    <div class="v2-faq-grid">
+      <div class="v2-section-head">
+        <span class="v2-eyebrow">Hai domande?</span>
+        <h2 class="v2-h2">Domande <em>frequenti</em></h2>
+        <p class="v2-lead">Non trovi la risposta? Scrivici su WhatsApp o dalla chat del sito.</p>
+      </div>
+      <div class="v2-faq-list">
+        <details><summary>Che materiali usate per la stampa 3D?</summary><p>Utilizziamo la stampa FDM e SLA, scegliendo il materiale e la tecnica più adatti a resistenza, finitura e uso previsto di ogni oggetto.</p></details>
+        <details><summary>Quanto tempo ci vuole per ricevere il mio ordine?</summary><p>I tempi di produzione variano in base al prodotto; una volta stampato e controllato, l'ordine viene spedito in tutta Italia ed Europa.</p></details>
+        <details><summary>Posso personalizzare qualsiasi prodotto del catalogo?</summary><p>Sì, la maggior parte dei prodotti può essere personalizzata nel colore, nelle dimensioni o nel design su richiesta.</p></details>
+        <details><summary>Fate figure personalizzate in stile Funko Pop?</summary><p>Sì: partiamo da una o più foto, modelliamo la figura in 3D, ti mandiamo l'anteprima e la stampiamo solo quando ti piace. Va bene per persone, coppie, animali e personaggi.</p></details>
+        <details><summary>Realizzate anche progetti su misura non presenti nel catalogo?</summary><p>Sì, realizziamo oggetti personalizzati a partire dal tuo design o da un semplice brief, dal logo aziendale alla figura di un personaggio.</p></details>
+        <details><summary>Come posso pagare il mio ordine?</summary><p>I pagamenti si effettuano online in modo sicuro direttamente al checkout del sito.</p></details>
+        <details><summary>Spedite fuori dall'Italia?</summary><p>Sì, spediamo in tutta Italia e in Europa.</p></details>
+        <details><summary>Cosa faccio se il prodotto arriva danneggiato?</summary><p>Contattaci tramite WhatsApp, email o la chat del sito e troveremo insieme una soluzione.</p></details>
+        <details><summary>Come posso contattarvi per assistenza?</summary><p>Puoi scriverci su WhatsApp al 392 822 5406, via email a rolefigz@gmail.com o tramite la chat di supporto del sito.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINALE -->
+  <section class="v2-cta">
+    <div>
+      <h2 class="v2-h2">Hai un'idea? <em>La stampiamo.</em></h2>
+      <p class="v2-lead">Mandaci un file, uno schizzo o anche solo una foto: ti rispondiamo con un preventivo.</p>
+    </div>
+    <div class="v2-hero-ctas">
+      <a class="v2-btn v2-btn-primary" href="https://wa.me/393928225406" target="_blank" rel="noopener">
+        <iconify-icon icon="mdi:whatsapp" width="18"></iconify-icon> Scrivici su WhatsApp
+      </a>
+      <a class="v2-btn v2-btn-outline" href="mailto:rolefigz@gmail.com">Email</a>
+    </div>
+  </section>
 
   <!-- FOOTER -->
   <footer>
     <div class="footer-grid">
       <div>
-        <img class="footer-logo" src="/assets/Logo.png" alt="Rolefigz">
-        <p class="footer-tagline">Stampa 3D artigianale di precisione. Figure, merchandising aziendale e oggetti personalizzati realizzati con passione.</p>
+        <img class="footer-logo" src="/assets/opt/logo-white.webp" alt="Rolefigz">
+        <p class="footer-tagline">Figure, regali e oggetti personalizzati, stampati in 3D e rifiniti a mano a Piacenza.</p>
       </div>
       <div>
-        <div class="footer-col-title">Navigazione</div>
+        <div class="footer-col-title">Privati</div>
         <a class="footer-link" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">Catalogo</a>
+        <a class="footer-link" href="#figure-personalizzate" onclick="mostraVista('tienda');setTimeout(()=>document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'}),50);return false">Figure personalizzate</a>
+        <a class="footer-link" href="/f1/">Circuiti in scala</a>
+        <a class="footer-link" onclick="mostraVista('blog');loadArticoli()">Blog</a>
         <a class="footer-link" onclick="apriAuth('register')">Crea account</a>
         <a class="footer-link" onclick="apriAuth('login')">Accedi</a>
       </div>
-
       <div>
         <div class="footer-col-title">Contatti</div>
-        <a class="footer-link" href="https://wa.me/393928225406" target="_blank" style="color:#25D366">
-          <iconify-icon icon="mdi:whatsapp" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>WhatsApp · 329 822 5406
+        <a class="footer-link" href="https://wa.me/393928225406" target="_blank" rel="noopener">
+          <iconify-icon icon="mdi:whatsapp" width="14"></iconify-icon>392 822 5406
         </a>
-        <a class="footer-link" href="mailto:rolefigz@gmail.com"><iconify-icon icon="mdi:email-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>rolefigz@gmail.com</a>
-        <a class="footer-link"><iconify-icon icon="mdi:map-marker-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Italia, Piacenza</a>
-        <a class="footer-link"><iconify-icon icon="mdi:printer-3d" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Stampa 3D Premium</a>
-        <a class="footer-link"><iconify-icon icon="mdi:truck-delivery-outline" width="13" style="vertical-align:middle;margin-right:6px"></iconify-icon>Spedizioni in tutta Italia e Europa</a>
+        <a class="footer-link" href="mailto:rolefigz@gmail.com"><iconify-icon icon="mdi:email-outline" width="14"></iconify-icon>rolefigz@gmail.com</a>
+        <a class="footer-link"><iconify-icon icon="mdi:map-marker-outline" width="14"></iconify-icon>Piacenza, Italia</a>
+        <a class="footer-link"><iconify-icon icon="mdi:truck-delivery-outline" width="14"></iconify-icon>Spedizioni Italia ed Europa</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <div class="footer-copy">© 2025 ROLEFIGZ — TUTTI I DIRITTI RISERVATI</div>
-      <div class="footer-fatto">fatto a mano · stampato in 3D</div>
+      <div class="footer-copy">© 2026 Rolefigz — Tutti i diritti riservati</div>
+      <div class="footer-fatto"><a href="/privacy.html">Privacy</a> · <a href="/termini.html">Termini</a></div>
     </div>
   </footer>
 </div>
@@ -462,8 +654,11 @@
 <!-- ══ VISTA: BLOG ══ -->
 <div class="view" id="view-blog">
   <div class="blog-wrap">
-    <div class="section-eyebrow">// Idee e Ispirazione</div>
-    <h2 class="section-title" style="color:var(--dark);margin-bottom:36px">ARTICOLI</h2>
+    <div class="v2-section-head blog-head">
+      <span class="v2-eyebrow">Blog</span>
+      <h2 class="v2-h2">Idee, guide e <em>dietro le quinte</em></h2>
+      <p class="v2-lead">Materiali, tecniche e progetti dal nostro laboratorio di stampa 3D a Piacenza.</p>
+    </div>
     <div id="blogWrap"></div>
   </div>
 </div>
@@ -808,16 +1003,21 @@
 <script src="/js/productos.js"></script>
 <script src="/js/checkout.js"></script>
 <script src="/js/perfil.js"></script>
-<script src="/js/admin.js"></script>
 <script src="/js/blog.js"></script>
 <script src="/js/resenas.js"></script>
 <script src="/js/chat.js"></script>
 <script src="/js/app.js"></script>
+<script src="/vendor/gsap.min.js"></script>
+<script src="/vendor/ScrollTrigger.min.js"></script>
+<script src="/vendor/lenis.min.js"></script>
+<script src="/js/v2-motion.js"></script>
+<script src="/js/v2-gate.js"></script>
+<script type="module" src="/js/hero3d.js"></script>
 
 <!-- ══ COOKIE BANNER ══ -->
-<div id="cookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--dark);color:#ccc;padding:18px 32px;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:2px solid var(--accent);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px">
-  <span>🍪 Questo sito usa cookie tecnici necessari al funzionamento. Nessun cookie di profilazione. <a href="/privacy.html" style="color:var(--accent);text-decoration:none">Privacy Policy</a></span>
-  <button onclick="accettaCookie()" style="background:var(--accent);border:none;color:#fff;padding:9px 22px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;white-space:nowrap">HO CAPITO</button>
+<div id="cookieBanner" class="v2-cookie">
+  <span>🍪 Usiamo solo cookie tecnici necessari al funzionamento, nessun cookie di profilazione. <a href="/privacy.html">Privacy Policy</a></span>
+  <button onclick="accettaCookie()">Ho capito</button>
 </div>
 <script>
   (function() {

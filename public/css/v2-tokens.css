@@ -1,0 +1,28 @@
+/* Token del design v2 — condivisi da tutte le pagine */
+:root {
+  --bg: #F6F5F2;
+  --surface: #FFFFFF;
+  --surface2: #EFEDE8;
+  --border: #E3E0D9;
+  --dark: #111110;
+  --dark2: #1C1B19;
+  --dark3: #262522;
+  --text: #161614;
+  --muted: #6E6B64;
+  --accent: #F26A1B;        /* arancione filamento */
+  --accent2: #C24F0C;       /* testo arancione su chiaro */
+  --accent-soft: rgba(242,106,27,.10);
+  --green: #2F8F5B;
+  --red: #D1382A;
+
+  --r-sm: 8px;
+  --r: 14px;
+  --r-lg: 22px;
+  --shadow-sm: 0 1px 2px rgba(17,17,16,.06), 0 1px 1px rgba(17,17,16,.04);
+  --shadow: 0 10px 30px -12px rgba(17,17,16,.18);
+  --shadow-lg: 0 30px 60px -20px rgba(17,17,16,.35);
+  --pad-x: clamp(16px, 5vw, 72px);
+  --display: 'Barlow Condensed', sans-serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', ui-monospace, monospace;
+}

@@ -76,11 +76,21 @@ app.get("/checkout",   serveApp);
 // Kit: /kit è la porta d'ingresso (merch o segnaposti) — così i link a /kit già inviati non si rompono.
 // /kit/merch: carica il logo → kit in 3D + preventivo + prenotazione del kit campione
 // /kit/segnaposti: carica il logo → segnaposti in 3D + prenotazione del kit campione dei segnaposti
+// Area aziende (B2B): soluzioni, processo e contatti per attività e locali.
+app.get("/aziende", (req, res) => res.sendFile(path.join(__dirname, "public", "aziende.html")));
 app.get("/kit", (req, res) => res.sendFile(path.join(__dirname, "public", "kit-index.html")));
 app.get("/kit/merch", (req, res) => res.sendFile(path.join(__dirname, "public", "kit.html")));
 app.get("/kit/segnaposti", (req, res) => res.sendFile(path.join(__dirname, "public", "segnaposti.html")));
 
-app.get("/producto/:slug", (req, res) => {
+// Pagina prodotto: stessa SPA, ma con titolo, meta e dati strutturati già nell'HTML (SEO).
+const { htmlProdotto } = require("./src/utils/seoProdotto");
+app.get("/producto/:slug", async (req, res) => {
+  try {
+    const html = await htmlProdotto(req.params.slug);
+    if (html) return res.type("html").send(html);
+  } catch (err) {
+    console.error("SEO prodotto:", err.message);
+  }
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 

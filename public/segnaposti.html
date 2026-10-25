@@ -10,9 +10,12 @@
   <meta property="og:image" content="https://www.rolefigz.com/assets/llaveros.jpeg"/>
   <link rel="canonical" href="https://www.rolefigz.com/kit/segnaposti"/>
   <link rel="icon" type="image/png" href="/assets/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"/>
   <link rel="stylesheet" href="/css/shared.css"/>
-  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <script src="/js/iconify-lite.js"></script>
+  <script type="module" src="/vendor/model-viewer.min.js"></script>
   <style>
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-thumb { background: var(--accent); }
@@ -324,12 +327,14 @@
       .k-success-h { font-size: 42px; }
     }
   </style>
+  <link rel="stylesheet" href="/css/v2-tokens.css"/>
+  <link rel="stylesheet" href="/css/v2-pages.css"/>
 </head>
 <body>
 
 <nav class="k-nav">
-  <a href="/"><img src="/assets/logo.png" alt="RoleFigz" class="k-nav-logo"/></a>
-  <div class="k-nav-badge">Stampa 3D · <span>Piacenza</span></div>
+  <a href="/"><img src="/assets/opt/logo-white.webp" alt="RoleFigz" class="k-nav-logo"/></a>
+  <a class="v2-back" href="/aziende">← RoleFigz per le aziende</a>
 </nav>
 
 <!-- HERO -->
@@ -345,6 +350,162 @@
       <div><div class="k-stat-n">7 gg</div><div class="k-stat-l">di menù digitale gratis</div></div>
     </div>
   </div>
+  <div class="k-tray k-tray-cut" aria-hidden="true">
+      <figure class="k-tray-item t1"><img src="/assets/segnaposti/s51-4.webp" alt="" loading="eager"><figcaption>Segnaposto NFC</figcaption></figure>
+      <figure class="k-tray-item t2"><img src="/assets/segnaposti/s40-2-sm.webp" alt="" loading="eager"><figcaption>Segnaposto QR</figcaption></figure>
+      <figure class="k-tray-item t3"><img src="/assets/segnaposti/s42-0-sm.webp" alt="" loading="eager"><figcaption>Sagomato sul logo</figcaption></figure>
+  </div>
+</section>
+
+<!-- LAVORI REALI -->
+<section class="k-section k-section-dark k-works" id="k-lavori">
+  <div class="k-wrap">
+    <div class="k-label">// Lavori reali</div>
+    <div class="k-title">GIÀ SUI TAVOLI<br>DEI NOSTRI CLIENTI</div>
+    <p class="k-lead">Segnaposti stampati in 3D per ristoranti, bar e hotel: con QR, con NFC, sagomati sul logo o con il numero del tavolo. Tocca una foto per vederla da vicino.</p>
+    <div class="k-works-filter" role="group" aria-label="Filtra i lavori">
+      <button type="button" data-filter="all" aria-pressed="true">Tutti <span>25</span></button>
+      <button type="button" data-filter="qr" aria-pressed="false">QR code <span>14</span></button>
+      <button type="button" data-filter="nfc" aria-pressed="false">NFC <span>4</span></button>
+      <button type="button" data-filter="sagoma" aria-pressed="false">Sagomati <span>4</span></button>
+      <button type="button" data-filter="numero" aria-pressed="false">Numeri tavolo <span>3</span></button>
+    </div>
+    <div class="k-works-grid">
+      <button class="k-work" type="button" data-cat="nfc" data-full="/assets/segnaposti/s51-4.webp" aria-label="Bargonzi, NFC con logo: ingrandisci">
+        <img src="/assets/segnaposti/s51-4-sm.webp" alt="Segnaposto Bargonzi stampato in 3D, nfc con logo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Bargonzi</strong><small>NFC con logo</small></span>
+        <span class="k-work-tag">NFC</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s40-2.webp" aria-label="Cristian, Ristorante pizzeria: ingrandisci">
+        <img src="/assets/segnaposti/s40-2-sm.webp" alt="Segnaposto Cristian stampato in 3D, ristorante pizzeria" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Cristian</strong><small>Ristorante pizzeria</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="nfc" data-full="/assets/segnaposti/s50-1.webp" aria-label="Piacere, Pizzeria gourmet: ingrandisci">
+        <img src="/assets/segnaposti/s50-1-sm.webp" alt="Segnaposto Piacere stampato in 3D, pizzeria gourmet" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Piacere</strong><small>Pizzeria gourmet</small></span>
+        <span class="k-work-tag">NFC</span>
+      </button>
+      <button class="k-work" type="button" data-cat="sagoma" data-full="/assets/segnaposti/s42-0.webp" aria-label="Lume, Sagoma del logo: ingrandisci">
+        <img src="/assets/segnaposti/s42-0-sm.webp" alt="Segnaposto Lume stampato in 3D, sagoma del logo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Lume</strong><small>Sagoma del logo</small></span>
+        <span class="k-work-tag">Sagomato</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s44-0.webp" aria-label="Tado, Due colori: ingrandisci">
+        <img src="/assets/segnaposti/s44-0-sm.webp" alt="Segnaposto Tado stampato in 3D, due colori" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Tado</strong><small>Due colori</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="nfc" data-full="/assets/segnaposti/s50-5.webp" aria-label="Vicolo Bistrot, NFC blu: ingrandisci">
+        <img src="/assets/segnaposti/s50-5-sm.webp" alt="Segnaposto Vicolo Bistrot stampato in 3D, nfc blu" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Vicolo Bistrot</strong><small>NFC blu</small></span>
+        <span class="k-work-tag">NFC</span>
+      </button>
+      <button class="k-work" type="button" data-cat="sagoma" data-full="/assets/segnaposti/s50-0.webp" aria-label="La Scimmia Pazza, Sagoma con QR: ingrandisci">
+        <img src="/assets/segnaposti/s50-0-sm.webp" alt="Segnaposto La Scimmia Pazza stampato in 3D, sagoma con qr" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>La Scimmia Pazza</strong><small>Sagoma con QR</small></span>
+        <span class="k-work-tag">Sagomato</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s50-3.webp" aria-label="Ritual Café, Oro e crema: ingrandisci">
+        <img src="/assets/segnaposti/s50-3-sm.webp" alt="Segnaposto Ritual Café stampato in 3D, oro e crema" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Ritual Café</strong><small>Oro e crema</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s41-0.webp" aria-label="Eurohotel · Luna Rossa, Hotel e pizzeria: ingrandisci">
+        <img src="/assets/segnaposti/s41-0-sm.webp" alt="Segnaposto Eurohotel · Luna Rossa stampato in 3D, hotel e pizzeria" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Eurohotel · Luna Rossa</strong><small>Hotel e pizzeria</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s49-0.webp" aria-label="Barbarossa, Logo in rame: ingrandisci">
+        <img src="/assets/segnaposti/s49-0-sm.webp" alt="Segnaposto Barbarossa stampato in 3D, logo in rame" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Barbarossa</strong><small>Logo in rame</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="numero" data-full="/assets/segnaposti/s45-1.webp" aria-label="Tavolo 04, Numero sagomato: ingrandisci">
+        <img src="/assets/segnaposti/s45-1-sm.webp" alt="Segnaposto Tavolo 04 stampato in 3D, numero sagomato" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Tavolo 04</strong><small>Numero sagomato</small></span>
+        <span class="k-work-tag">Numero</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s44-1.webp" aria-label="Minerva, Bianco e nero: ingrandisci">
+        <img src="/assets/segnaposti/s44-1-sm.webp" alt="Segnaposto Minerva stampato in 3D, bianco e nero" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Minerva</strong><small>Bianco e nero</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="nfc" data-full="/assets/segnaposti/s41-2.webp" aria-label="Recensioni + Menù, Doppio QR e NFC: ingrandisci">
+        <img src="/assets/segnaposti/s41-2-sm.webp" alt="Segnaposto Recensioni + Menù stampato in 3D, doppio qr e nfc" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Recensioni + Menù</strong><small>Doppio QR e NFC</small></span>
+        <span class="k-work-tag">NFC</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s51-0.webp" aria-label="Senza Nome, Food & Drink: ingrandisci">
+        <img src="/assets/segnaposti/s51-0-sm.webp" alt="Segnaposto Senza Nome stampato in 3D, food & drink" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Senza Nome</strong><small>Food & Drink</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s43-1.webp" aria-label="Decanta, Wine bar: ingrandisci">
+        <img src="/assets/segnaposti/s43-1-sm.webp" alt="Segnaposto Decanta stampato in 3D, wine bar" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Decanta</strong><small>Wine bar</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="numero" data-full="/assets/segnaposti/s42-1.webp" aria-label="Tavolo 20, Numero tavolo: ingrandisci">
+        <img src="/assets/segnaposti/s42-1-sm.webp" alt="Segnaposto Tavolo 20 stampato in 3D, numero tavolo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Tavolo 20</strong><small>Numero tavolo</small></span>
+        <span class="k-work-tag">Numero</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s50-7.webp" aria-label="Vicolo Bistrot, QR blu: ingrandisci">
+        <img src="/assets/segnaposti/s50-7-sm.webp" alt="Segnaposto Vicolo Bistrot stampato in 3D, qr blu" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Vicolo Bistrot</strong><small>QR blu</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s41-1.webp" aria-label="Unocaffè, Caffetteria: ingrandisci">
+        <img src="/assets/segnaposti/s41-1-sm.webp" alt="Segnaposto Unocaffè stampato in 3D, caffetteria" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Unocaffè</strong><small>Caffetteria</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="sagoma" data-full="/assets/segnaposti/s43-0.webp" aria-label="Tigellabella, Solo logo: ingrandisci">
+        <img src="/assets/segnaposti/s43-0-sm.webp" alt="Segnaposto Tigellabella stampato in 3D, solo logo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Tigellabella</strong><small>Solo logo</small></span>
+        <span class="k-work-tag">Sagomato</span>
+      </button>
+      <button class="k-work" type="button" data-cat="numero" data-full="/assets/segnaposti/s51-2.webp" aria-label="Tavolo 12, Effetto pietra: ingrandisci">
+        <img src="/assets/segnaposti/s51-2-sm.webp" alt="Segnaposto Tavolo 12 stampato in 3D, effetto pietra" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Tavolo 12</strong><small>Effetto pietra</small></span>
+        <span class="k-work-tag">Numero</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s50-2.webp" aria-label="Barbarossa, Scopri il menù: ingrandisci">
+        <img src="/assets/segnaposti/s50-2-sm.webp" alt="Segnaposto Barbarossa stampato in 3D, scopri il menù" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Barbarossa</strong><small>Scopri il menù</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s51-3.webp" aria-label="Skyline, Effetto marmo: ingrandisci">
+        <img src="/assets/segnaposti/s51-3-sm.webp" alt="Segnaposto Skyline stampato in 3D, effetto marmo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Skyline</strong><small>Effetto marmo</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="sagoma" data-full="/assets/segnaposti/s50-6.webp" aria-label="Ritual Café, Logo in rilievo: ingrandisci">
+        <img src="/assets/segnaposti/s50-6-sm.webp" alt="Segnaposto Ritual Café stampato in 3D, logo in rilievo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Ritual Café</strong><small>Logo in rilievo</small></span>
+        <span class="k-work-tag">Sagomato</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s40-1.webp" aria-label="Skyline, Bianco e rosso: ingrandisci">
+        <img src="/assets/segnaposti/s40-1-sm.webp" alt="Segnaposto Skyline stampato in 3D, bianco e rosso" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Skyline</strong><small>Bianco e rosso</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+      <button class="k-work" type="button" data-cat="qr" data-full="/assets/segnaposti/s51-5.webp" aria-label="Bargonzi, QR con logo: ingrandisci">
+        <img src="/assets/segnaposti/s51-5-sm.webp" alt="Segnaposto Bargonzi stampato in 3D, qr con logo" loading="lazy" decoding="async" width="360" height="480">
+        <span class="k-work-cap"><strong>Bargonzi</strong><small>QR con logo</small></span>
+        <span class="k-work-tag">QR</span>
+      </button>
+    </div>
+    <div class="k-works-cta">
+      <a href="#k-guida" class="k-cta">Crea i tuoi con il tuo logo <span class="iconify" data-icon="mdi:arrow-down"></span></a>
+    </div>
+  </div>
+  <dialog class="k-works-zoom" id="kWorksZoom" aria-label="Segnaposto ingrandito">
+    <button type="button" class="k-works-close" aria-label="Chiudi">✕</button>
+    <img alt="">
+    <p></p>
+  </dialog>
 </section>
 
 <!-- GUIDA -->
@@ -603,16 +764,17 @@
 </section>
 
 <!-- CONTATTI -->
-<section style="background:var(--dark);padding:48px;border-top:2px solid var(--accent)">
-  <div style="max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+<section class="k-contact">
+  <div class="k-contact-inner">
     <div>
-      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px">// Domande?</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:#f0ece4;letter-spacing:-1px;text-transform:uppercase">Scrivici</div>
+      <span class="k-contact-eyebrow">Domande prima di caricare il logo?</span>
+      <h2 class="k-contact-h">Scrivici, rispondiamo <em>in giornata</em>.</h2>
+      <p class="k-contact-p">WhatsApp <strong>+39 392 822 5406</strong> · Email <strong>rolefigz@gmail.com</strong></p>
     </div>
-    <a href="mailto:rolefigz@gmail.com" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(193,127,58,.3);padding:16px 24px;text-decoration:none">
-      <span style="font-size:26px;color:var(--accent)"><span class="iconify" data-icon="mdi:email-outline"></span></span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f0ece4">rolefigz@gmail.com</span>
-    </a>
+    <div class="k-contact-ctas">
+      <a class="k-contact-btn is-primary" href="https://wa.me/393928225406" target="_blank" rel="noopener"><span class="iconify" data-icon="mdi:whatsapp"></span> WhatsApp</a>
+      <a class="k-contact-btn" href="mailto:rolefigz@gmail.com"><span class="iconify" data-icon="mdi:email-outline"></span> Email</a>
+    </div>
   </div>
 </section>
 
@@ -973,5 +1135,7 @@
   };
 })();
 </script>
+<script src="/js/v2-lavori.js"></script>
+<script src="/js/v2-reveal.js" defer></script>
 </body>
 </html>

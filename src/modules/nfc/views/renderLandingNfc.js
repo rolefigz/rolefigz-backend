@@ -48,6 +48,8 @@ function renderLandingNfc(prodotti) {
 <title>RoleFigz NFC per attivita' locali</title>
 <meta name="description" content="Pagina web per la tua attivita', tag NFC e QR fisici e statistiche a ${mensile} € al mese. Il merchandising lo ordini dal pannello, ai prezzi di listino.">
 <link rel="icon" type="image/png" href="/assets/LogoSfondoNero.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify({
   "@context": "https://schema.org", "@graph": [
     { "@type": "Service", name: "RoleFigz NFC", provider: { "@type": "Organization", name: nomeAzienda },
@@ -57,15 +59,17 @@ function renderLandingNfc(prodotti) {
 }).replace(/</g, "\\u003c")}</script>
 <style>
 :root{
-  --ink:#1D1D1F; --ink-dim:rgba(29,29,31,.62); --void:#FBFBFD; --line: rgba(0,0,0,.08);
-  --accent:#0071E3; --pill:999px; --card:22px; --surface:#FFFFFF;
+  --ink:#161614; --ink-dim:rgba(22,22,20,.62); --void:#F6F5F2; --line: rgba(17,17,16,.08);
+  --accent:#E25A0C; --pill:999px; --card:22px; --surface:#FFFFFF;
   --phone-void:#0E0E0F; --phone-ink:#F5F5F7; --phone-ink-dim:rgba(245,245,247,.62); --phone-accent:#FF6A2C;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
-body{margin:0;background:var(--void);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--void);color:var(--ink);font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1,h2,h3{font-weight:600;margin:0;letter-spacing:-.015em;text-wrap:balance}
+h1,h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;letter-spacing:-.01em;line-height:1}
+::selection{background:var(--accent);color:#fff}
 a{color:inherit}
 img{max-width:100%;display:block}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
@@ -207,11 +211,53 @@ details p{color:var(--ink-dim);font-size:.88rem;line-height:1.6;margin:12px 0 0;
 .lead-form-esito.err{color:#c0392b}
 
 footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-size:.72rem;color:var(--ink-dim)}
+
+/* ══ v2: hero scuro, anelli NFC, titoli grandi, piani e contatti più curati ══ */
+main.hero{position:relative;isolation:isolate;color:#f6f5f2;padding:96px 24px 110px}
+main.hero::before{content:"";position:absolute;inset:0 calc(50% - 50vw);z-index:-1;
+  background:radial-gradient(55% 70% at 85% 30%,rgba(242,106,27,.22),transparent 65%),radial-gradient(40% 60% at 0% 100%,rgba(242,106,27,.1),transparent 60%),#0b0b0a}
+main.hero::after{content:"";position:absolute;inset:0 calc(50% - 50vw);z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 6px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 70%);mask-image:linear-gradient(180deg,transparent,#000 70%)}
+.hero-chip{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#e8e4dc;font-size:.82rem;margin-bottom:22px;opacity:0;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .05s both}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:#F26A1B;box-shadow:0 0 0 4px rgba(242,106,27,.2)}
+.hero h1{font-size:clamp(2.8rem,6vw,5.2rem);line-height:.95;max-width:12ch;color:#fff}
+.hero h1 em{font-style:normal;color:#F26A1B}
+.hero p{color:#cfc9be}
+.hero .btn--ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.hero .btn--primary{background:#F26A1B;box-shadow:0 10px 28px -10px rgba(242,106,27,.7)}
+.phone-caption{color:#8d877c}
+.phone-stage{position:relative;display:flex;flex-direction:column;align-items:center}
+.nfc-ring{position:absolute;left:50%;top:42%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;border:1.5px solid rgba(242,106,27,.55);opacity:0;pointer-events:none;animation:nfcPulse 3.6s cubic-bezier(.2,.7,.2,1) infinite}
+.nfc-ring.r2{animation-delay:1.2s}.nfc-ring.r3{animation-delay:2.4s}
+@keyframes nfcPulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion: reduce){.nfc-ring{display:none}.hero-chip{animation:none;opacity:1}}
+.phone{position:relative;z-index:1;box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06)}
+section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;font-size:clamp(2.1rem,4vw,3.2rem)!important;line-height:1;letter-spacing:-.01em}
+.eyebrow{font-family:"DM Mono",ui-monospace,monospace;letter-spacing:.14em;font-weight:500}
+.step{padding:24px 22px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+.step .n{font-family:"DM Mono",ui-monospace,monospace;font-size:.9rem;font-weight:500}
+.incluso-voce{border:1px solid var(--line);box-shadow:none}
+.merch-carousel{border-radius:24px;background:#111110}
+.merch-slide img{height:440px}
+.piano-card{border-radius:24px}
+.piano-card--evidenza{background:#111110;color:#f6f5f2;box-shadow:0 0 0 2px #F26A1B,0 30px 60px -30px rgba(242,106,27,.6)}
+.piano-card--evidenza .piano-crediti,.piano-card--evidenza .piano-features li{color:#bdb7ab}
+.piano-card--evidenza .piano-cta{background:#F26A1B;color:#fff}
+.piano-prezzo{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800}
+.contatti{position:relative;isolation:isolate;color:#fff;text-align:center;border-top:0!important;border-radius:28px;margin:40px auto 80px;padding:64px 28px!important;
+  background:#F26A1B repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 7px)}
+.contatti h2{color:#fff}
+.contatti p{color:rgba(255,255,255,.9)!important}
+.contatti .btn--primary{background:#111110}
+.contatti .btn--ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6)}
+.contatti .lead-form input,.contatti .lead-form textarea{background:rgba(255,255,255,.95);border-color:transparent}
+.contatti .lead-form button{background:#111110;color:#fff}
+.contatti .lead-intro, .contatti label{color:rgba(255,255,255,.9)}
 </style>
 </head><body>
 
 <nav class="top">
-  <a class="brand" href="/nfc"><img src="/assets/LogoSfondoNero.png" alt="RoleFigz"><span>RoleFigz NFC</span></a>
+  <a class="brand" href="/nfc"><img src="/assets/opt/logo-header.webp" alt="RoleFigz"><span>RoleFigz NFC</span></a>
   <div class="nav-right">
     <a class="nav-login" href="/index.html?nfcLogin=1">Accedi</a>
     <a class="nav-cta" href="#contatti">Contattaci</a>
@@ -229,7 +275,8 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
     </div>
   </div>
   <div class="phone-wrap">
-    <div>
+    <div class="phone-stage">
+      <span class="nfc-ring r1" aria-hidden="true"></span><span class="nfc-ring r2" aria-hidden="true"></span><span class="nfc-ring r3" aria-hidden="true"></span>
       <div class="phone">
         <div class="phone-top">
           <div class="phone-badge">B</div>
@@ -271,11 +318,11 @@ footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-si
 <section class="wrap merch" style="border-top:1px solid var(--line)">
   <div class="merch-carousel reveal">
     <div class="merch-track" id="merch-track">
-      <div class="merch-slide"><img src="/assets/presentationbadge2.jpeg" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
-      <div class="merch-slide"><img src="/assets/llaveros.jpeg" alt="Portachiavi NFC personalizzati" loading="lazy"></div>
-      <div class="merch-slide"><img src="/assets/Identificador.jpeg" alt="Identificativo personalizzato" loading="lazy"></div>
-      <div class="merch-slide"><img src="/assets/standnfcpiccolo.jpeg" alt="Stand recensioni" loading="lazy"></div>
-      <div class="merch-slide"><img src="/assets/iman.jpeg" alt="Calamita personalizzata" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/opt/presentationbadge2.webp" alt="Badge di presentazione RoleFigz" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/opt/llaveros.webp" alt="Portachiavi NFC personalizzati" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/opt/Identificador.webp" alt="Identificativo personalizzato" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/opt/standnfcpiccolo.webp" alt="Stand recensioni" loading="lazy"></div>
+      <div class="merch-slide"><img src="/assets/opt/iman.webp" alt="Calamita personalizzata" loading="lazy"></div>
     </div>
     <button type="button" class="merch-nav merch-nav--prev" aria-label="Foto precedente" onclick="merchCarouselVai(-1)">‹</button>
     <button type="button" class="merch-nav merch-nav--next" aria-label="Foto successiva" onclick="merchCarouselVai(1)">›</button>
