@@ -1,5 +1,4 @@
 const { body, validationResult } = require("express-validator");
-const { realeAUnita } = require("../utils/crediti");
 
 const valida = (req, res, next) => {
   const errori = validationResult(req);
@@ -16,7 +15,6 @@ const validaCreaAzienda = [
   body("name").trim().notEmpty().withMessage("Il nome dell'azienda e' obbligatorio"),
   body("slug").trim().toLowerCase().matches(/^[a-z0-9-]{2,50}$/)
     .withMessage("Slug non valido: minuscole, numeri e trattini, 2-50 caratteri"),
-  body("plan_id").isInt({ min: 1 }).withMessage("Piano non valido"),
   body("owner_user_id").optional({ checkFalsy: true }).isInt({ min: 1 }),
   body("owner_email").optional({ checkFalsy: true }).isEmail().withMessage("Email proprietario non valida").normalizeEmail(),
   body("owner_nombre").optional({ checkFalsy: true }).trim().notEmpty(),
@@ -25,7 +23,6 @@ const validaCreaAzienda = [
 
 const validaAggiornaAzienda = [
   body("name").optional().trim().notEmpty().withMessage("Il nome non puo' essere vuoto"),
-  body("plan_id").optional().isInt({ min: 1 }).withMessage("Piano non valido"),
   valida,
 ];
 
@@ -33,20 +30,6 @@ const validaPagamento = [
   body("amount_cents").isInt({ min: 1 }).withMessage("L'importo deve essere maggiore di 0"),
   body("months_covered").isInt({ min: 1 }).withMessage("I mesi coperti devono essere almeno 1"),
   body("received_at").optional({ checkFalsy: true }).isISO8601().withMessage("Data non valida"),
-  valida,
-];
-
-const validaAggiustaCrediti = [
-  body("delta")
-    .isFloat().withMessage("Delta crediti non valido")
-    .toFloat()
-    .custom(v => {
-      if (v === 0) throw new Error("Il delta non puo' essere zero");
-      if (Math.round(v * 2) !== v * 2) throw new Error("Il delta deve essere multiplo di 0,5");
-      return true;
-    })
-    .customSanitizer(v => realeAUnita(v)),
-  body("motivo").trim().notEmpty().withMessage("Il motivo e' obbligatorio"),
   valida,
 ];
 
@@ -61,15 +44,8 @@ const validaPaginaContenuto = [
 
 const validaCreaProdottoMerch = [
   body("name").trim().notEmpty().withMessage("Il nome e' obbligatorio"),
-  body("credit_cost")
-    .isFloat({ min: 0 }).withMessage("Crediti non validi")
-    .toFloat()
-    .custom(v => {
-      if (Math.round(v * 2) !== v * 2) throw new Error("I crediti devono essere multipli di 0,5");
-      return true;
-    })
-    .customSanitizer(v => realeAUnita(v)),
-  body("extra_price_cents").optional().isInt({ min: 0 }).withMessage("Prezzo extra non valido").toInt(),
+  body("price_cents").isInt({ min: 0 }).withMessage("Prezzo non valido").toInt(),
+  body("min_quantity").optional({ checkFalsy: true }).isInt({ min: 1 }).withMessage("Quantita' minima non valida").toInt(),
   body("internal_cost_cents").optional({ checkFalsy: true }).isInt({ min: 0 }).toInt(),
   body("production_days").optional({ checkFalsy: true }).isInt({ min: 0 }).toInt(),
   valida,
@@ -101,13 +77,6 @@ const validaAggiornaTag = [
   valida,
 ];
 
-const validaPiano = [
-  body("name").trim().notEmpty().withMessage("Il nome del piano e' obbligatorio"),
-  body("monthly_price_cents").isInt({ min: 0 }).withMessage("Prezzo non valido"),
-  body("monthly_credits").isInt({ min: 0 }).withMessage("Crediti non validi"),
-  valida,
-];
-
 const validaAggiornaAziendaCliente = [
   body("name").optional().trim().notEmpty().withMessage("Il nome non puo' essere vuoto").isLength({ max: 160 }),
   body("sector").optional({ checkFalsy: true }).trim().isLength({ max: 120 }),
@@ -133,8 +102,8 @@ const validaCambiaStatoLead = [
 ];
 
 module.exports = {
-  validaCreaAzienda, validaAggiornaAzienda, validaPagamento, validaAggiustaCrediti,
-  validaPaginaContenuto, validaPiano, validaCreaTag, validaAggiornaTag,
+  validaCreaAzienda, validaAggiornaAzienda, validaPagamento,
+  validaPaginaContenuto, validaCreaTag, validaAggiornaTag,
   validaCreaProdottoMerch, validaCreaOrdineMerch, validaCambiaStatoOrdineMerch,
   validaAggiornaAziendaCliente, validaCreaLead, validaCambiaStatoLead,
 };

@@ -15,7 +15,10 @@ const STATO_COLORE_NFC = {
   grace: 'var(--accent)', cancelled: 'var(--red)', suspended: 'var(--red)',
 };
 
-let nfcPianiCache = [];
+// Abbonamento unico: 5 € al mese, il primo pagamento copre almeno 12 mesi.
+const NFC_PREZZO_MENSILE_CENTS = 500;
+const NFC_MESI_MINIMI = 12;
+
 let nfcPgLinksCorrenti = [];
 
 const TIPI_LINK_NFC_ADMIN = [
@@ -31,15 +34,9 @@ const TIPI_LINK_NFC_ADMIN = [
 async function adminTabNfcAziende(content) {
   content.innerHTML = '<div class="loading">CARICAMENTO</div>';
   try {
-    const [rAziende, rPiani] = await Promise.all([
-      fetch(`${API_NFC}/aziende`, { headers: { Authorization: `Bearer ${token}` } }),
-      fetch(`${API_NFC}/piani`,   { headers: { Authorization: `Bearer ${token}` } }),
-    ]);
+    const rAziende = await fetch(`${API_NFC}/aziende`, { headers: { Authorization: `Bearer ${token}` } });
     const aziende = await rAziende.json();
-    nfcPianiCache = await rPiani.json();
     if (!Array.isArray(aziende)) throw new Error(aziende?.error || 'Errore caricamento aziende');
-
-    const opzioniPiano = nfcPianiCache.map(p => `<option value="${p.id}">${p.name} — €${centesimiAEuro(p.monthly_price_cents)}/mese</option>`).join('');
 
     const righe = aziende.map(a => {
       const sub = a.Subscription || {};
@@ -47,10 +44,8 @@ async function adminTabNfcAziende(content) {
       return `<tr>
         <td><strong>${a.name}</strong><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">/nfc/${a.slug}</div></td>
         <td>${a.Utente ? `${a.Utente.nombre}<div style="font-size:9px;color:var(--muted)">${a.Utente.email}</div>` : '—'}</td>
-        <td>${sub.Plan ? sub.Plan.name : '—'}</td>
         <td><span class="pill" style="background:${STATO_COLORE_NFC[stato]};color:#fff">${STATO_LABEL_NFC[stato]}</span></td>
         <td>${sub.paid_until ? new Date(sub.paid_until).toLocaleDateString('it-IT') : '—'}</td>
-        <td style="font-weight:700">${a.creditiSaldo}</td>
         <td>${a.ordiniTotali}</td>
         <td>${a.CompanyPage?.is_published ? '✅' : '—'}</td>
         <td>
@@ -69,7 +64,6 @@ async function adminTabNfcAziende(content) {
         <div class="form-row">
           <div class="field"><label>Nome azienda *</label><input id="naName" type="text" placeholder="Cooperativa Sociale XY"/></div>
           <div class="field"><label>Slug *</label><input id="naSlug" type="text" placeholder="cooperativa-xy" oninput="this.value=this.value.toLowerCase()"/></div>
-          <div class="field"><label>Piano *</label><select id="naPlanId"><option value="">Seleziona...</option>${opzioniPiano}</select></div>
           <div class="field"><label>Settore</label><input id="naSettore" type="text" placeholder="ristorazione, retail..."/></div>
         </div>
         <div class="form-row">
@@ -87,8 +81,8 @@ async function adminTabNfcAziende(content) {
         ? '<div class="empty-state"><div class="ei">🏢</div><h3>NESSUNA AZIENDA</h3></div>'
         : `<table>
             <thead><tr>
-              <th>Azienda</th><th>Cliente</th><th>Piano</th><th>Stato</th><th>Pagato fino al</th>
-              <th>Crediti</th><th>Ordini</th><th>Pagina</th><th>Azioni</th>
+              <th>Azienda</th><th>Cliente</th><th>Stato</th><th>Pagato fino al</th>
+              <th>Ordini</th><th>Pagina</th><th>Azioni</th>
             </tr></thead>
             <tbody>${righe}</tbody>
           </table>`}`;
@@ -99,12 +93,11 @@ async function nfcCreaAzienda() {
   const body = {
     name:         document.getElementById('naName')?.value.trim(),
     slug:         document.getElementById('naSlug')?.value.trim(),
-    plan_id:      document.getElementById('naPlanId')?.value,
     sector:       document.getElementById('naSettore')?.value.trim() || undefined,
     owner_nombre: document.getElementById('naOwnerNombre')?.value.trim(),
     owner_email:  document.getElementById('naOwnerEmail')?.value.trim(),
   };
-  if (!body.name || !body.slug || !body.plan_id || !body.owner_nombre || !body.owner_email) {
+  if (!body.name || !body.slug || !body.owner_nombre || !body.owner_email) {
     showMsg('nfcAziendaMsg', 'Compila tutti i campi obbligatori (*)', 'err'); return;
   }
   try {
@@ -158,10 +151,11 @@ async function adminTabNfcAziendaDettaglio(id) {
     ]);
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    const { azienda, creditiSaldo, movimenti, pagamenti } = data;
+    const { azienda, pagamenti } = data;
     const sub = azienda.Subscription || {};
     const stato = sub.status || 'inactive';
     const puoAttivareProva = !sub.paid_until;
+    const mesiProposti = pagamenti.length ? 1 : NFC_MESI_MINIMI;
 
     const datiPagina = await rPagina.json();
     const pagina = datiPagina.pagina || {};
@@ -170,18 +164,6 @@ async function adminTabNfcAziendaDettaglio(id) {
     const nfcPgOpFoto = pagina.design?.backgroundOpacity ?? 70;
     const nfcPgOpBtn = pagina.design?.buttonOpacity ?? 5;
 
-    if (!nfcPianiCache.length) {
-      nfcPianiCache = await (await fetch(`${API_NFC}/piani`, { headers: { Authorization: `Bearer ${token}` } })).json();
-    }
-    const opzioniPiano = nfcPianiCache.map(p =>
-      `<option value="${p.id}" ${sub.plan_id === p.id ? 'selected' : ''}>${p.name} — €${centesimiAEuro(p.monthly_price_cents)}/mese</option>`).join('');
-
-    const righeMovimenti = movimenti.map(m => `
-      <tr>
-        <td>${new Date(m.createdAt).toLocaleString('it-IT')}</td>
-        <td>${m.reason}</td>
-        <td style="font-weight:700;color:${m.delta >= 0 ? 'var(--green)' : 'var(--red)'}">${m.delta >= 0 ? '+' : ''}${m.delta}</td>
-      </tr>`).join('') || '<tr><td colspan="3" style="color:var(--muted)">Nessun movimento</td></tr>';
 
     const righePagamenti = pagamenti.map(p => `
       <tr>
@@ -204,7 +186,6 @@ async function adminTabNfcAziendaDettaglio(id) {
             <div class="field"><label>Settore</label><input id="daSettore" type="text" value="${azienda.sector || ''}"/></div>
           </div>
           <div class="form-row">
-            <div class="field"><label>Piano</label><select id="daPlanId">${opzioniPiano}</select></div>
             <div class="field"><label>P.IVA</label><input id="daPiva" type="text" value="${azienda.piva || ''}"/></div>
           </div>
           <div class="form-row">
@@ -227,18 +208,11 @@ async function adminTabNfcAziendaDettaglio(id) {
         </div>
 
         <div style="background:var(--surface);border:1px solid var(--border);padding:20px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">CREDITI — saldo attuale: <strong style="color:var(--dark)">${creditiSaldo}</strong></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:6px">REGISTRA PAGAMENTO IN CONTANTI</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:14px">€${centesimiAEuro(NFC_PREZZO_MENSILE_CENTS)}/mese · ${pagamenti.length ? 'rinnovo' : `primo pagamento: minimo ${NFC_MESI_MINIMI} mesi`}</div>
           <div class="form-row">
-            <div class="field"><label>Delta (+/-)</label><input id="dcDelta" type="number" step="0.5" placeholder="es. 20 o -1.5"/></div>
-            <div class="field"><label>Motivo *</label><input id="dcMotivo" type="text" placeholder="obbligatorio"/></div>
-          </div>
-          <button class="btn-submit" onclick="nfcAggiustaCrediti(${azienda.id})">AGGIUSTA CREDITI</button>
-          <div id="nfcCreditiMsg"></div>
-
-          <div style="border-top:1px solid var(--border);margin:18px 0 14px;padding-top:14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted)">REGISTRA PAGAMENTO IN CONTANTI</div>
-          <div class="form-row">
-            <div class="field"><label>Importo (€) *</label><input id="dpImporto" type="number" step="0.01" placeholder="49.00"/></div>
-            <div class="field"><label>Mesi coperti *</label><input id="dpMesi" type="number" value="1" min="1"/></div>
+            <div class="field"><label>Importo (€) *</label><input id="dpImporto" type="number" step="0.01" value="${centesimiAEuro(NFC_PREZZO_MENSILE_CENTS * mesiProposti)}"/></div>
+            <div class="field"><label>Mesi coperti *</label><input id="dpMesi" type="number" value="${mesiProposti}" min="${pagamenti.length ? 1 : NFC_MESI_MINIMI}" oninput="document.getElementById('dpImporto').value=(Math.max(0,parseInt(this.value,10)||0)*NFC_PREZZO_MENSILE_CENTS/100).toFixed(2)"/></div>
             <div class="field"><label>Data ricevuto</label><input id="dpData" type="date"/></div>
           </div>
           <div class="field"><label>Nota</label><input id="dpNota" type="text" placeholder="opzionale"/></div>
@@ -381,7 +355,7 @@ async function adminTabNfcAziendaDettaglio(id) {
           <summary>🔗 LINK / RETI SOCIALI</summary>
           <div class="pg-sezione-body">
             <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px">
-              L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.
+              L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta. Trascina ⠿ per cambiare l'ordine.
             </div>
             <div id="nfcPgLinksLista"></div>
             <button class="action-btn" onclick="nfcPgAggiungiLink()">+ AGGIUNGI LINK</button>
@@ -391,15 +365,9 @@ async function adminTabNfcAziendaDettaglio(id) {
         </details>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
-        <div>
-          <div class="admin-form-title" style="font-size:14px">MOVIMENTI CREDITI</div>
-          <table><thead><tr><th>Data</th><th>Motivo</th><th>Delta</th></tr></thead><tbody>${righeMovimenti}</tbody></table>
-        </div>
-        <div>
-          <div class="admin-form-title" style="font-size:14px">PAGAMENTI</div>
-          <table><thead><tr><th>Data</th><th>Importo</th><th>Mesi</th><th>Nota</th></tr></thead><tbody>${righePagamenti}</tbody></table>
-        </div>
+      <div style="margin-top:20px">
+        <div class="admin-form-title" style="font-size:14px">PAGAMENTI</div>
+        <table><thead><tr><th>Data</th><th>Importo</th><th>Mesi</th><th>Nota</th></tr></thead><tbody>${righePagamenti}</tbody></table>
       </div>`;
 
     nfcPgRenderLinks();
@@ -410,7 +378,8 @@ function nfcPgRenderLinks() {
   const wrap = document.getElementById('nfcPgLinksLista');
   if (!wrap) return;
   wrap.innerHTML = nfcPgLinksCorrenti.map((l, i) => `
-    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);padding:8px;margin-bottom:6px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--surface);padding:8px;margin-bottom:6px;flex-wrap:wrap">
+      <span class="nfc-pg-handle" title="Trascina per riordinare" style="cursor:grab;touch-action:none;user-select:none;color:var(--muted);display:flex;padding:6px 2px"><iconify-icon icon="mdi:drag" width="18"></iconify-icon></span>
       <select onchange="nfcPgLinksCorrenti[${i}].type=this.value" style="font-family:'DM Mono',monospace;font-size:10px">
         ${TIPI_LINK_NFC_ADMIN.map(([v, lbl]) => `<option value="${v}" ${l.type === v ? 'selected' : ''}>${lbl}</option>`).join('')}
       </select>
@@ -421,6 +390,18 @@ function nfcPgRenderLinks() {
       </label>
       <button class="action-btn danger" onclick="nfcPgRimuoviLink(${i})">✕</button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:12px">Nessun link ancora.</p>';
+
+  // Riordino trascinando la maniglia (anche col dito): si salva con SALVA LINK.
+  if (window.nfcPgSortable) window.nfcPgSortable.destroy();
+  window.nfcPgSortable = window.Sortable && nfcPgLinksCorrenti.length > 1 ? Sortable.create(wrap, {
+    handle: '.nfc-pg-handle', animation: 180, delay: 120, delayOnTouchOnly: true, touchStartThreshold: 4,
+    onEnd: (e) => {
+      if (e.oldIndex === e.newIndex) return;
+      const [spostato] = nfcPgLinksCorrenti.splice(e.oldIndex, 1);
+      nfcPgLinksCorrenti.splice(e.newIndex, 0, spostato);
+      nfcPgRenderLinks();
+    },
+  }) : null;
 }
 
 function nfcPgAggiungiLink() {
@@ -555,7 +536,6 @@ async function nfcSalvaAzienda(id) {
   const body = {
     name:           document.getElementById('daName')?.value.trim(),
     sector:         document.getElementById('daSettore')?.value.trim(),
-    plan_id:        document.getElementById('daPlanId')?.value,
     piva:           document.getElementById('daPiva')?.value.trim(),
     codice_fiscale: document.getElementById('daCf')?.value.trim(),
     codice_sdi:     document.getElementById('daSdi')?.value.trim(),
@@ -616,26 +596,11 @@ async function nfcMostraLinkTag(id) {
   } catch(e) { box.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
-async function nfcAggiustaCrediti(id) {
-  const delta  = parseFloat(document.getElementById('dcDelta')?.value);
-  const motivo = document.getElementById('dcMotivo')?.value.trim();
-  if (!delta) { showMsg('nfcCreditiMsg', 'Inserisci un delta diverso da zero', 'err'); return; }
-  if (!motivo) { showMsg('nfcCreditiMsg', 'Il motivo e\' obbligatorio', 'err'); return; }
-  try {
-    const r = await fetch(`${API_NFC}/aziende/${id}/crediti/aggiusta`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ delta, motivo }),
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error);
-    adminTabNfcAziendaDettaglio(id);
-  } catch(e) { showMsg('nfcCreditiMsg', e.message, 'err'); }
-}
-
 async function nfcRegistraPagamento(id) {
   const amount_cents   = euroACentesimi(document.getElementById('dpImporto')?.value);
   const months_covered = parseInt(document.getElementById('dpMesi')?.value, 10) || 1;
+  const minimo = parseInt(document.getElementById('dpMesi')?.min, 10) || 1;
+  if (months_covered < minimo) { showMsg('nfcPagamentoMsg', `Il primo pagamento deve coprire almeno ${minimo} mesi`, 'err'); return; }
   const received_at    = document.getElementById('dpData')?.value || undefined;
   const note            = document.getElementById('dpNota')?.value.trim() || undefined;
   if (!amount_cents) { showMsg('nfcPagamentoMsg', 'Inserisci un importo valido', 'err'); return; }
@@ -658,105 +623,6 @@ async function nfcAttivaProva(id) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     adminTabNfcAziendaDettaglio(id);
-  } catch(e) { alert('Errore: ' + e.message); }
-}
-
-// ══════════════════════════════ PIANI ══════════════════════════════
-
-let nfcPianoInModifica = null;
-
-async function adminTabNfcPiani(content) {
-  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
-  try {
-    const r = await fetch(`${API_NFC}/piani`, { headers: { Authorization: `Bearer ${token}` } });
-    const piani = await r.json();
-    if (!Array.isArray(piani)) throw new Error(piani?.error || 'Errore caricamento piani');
-    nfcPianiCache = piani;
-
-    const righe = piani.map(p => `
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>€${centesimiAEuro(p.monthly_price_cents)}/mese</td>
-        <td>${p.monthly_credits}</td>
-        <td><span class="pill" style="background:${p.active ? 'var(--green)' : 'var(--muted)'};color:#fff">${p.active ? 'ATTIVO' : 'OFF'}</span></td>
-        <td>
-          <button class="action-btn" onclick="nfcModificaPiano(${p.id})">MODIFICA</button>
-          <button class="action-btn" onclick="nfcTogglePiano(${p.id}, ${!p.active})">${p.active ? 'DISATTIVA' : 'ATTIVA'}</button>
-        </td>
-      </tr>`).join('');
-
-    content.innerHTML = `
-      <div class="admin-form-title">PIANI NFC</div>
-
-      <div style="background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:24px">
-        <div id="ppFormTitolo" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">NUOVO PIANO</div>
-        <div class="form-row">
-          <div class="field"><label>Nome *</label><input id="ppName" type="text" placeholder="Base, Pro, Premium..."/></div>
-          <div class="field"><label>Prezzo mensile (€) *</label><input id="ppPrezzo" type="number" step="0.01" placeholder="49.00"/></div>
-          <div class="field"><label>Crediti mensili *</label><input id="ppCrediti" type="number" placeholder="100"/></div>
-          <div class="field"><label>Posizione</label><input id="ppPosizione" type="number" value="0"/></div>
-        </div>
-        <button class="btn-submit" id="ppSalvaBtn" onclick="nfcSalvaPiano()">+ CREA PIANO</button>
-        <button class="action-btn" id="ppAnnullaBtn" onclick="nfcAnnullaModificaPiano()" style="display:none;margin-left:8px">ANNULLA</button>
-        <div id="nfcPianoMsg"></div>
-      </div>
-
-      ${!piani.length
-        ? '<div class="empty-state"><div class="ei">📋</div><h3>NESSUN PIANO</h3></div>'
-        : `<table><thead><tr><th>Nome</th><th>Prezzo</th><th>Crediti/mese</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>${righe}</tbody></table>`}`;
-  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
-}
-
-function nfcModificaPiano(id) {
-  const p = nfcPianiCache.find(x => x.id === id);
-  if (!p) return;
-  nfcPianoInModifica = id;
-  document.getElementById('ppName').value = p.name;
-  document.getElementById('ppPrezzo').value = centesimiAEuro(p.monthly_price_cents);
-  document.getElementById('ppCrediti').value = p.monthly_credits;
-  document.getElementById('ppPosizione').value = p.position || 0;
-  document.getElementById('ppFormTitolo').textContent = `MODIFICA PIANO: ${p.name}`;
-  document.getElementById('ppSalvaBtn').textContent = 'SALVA MODIFICHE';
-  document.getElementById('ppAnnullaBtn').style.display = '';
-}
-
-function nfcAnnullaModificaPiano() {
-  nfcPianoInModifica = null;
-  adminTabNfcPiani(document.getElementById('adminContent'));
-}
-
-async function nfcSalvaPiano() {
-  const body = {
-    name:                document.getElementById('ppName')?.value.trim(),
-    monthly_price_cents: euroACentesimi(document.getElementById('ppPrezzo')?.value),
-    monthly_credits:     parseInt(document.getElementById('ppCrediti')?.value, 10) || 0,
-    position:            parseInt(document.getElementById('ppPosizione')?.value, 10) || 0,
-  };
-  if (!body.name) { showMsg('nfcPianoMsg', 'Il nome e\' obbligatorio', 'err'); return; }
-  try {
-    const url    = nfcPianoInModifica ? `${API_NFC}/piani/${nfcPianoInModifica}` : `${API_NFC}/piani`;
-    const method = nfcPianoInModifica ? 'PUT' : 'POST';
-    const r = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body),
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || (data.dettagli && data.dettagli.map(d => d.messaggio).join(', ')));
-    nfcPianoInModifica = null;
-    adminTabNfcPiani(document.getElementById('adminContent'));
-  } catch(e) { showMsg('nfcPianoMsg', e.message, 'err'); }
-}
-
-async function nfcTogglePiano(id, active) {
-  try {
-    const r = await fetch(`${API_NFC}/piani/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ active }),
-    });
-    if (!r.ok) throw new Error((await r.json()).error);
-    adminTabNfcPiani(document.getElementById('adminContent'));
   } catch(e) { alert('Errore: ' + e.message); }
 }
 
@@ -900,8 +766,8 @@ async function adminTabNfcProdotti(content) {
     const righe = prodotti.map(p => `
       <tr>
         <td>${p.image ? `<img src="${p.image}" style="width:36px;height:36px;object-fit:cover;vertical-align:middle;margin-right:8px"/>` : ''}<strong>${p.name}</strong></td>
-        <td>${p.credit_cost}</td>
-        <td>€${centesimiAEuro(p.extra_price_cents)}</td>
+        <td>€${centesimiAEuro(p.price_cents)}</td>
+        <td>${p.min_quantity || 1}</td>
         <td>${p.production_days ?? '—'} gg</td>
         <td><span class="pill" style="background:${p.active ? 'var(--green)' : 'var(--muted)'};color:#fff">${p.active ? 'ATTIVO' : 'OFF'}</span></td>
         <td>
@@ -917,8 +783,8 @@ async function adminTabNfcProdotti(content) {
         <div id="mpFormTitolo" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">NUOVO PRODOTTO</div>
         <div class="form-row">
           <div class="field"><label>Nome *</label><input id="mpName" type="text" placeholder="Portachiavi 3D"/></div>
-          <div class="field"><label>Crediti richiesti *</label><input id="mpCrediti" type="number" min="0" step="0.5" placeholder="es. 1.5"/></div>
-          <div class="field"><label>Prezzo eccedenza (€)</label><input id="mpPrezzoExtra" type="number" step="0.01" placeholder="5.00"/></div>
+          <div class="field"><label>Prezzo listino (€) *</label><input id="mpPrezzo" type="number" min="0" step="0.01" placeholder="2.50"/></div>
+          <div class="field"><label>Quantità minima</label><input id="mpMinimo" type="number" min="1" value="1"/></div>
           <div class="field"><label>Giorni produzione</label><input id="mpGiorni" type="number" min="0" placeholder="7"/></div>
         </div>
         <div class="field"><label>Descrizione</label><textarea id="mpDescrizione" placeholder="Descrizione breve del prodotto"></textarea></div>
@@ -930,7 +796,7 @@ async function adminTabNfcProdotti(content) {
 
       ${!prodotti.length
         ? '<div class="empty-state"><div class="ei">🎁</div><h3>NESSUN PRODOTTO</h3></div>'
-        : `<table><thead><tr><th>Prodotto</th><th>Crediti</th><th>Extra</th><th>Produzione</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>${righe}</tbody></table>`}`;
+        : `<table><thead><tr><th>Prodotto</th><th>Prezzo</th><th>Minimo</th><th>Produzione</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>${righe}</tbody></table>`}`;
 
     window.nfcProdottiCache = prodotti;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
@@ -941,8 +807,8 @@ function nfcModificaProdotto(id) {
   if (!p) return;
   nfcProdottoInModifica = id;
   document.getElementById('mpName').value = p.name;
-  document.getElementById('mpCrediti').value = p.credit_cost;
-  document.getElementById('mpPrezzoExtra').value = centesimiAEuro(p.extra_price_cents);
+  document.getElementById('mpPrezzo').value = centesimiAEuro(p.price_cents);
+  document.getElementById('mpMinimo').value = p.min_quantity || 1;
   document.getElementById('mpGiorni').value = p.production_days || '';
   document.getElementById('mpDescrizione').value = p.description || '';
   document.getElementById('mpFormTitolo').textContent = `MODIFICA: ${p.name}`;
@@ -957,13 +823,13 @@ function nfcAnnullaModificaProdotto() {
 
 async function nfcSalvaProdotto() {
   const name = document.getElementById('mpName')?.value.trim();
-  const credit_cost = document.getElementById('mpCrediti')?.value;
-  if (!name || credit_cost === '') { showMsg('nfcProdottoMsg', 'Nome e crediti sono obbligatori', 'err'); return; }
+  const prezzo = document.getElementById('mpPrezzo')?.value;
+  if (!name || prezzo === '') { showMsg('nfcProdottoMsg', 'Nome e prezzo sono obbligatori', 'err'); return; }
 
   const fd = new FormData();
   fd.append('name', name);
-  fd.append('credit_cost', credit_cost);
-  fd.append('extra_price_cents', euroACentesimi(document.getElementById('mpPrezzoExtra')?.value));
+  fd.append('price_cents', euroACentesimi(prezzo));
+  fd.append('min_quantity', parseInt(document.getElementById('mpMinimo')?.value, 10) || 1);
   fd.append('production_days', document.getElementById('mpGiorni')?.value || '');
   fd.append('description', document.getElementById('mpDescrizione')?.value || '');
   const file = document.getElementById('mpImmagine')?.files[0];
@@ -1004,8 +870,7 @@ async function adminTabNfcOrdiniMerch(content) {
         <td>#${o.id}</td>
         <td>${o.Company?.name || '—'}</td>
         <td>${(o.items || []).map(it => `${it.MerchProduct?.name || '?'} ×${it.quantity}`).join('<br/>')}</td>
-        <td>${o.credits_used}</td>
-        <td>${o.extra_amount_cents > 0 ? `€${centesimiAEuro(o.extra_amount_cents)}` : '—'}</td>
+        <td style="font-weight:700">€${centesimiAEuro(o.total_cents)}</td>
         <td>${o.delivery_method === 'shipping' ? 'Spedizione' : 'A mano'}</td>
         <td>
           <select onchange="nfcCambiaStatoOrdineMerch(${o.id}, this.value)">
@@ -1018,7 +883,7 @@ async function adminTabNfcOrdiniMerch(content) {
       <div class="admin-form-title">ORDINI MERCHANDISING</div>
       ${!ordini.length
         ? '<div class="empty-state"><div class="ei">📦</div><h3>NESSUN ORDINE</h3></div>'
-        : `<table><thead><tr><th>#</th><th>Azienda</th><th>Articoli</th><th>Crediti</th><th>Eccedenza</th><th>Consegna</th><th>Stato</th></tr></thead><tbody>${righe}</tbody></table>`}`;
+        : `<table><thead><tr><th>#</th><th>Azienda</th><th>Articoli</th><th>Totale</th><th>Consegna</th><th>Stato</th></tr></thead><tbody>${righe}</tbody></table>`}`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 

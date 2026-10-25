@@ -1,4 +1,4 @@
-const { Plan } = require("../../../models");
+const { MerchProduct } = require("../../../models");
 const { renderLandingNfc } = require("../views/renderLandingNfc");
 const pageCache = require("../utils/pageCache");
 
@@ -11,8 +11,8 @@ async function mostraLanding(req, res) {
     return res.send(cache);
   }
 
-  const piani = await Plan.findAll({ where: { active: true }, order: [["position", "ASC"], ["id", "ASC"]] });
-  const html = renderLandingNfc(piani);
+  const prodotti = await MerchProduct.findAll({ where: { active: true }, order: [["position", "ASC"], ["id", "ASC"]] });
+  const html = renderLandingNfc(prodotti);
   pageCache.set(CACHE_KEY, html);
 
   res.set("Content-Type", "text/html; charset=utf-8");

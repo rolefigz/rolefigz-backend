@@ -123,15 +123,15 @@ function renderPaginaDemo(p) {
 // «Crea azienda» del Kit campione: azienda attiva con la pagina pubblicata (logo, mappa, link e recensione),
 // abbonamento in prova fino alla scadenza della pagina di prova. `ownerUserId`: chi ha scelto l'admin.
 async function aziendaDaDemo(p, ownerUserId, actorUserId, transaction) {
-  const { CompanyPage, PageLink, Subscription, Plan } = require("../models");
+  const { CompanyPage, PageLink, Subscription } = require("../models");
+  const { pianoUnico } = require("../modules/nfc/utils/abbonamento");
   const { registraAzione } = require("../modules/nfc/services/auditLogService");
   const ErroreAzienda = require("../modules/nfc/utils/erroreAzienda");
   const t = { transaction };
   if (await Company.findOne({ where: { slug: p.slug }, paranoid: false, ...t })) {
     throw new ErroreAzienda(`Esiste già un'azienda con lo slug «${p.slug}»`, 400);
   }
-  const piano = await Plan.findOne({ where: { active: true }, order: [["monthly_price_cents", "ASC"], ["id", "ASC"]], ...t });
-  if (!piano) throw new ErroreAzienda("Nessun piano attivo: creane uno in NFC → Piani", 400);
+  const piano = await pianoUnico(transaction);
   const fondo = coloreSfondo(p.logo_url);
   const azienda = await Company.create({ owner_user_id: ownerUserId, name: p.nome, slug: p.slug,
                                          sector: p.categoria || null }, t);

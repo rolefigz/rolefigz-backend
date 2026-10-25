@@ -59,13 +59,12 @@ async function tabNfcHome(content) {
       ${d.paginaPubblicata ? `<p style="margin-bottom:20px"><a href="${d.url}" target="_blank">${d.url}</a></p>` : ''}
 
       <div class="stats-row">
-        <div class="stat"><div class="num">${d.creditiSaldo}</div><div class="lbl">CREDITI DISPONIBILI</div></div>
         <div class="stat"><div class="num">${d.ordiniInCorso}</div><div class="lbl">ORDINI IN CORSO</div></div>
         <div class="stat"><div class="num">${d.statisticheMese.visite}</div><div class="lbl">VISITE QUESTO MESE</div></div>
         <div class="stat"><div class="num">${d.statisticheMese.scansioni}</div><div class="lbl">SCANSIONI QUESTO MESE</div></div>
         <div class="stat"><div class="num">${d.statisticheMese.click}</div><div class="lbl">CLICK QUESTO MESE</div></div>
       </div>
-      <p style="font-size:11px;color:var(--muted)">Merchandising, ordini e statistiche dettagliate arriveranno presto in questo pannello.</p>`;
+      <p style="font-size:11px;color:var(--muted)">Abbonamento: 5 € al mese, minimo 12 mesi. Il merchandising si ordina dalla sezione Merchandising e si paga alla consegna.</p>`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
@@ -98,7 +97,7 @@ async function tabNfcAzienda(content) {
       </div>
       <button class="btn-submit" onclick="nfcSalvaAziendaCliente()">Salva modifiche</button>
       <div id="gaMsg"></div>
-      <p class="note">Il piano, i crediti e i pagamenti sono gestiti da RoleFigz — per modificarli contattaci direttamente.</p>`;
+      <p class="note">L'abbonamento e i pagamenti sono gestiti da RoleFigz — per modificarli contattaci direttamente.</p>`;
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
@@ -265,7 +264,8 @@ async function tabNfcPagina(content) {
         <div class="pg-sezione-body">
           <div class="note" style="margin-bottom:12px">
             Se cambi WhatsApp o Instagram non serve riprogrammare gli NFC, basta salvare qui.<br/>
-            L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.
+            L'icona si aggiunge da sola in base al Tipo — non serve scriverla anche nell'Etichetta.<br/>
+            Per cambiare l'ordine dei pulsanti trascina la maniglia <iconify-icon icon="mdi:drag" width="13" style="vertical-align:-2px"></iconify-icon> col dito o col mouse: il nuovo ordine si salva da solo.
           </div>
           <div id="nfcLinksLista"></div>
           <button class="action-btn" onclick="nfcAggiungiLink()">+ Aggiungi link</button>
@@ -282,7 +282,8 @@ function nfcRenderLinks() {
   const wrap = document.getElementById('nfcLinksLista');
   if (!wrap) return;
   wrap.innerHTML = nfcLinksCorrenti.map((l, i) => `
-    <div class="link-row">
+    <div class="link-row" data-indice="${i}">
+      <span class="link-handle" title="Trascina per riordinare" aria-label="Trascina per riordinare"><iconify-icon icon="mdi:drag" width="20"></iconify-icon></span>
       <select onchange="nfcLinksCorrenti[${i}].type=this.value">
         ${TIPI_LINK_NFC.map(([v, lbl]) => `<option value="${v}" ${l.type === v ? 'selected' : ''}>${lbl}</option>`).join('')}
       </select>
@@ -293,6 +294,26 @@ function nfcRenderLinks() {
       </label>
       <button class="action-btn danger" onclick="nfcRimuoviLink(${i})"><iconify-icon icon="mdi:close" width="14"></iconify-icon></button>
     </div>`).join('') || '<p style="color:var(--muted);font-size:12px">Nessun link ancora.</p>';
+  nfcAttivaRiordino(wrap);
+}
+
+// Riordino dei pulsanti trascinando la maniglia (touch e mouse, con SortableJS):
+// al rilascio si riallinea l'array, si ridisegna e si salva subito l'ordine.
+let nfcSortable = null;
+function nfcAttivaRiordino(wrap) {
+  if (nfcSortable) { nfcSortable.destroy(); nfcSortable = null; }
+  if (!window.Sortable || nfcLinksCorrenti.length < 2) return;
+  nfcSortable = Sortable.create(wrap, {
+    handle: '.link-handle', animation: 180, ghostClass: 'link-row--ghost', chosenClass: 'link-row--scelto',
+    delay: 120, delayOnTouchOnly: true, touchStartThreshold: 4,
+    onEnd: (e) => {
+      if (e.oldIndex === e.newIndex) return;
+      const [spostato] = nfcLinksCorrenti.splice(e.oldIndex, 1);
+      nfcLinksCorrenti.splice(e.newIndex, 0, spostato);
+      nfcRenderLinks();
+      nfcSalvaLinks('✅ Nuovo ordine salvato');
+    },
+  });
 }
 
 function nfcAggiungiLink() {
@@ -346,7 +367,7 @@ async function nfcSalvaContenuto() {
   } catch(e) { showMsg('nfcContenutoMsg', e.message, 'err'); }
 }
 
-async function nfcSalvaLinks() {
+async function nfcSalvaLinks(messaggioOk = '✅ Link salvati') {
   try {
     const r = await fetch(`${API_NFC_CLIENT}/pagina/link`, {
       method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }),
@@ -356,7 +377,7 @@ async function nfcSalvaLinks() {
     if (!r.ok) throw new Error(d.error);
     nfcLinksCorrenti = d;
     nfcRenderLinks();
-    showMsg('nfcLinksMsg', '✅ Link salvati', 'ok');
+    showMsg('nfcLinksMsg', messaggioOk, 'ok');
   } catch(e) { showMsg('nfcLinksMsg', e.message, 'err'); }
 }
 
@@ -429,10 +450,9 @@ async function nfcNascondiPagina() {
 // ══════════════════════════════ MERCHANDISING ══════════════════════════════
 
 let nfcCatalogoCache = [];
-let nfcCreditiSaldoCache = 0;
 let nfcCarrello = {};
 
-function euroDaCents(c) { return (parseInt(c || 0, 10) / 100).toFixed(2); }
+function euroDaCents(c) { return (parseInt(c || 0, 10) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
 async function tabNfcMerch(content) {
   content.innerHTML = '<div class="loading">Caricamento…</div>';
@@ -441,18 +461,17 @@ async function tabNfcMerch(content) {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error);
     nfcCatalogoCache = d.prodotti;
-    nfcCreditiSaldoCache = d.creditiSaldo;
     nfcCarrello = {};
 
     content.innerHTML = `
-      <p style="margin-bottom:16px">Crediti disponibili: <strong>${nfcCreditiSaldoCache}</strong></p>
+      <p style="margin-bottom:16px">Prezzi del listino, finali. Scegli i prodotti e invia l'ordine: lo prepariamo e lo paghi alla consegna.</p>
       <div class="prod-grid">
         ${nfcCatalogoCache.map(p => `
           <div class="card prod-card">
             ${p.image ? `<img src="${p.image}"/>` : ''}
             <div style="font-weight:700">${p.name}</div>
             <div style="font-size:11px;color:var(--muted);margin:4px 0">${p.description || ''}</div>
-            <div style="font-size:12px;margin-bottom:8px">${p.credit_cost} crediti ${p.extra_price_cents ? `· extra €${euroDaCents(p.extra_price_cents)}/pz` : ''} ${p.production_days ? `· ${p.production_days} gg` : ''}</div>
+            <div style="font-size:13px;margin-bottom:8px"><strong>€${euroDaCents(p.price_cents)}</strong>${p.min_quantity > 1 ? ` · minimo ${p.min_quantity}` : ''}${p.production_days ? ` · ${p.production_days} gg` : ''}</div>
             <button class="action-btn" onclick="nfcCarrelloAggiungi(${p.id})">+ Aggiungi</button>
           </div>`).join('')}
       </div>
@@ -483,36 +502,30 @@ async function tabNfcMerch(content) {
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
+function nfcMinimoProdotto(productId) {
+  return nfcCatalogoCache.find(x => x.id === productId)?.min_quantity || 1;
+}
+
+// La prima aggiunta mette gia' la quantita' minima del prodotto (es. 25 portachiavi).
 function nfcCarrelloAggiungi(productId) {
-  nfcCarrello[productId] = (nfcCarrello[productId] || 0) + 1;
+  nfcCarrello[productId] = nfcCarrello[productId] ? nfcCarrello[productId] + 1 : nfcMinimoProdotto(productId);
   nfcRenderCarrello();
 }
 
 function nfcCarrelloAggiorna(productId, quantity) {
   const q = parseInt(quantity, 10);
   if (!q || q < 1) delete nfcCarrello[productId];
-  else nfcCarrello[productId] = q;
+  else nfcCarrello[productId] = Math.max(q, nfcMinimoProdotto(productId));
   nfcRenderCarrello();
 }
 
-// Stessa logica di allocazione greedy del backend, solo per l'anteprima —
-// il totale reale viene sempre ricalcolato server-side prima di scalare i crediti.
-function nfcCalcolaAllocazione() {
-  let residuo = nfcCreditiSaldoCache;
-  let creditiTotali = 0, extraTotaleCents = 0;
+// Solo anteprima: il totale vero lo ricalcola il server con i prezzi del listino.
+function nfcCalcolaTotale() {
   const righe = Object.entries(nfcCarrello).map(([id, qty]) => {
     const p = nfcCatalogoCache.find(x => x.id === parseInt(id, 10));
-    if (!p) return null;
-    const unitaCoperte = Math.max(0, Math.min(qty, Math.floor(residuo / (p.credit_cost || 1)) || 0));
-    const creditiUsati = unitaCoperte * p.credit_cost;
-    residuo -= creditiUsati;
-    creditiTotali += creditiUsati;
-    const unitaExtra = qty - unitaCoperte;
-    const extraCents = unitaExtra * (p.extra_price_cents || 0);
-    extraTotaleCents += extraCents;
-    return { prodotto: p, qty, extraCents };
+    return p ? { prodotto: p, qty, totaleCents: qty * (p.price_cents || 0) } : null;
   }).filter(Boolean);
-  return { righe, creditiTotali, extraTotaleCents };
+  return { righe, totaleCents: righe.reduce((s, r) => s + r.totaleCents, 0) };
 }
 
 function nfcRenderCarrello() {
@@ -526,35 +539,16 @@ function nfcRenderCarrello() {
     return;
   }
 
-  const { righe, creditiTotali, extraTotaleCents } = nfcCalcolaAllocazione();
+  const { righe, totaleCents } = nfcCalcolaTotale();
   lista.innerHTML = righe.map(r => `
     <div class="cart-row">
-      <span>${r.prodotto.name}</span>
-      <input type="number" min="1" value="${r.qty}" onchange="nfcCarrelloAggiorna(${r.prodotto.id}, this.value)"/>
-      <span style="color:var(--red);font-size:.78rem">${r.extraCents > 0 ? `+€${euroDaCents(r.extraCents)}` : ''}</span>
+      <span style="flex:1">${r.prodotto.name}<span style="display:block;font-size:.72rem;color:var(--muted)">€${euroDaCents(r.prodotto.price_cents)} cad.</span></span>
+      <input type="number" min="${r.prodotto.min_quantity || 1}" value="${r.qty}" onchange="nfcCarrelloAggiorna(${r.prodotto.id}, this.value)"/>
+      <span style="font-size:.85rem;font-weight:600;min-width:70px;text-align:right">€${euroDaCents(r.totaleCents)}</span>
       <button class="action-btn danger" onclick="nfcCarrelloAggiorna(${r.prodotto.id}, 0)"><iconify-icon icon="mdi:close" width="14"></iconify-icon></button>
     </div>`).join('');
 
-  totali.innerHTML = `Crediti usati: <strong>${creditiTotali}</strong> / ${nfcCreditiSaldoCache} disponibili
-    ${extraTotaleCents > 0 ? `<br/><span style="color:var(--red)">Hai superato i crediti disponibili — eccedenza da pagare in contanti: <strong>€${euroDaCents(extraTotaleCents)}</strong></span>` : ''}`;
-}
-
-async function nfcInviaOrdineConferma(confermaEccedenza) {
-  const delivery_method = document.getElementById('ordConsegna')?.value;
-  const indirizzo = document.getElementById('ordIndirizzo')?.value.trim();
-
-  const body = {
-    items: Object.entries(nfcCarrello).map(([product_id, quantity]) => ({ product_id: parseInt(product_id, 10), quantity })),
-    delivery_method,
-    shipping_address: delivery_method === 'shipping' ? { indirizzo } : undefined,
-    notes: document.getElementById('ordNote')?.value.trim() || undefined,
-    conferma_eccedenza: !!confermaEccedenza,
-  };
-
-  const r = await fetch(`${API_NFC_CLIENT}/ordini`, {
-    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
-  });
-  return { r, d: await r.json() };
+  totali.innerHTML = `Totale da pagare alla consegna: <strong style="font-size:1.05rem">€${euroDaCents(totaleCents)}</strong>`;
 }
 
 async function nfcInviaOrdine() {
@@ -565,22 +559,24 @@ async function nfcInviaOrdine() {
     showMsg('nfcOrdineMsg', 'Inserisci l\'indirizzo di spedizione', 'err'); return;
   }
 
+  const { totaleCents } = nfcCalcolaTotale();
+  if (!confirm(`Confermi l'ordine? Totale da pagare alla consegna: €${euroDaCents(totaleCents)}`)) return;
+
+  const body = {
+    items: Object.entries(nfcCarrello).map(([product_id, quantity]) => ({ product_id: parseInt(product_id, 10), quantity })),
+    delivery_method,
+    shipping_address: delivery_method === 'shipping' ? { indirizzo } : undefined,
+    notes: document.getElementById('ordNote')?.value.trim() || undefined,
+  };
+
   try {
-    let { r, d } = await nfcInviaOrdineConferma(false);
-
-    if (r.status === 409 && d.dettagli?.richiedeConferma) {
-      const proseguire = confirm(
-        `Hai superato i crediti disponibili.\n\nCrediti usati: ${d.dettagli.creditiUsati} / ${d.dettagli.saldoCrediti}\n` +
-        `Eccedenza da pagare in contanti alla consegna: €${euroDaCents(d.dettagli.extraAmountCents)}\n\n` +
-        `Vuoi continuare con l'ordine?`
-      );
-      if (!proseguire) return;
-      ({ r, d } = await nfcInviaOrdineConferma(true));
-    }
-
+    const r = await fetch(`${API_NFC_CLIENT}/ordini`, {
+      method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+    });
+    const d = await r.json();
     if (!r.ok) throw new Error(d.error || (Array.isArray(d.dettagli) && d.dettagli.map(x => x.messaggio).join(', ')));
-    alert(`Ordine inviato! Crediti usati: ${d.creditiUsati}`);
-    nfcTab('ordini', null);
+    alert(`Ordine #${d.ordine.id} inviato! Totale: €${euroDaCents(d.totaleCents)}, da pagare alla consegna.`);
+    nfcTab('ordini', document.querySelector('.menu-item[onclick*="ordini"]'));
   } catch(e) { showMsg('nfcOrdineMsg', e.message, 'err'); }
 }
 
@@ -610,8 +606,8 @@ async function tabNfcOrdini(content) {
           <span class="pill">${STATO_ORDINE_LABEL[o.status] || o.status}</span>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${new Date(o.createdAt).toLocaleDateString('it-IT')}</div>
-        ${(o.items || []).map(it => `<div style="font-size:12px">${it.MerchProduct?.name || '?'} × ${it.quantity}</div>`).join('')}
-        <div style="margin-top:8px;font-size:12px">Crediti usati: ${o.credits_used}${o.extra_amount_cents > 0 ? ` · Eccedenza: €${euroDaCents(o.extra_amount_cents)}` : ''}</div>
+        ${(o.items || []).map(it => `<div style="font-size:12px">${it.MerchProduct?.name || '?'} × ${it.quantity}${it.price_each_cents ? ` · €${euroDaCents(it.price_each_cents * it.quantity)}` : ''}</div>`).join('')}
+        <div style="margin-top:8px;font-size:12px">Totale: <strong>€${euroDaCents(o.total_cents)}</strong> · ${o.delivery_method === 'shipping' ? 'Spedizione' : 'Ritiro a mano'}</div>
       </div>`).join('');
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }

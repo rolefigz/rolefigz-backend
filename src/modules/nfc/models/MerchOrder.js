@@ -8,8 +8,8 @@ const STATI_ORDINE = ["in_attesa", "confermato", "in_produzione", "pronto", "spe
 const MerchOrder = sequelize.define("MerchOrder", {
   company_id:               { type: DataTypes.INTEGER, allowNull: false },
   status:                   { type: DataTypes.ENUM(...STATI_ORDINE), defaultValue: "in_attesa" },
-  credits_used:             { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-  extra_amount_cents:       { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  // Totale da pagare in contanti alla consegna (colonna storica extra_amount_cents).
+  total_cents:              { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: "extra_amount_cents" },
   shipping_address_snapshot:{ type: DataTypes.JSON },
   delivery_method:          { type: DataTypes.ENUM("hand", "shipping"), defaultValue: "hand" },
   notes:                    { type: DataTypes.TEXT },

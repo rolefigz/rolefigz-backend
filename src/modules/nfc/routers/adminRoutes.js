@@ -2,7 +2,6 @@ const express = require("express");
 const router  = express.Router();
 const { verifyToken, soloAdmin } = require("../../../middleware/auth");
 const aziende      = require("../controllers/aziendeController");
-const piani        = require("../controllers/planiController");
 const tags         = require("../controllers/tagController");
 const merchProdotti = require("../controllers/merchProductController");
 const merchOrdini   = require("../controllers/merchOrderAdminController");
@@ -10,14 +9,10 @@ const paginaAdmin   = require("../controllers/paginaAdminController");
 const leadAdmin      = require("../controllers/leadAdminController");
 const upload = require("../../../utils/upload");
 const {
-  validaCreaAzienda, validaAggiornaAzienda, validaPagamento, validaAggiustaCrediti, validaPiano,
+  validaCreaAzienda, validaAggiornaAzienda, validaPagamento,
   validaCreaTag, validaAggiornaTag, validaCreaProdottoMerch, validaCambiaStatoOrdineMerch,
   validaPaginaContenuto, validaCambiaStatoLead,
 } = require("../middleware/validazioniNfc");
-
-router.get("/piani",     verifyToken, soloAdmin, piani.listaPiani);
-router.post("/piani",    verifyToken, soloAdmin, validaPiano, piani.creaPiano);
-router.put("/piani/:id", verifyToken, soloAdmin, piani.aggiornaPiano);
 
 router.get("/aziende",             verifyToken, soloAdmin, aziende.listaAziende);
 router.post("/aziende",            verifyToken, soloAdmin, validaCreaAzienda, aziende.creaAzienda);
@@ -29,7 +24,6 @@ router.delete("/aziende/:id",      verifyToken, soloAdmin, aziende.eliminaAziend
 router.post("/aziende/:id/pagamenti",        verifyToken, soloAdmin, validaPagamento, aziende.registraPagamento);
 router.post("/aziende/:id/prova",            verifyToken, soloAdmin, aziende.attivaProvaController);
 router.post("/aziende/:id/attiva-indefinita", verifyToken, soloAdmin, aziende.attivaIndefinitamenteController);
-router.post("/aziende/:id/crediti/aggiusta", verifyToken, soloAdmin, validaAggiustaCrediti, aziende.aggiustaCreditiController);
 router.post("/aziende/:id/reset-password",   verifyToken, soloAdmin, aziende.reimpostaPasswordController);
 router.get("/aziende/:id/tag-link",          verifyToken, soloAdmin, tags.otteniLinkAzienda);
 

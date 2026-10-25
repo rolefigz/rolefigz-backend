@@ -2,17 +2,14 @@ const { Op } = require("sequelize");
 const {
   sequelize, Subscription, Plan, CompanyPage, MerchOrder, AnalyticsEvent,
 } = require("../../../models");
-const { calcolaSaldoCrediti } = require("../services/subscriptionService");
 const paginaService = require("../services/paginaService");
-const { unitaAReale } = require("../utils/crediti");
 
 const home = async (req, res) => {
   try {
     const azienda = req.azienda;
-    const [subscription, pagina, creditiSaldo] = await Promise.all([
+    const [subscription, pagina] = await Promise.all([
       Subscription.findOne({ where: { company_id: azienda.id }, include: [{ model: Plan }] }),
       CompanyPage.findOne({ where: { company_id: azienda.id } }),
-      calcolaSaldoCrediti(azienda.id),
     ]);
 
     const ordiniInCorso = await MerchOrder.count({
@@ -35,7 +32,6 @@ const home = async (req, res) => {
       url: `${baseUrl}/${azienda.slug}`,
       subscription,
       paginaPubblicata: pagina?.is_published || false,
-      creditiSaldo: unitaAReale(creditiSaldo),
       ordiniInCorso,
       statisticheMese: { visite: conteggiMese.page_view, scansioni: conteggiMese.tag_scan, click: conteggiMese.link_click },
     });

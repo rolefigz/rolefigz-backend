@@ -1,34 +1,27 @@
 const {
-  sequelize, Company, Subscription, Plan, CompanyPage, CreditLedger, Payment, MerchOrder,
+  sequelize, Company, Subscription, CompanyPage, Payment, MerchOrder,
 } = require("../../../models");
 const { Utente } = require("../../../models");
 const { risolviProprietario, reimpostaPassword } = require("../services/ownerService");
 const {
-  calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti, attivaIndefinitamente,
+  registraPagamentoContanti, attivaProva, attivaIndefinitamente,
 } = require("../services/subscriptionService");
 const { registraAzione } = require("../services/auditLogService");
 const { SLUG_RISERVATI } = require("../utils/reservedSlugs");
 const ErroreAzienda = require("../utils/erroreAzienda");
 const pageCache = require("../utils/pageCache");
-const { unitaAReale } = require("../utils/crediti");
+const { pianoUnico } = require("../utils/abbonamento");
 
 const listaAziende = async (req, res) => {
   try {
     const aziende = await Company.findAll({
       include: [
         { model: Utente, attributes: ["id", "nombre", "email"] },
-        { model: Subscription, include: [{ model: Plan, attributes: ["id", "name"] }] },
+        { model: Subscription },
         { model: CompanyPage, attributes: ["is_published"] },
       ],
       order: [["createdAt", "DESC"]],
     });
-
-    const saldi = await CreditLedger.findAll({
-      attributes: ["company_id", [sequelize.fn("SUM", sequelize.col("delta")), "saldo"]],
-      group: ["company_id"],
-      raw: true,
-    });
-    const saldoPerAzienda = Object.fromEntries(saldi.map(s => [s.company_id, unitaAReale(parseInt(s.saldo, 10))]));
 
     const ordini = await MerchOrder.findAll({
       attributes: ["company_id", [sequelize.fn("COUNT", sequelize.col("id")), "totale"]],
@@ -39,7 +32,6 @@ const listaAziende = async (req, res) => {
 
     res.json(aziende.map(a => ({
       ...a.toJSON(),
-      creditiSaldo: saldoPerAzienda[a.id] || 0,
       ordiniTotali: ordiniPerAzienda[a.id] || 0,
     })));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -50,24 +42,14 @@ const ottieniAzienda = async (req, res) => {
     const azienda = await Company.findByPk(req.params.id, {
       include: [
         { model: Utente, attributes: ["id", "nombre", "email", "telefono"] },
-        { model: Subscription, include: [{ model: Plan }] },
+        { model: Subscription },
         { model: CompanyPage },
       ],
     });
     if (!azienda) return res.status(404).json({ error: "Azienda non trovata" });
 
-    const [creditiSaldo, movimenti, pagamenti] = await Promise.all([
-      calcolaSaldoCrediti(azienda.id),
-      CreditLedger.findAll({ where: { company_id: azienda.id }, order: [["createdAt", "DESC"]], limit: 50 }),
-      Payment.findAll({ where: { company_id: azienda.id }, order: [["received_at", "DESC"]], limit: 50 }),
-    ]);
-
-    res.json({
-      azienda,
-      creditiSaldo: unitaAReale(creditiSaldo),
-      movimenti: movimenti.map(m => ({ ...m.toJSON(), delta: unitaAReale(m.delta) })),
-      pagamenti,
-    });
+    const pagamenti = await Payment.findAll({ where: { company_id: azienda.id }, order: [["received_at", "DESC"]], limit: 50 });
+    res.json({ azienda, pagamenti });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -75,7 +57,7 @@ const creaAzienda = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const {
-      name, slug, plan_id, sector, piva, codice_fiscale, codice_sdi, pec,
+      name, slug, sector, piva, codice_fiscale, codice_sdi, pec,
       owner_user_id, owner_nombre, owner_email,
     } = req.body;
 
@@ -85,8 +67,7 @@ const creaAzienda = async (req, res) => {
     const esisteSlug = await Company.findOne({ where: { slug: slugPulito }, transaction: t });
     if (esisteSlug) throw new ErroreAzienda("Slug gia' in uso", 400);
 
-    const piano = await Plan.findByPk(plan_id, { transaction: t });
-    if (!piano) throw new ErroreAzienda("Piano non valido", 400);
+    const piano = await pianoUnico(t);
 
     const { utente, passwordGenerata } = await risolviProprietario({ owner_user_id, owner_nombre, owner_email }, t);
 
@@ -101,7 +82,7 @@ const creaAzienda = async (req, res) => {
 
     await registraAzione({
       actorUserId: req.usuario.id, companyId: azienda.id, action: "company_created",
-      details: { name, slug: slugPulito, plan_id: piano.id, ownerCreato: !!passwordGenerata },
+      details: { name, slug: slugPulito, ownerCreato: !!passwordGenerata },
     }, t);
 
     await t.commit();
@@ -121,7 +102,7 @@ const aggiornaAzienda = async (req, res) => {
     const azienda = await Company.findByPk(req.params.id);
     if (!azienda) return res.status(404).json({ error: "Azienda non trovata" });
 
-    const { name, sector, piva, codice_fiscale, codice_sdi, pec, plan_id } = req.body;
+    const { name, sector, piva, codice_fiscale, codice_sdi, pec } = req.body;
     await azienda.update({
       ...(name !== undefined && { name }),
       ...(sector !== undefined && { sector }),
@@ -130,20 +111,6 @@ const aggiornaAzienda = async (req, res) => {
       ...(codice_sdi !== undefined && { codice_sdi }),
       ...(pec !== undefined && { pec }),
     });
-
-    if (plan_id) {
-      const piano = await Plan.findByPk(plan_id);
-      if (!piano) return res.status(400).json({ error: "Piano non valido" });
-      const subscription = await Subscription.findOne({ where: { company_id: azienda.id } });
-      if (subscription && subscription.plan_id !== piano.id) {
-        const pianoVecchio = subscription.plan_id;
-        await subscription.update({ plan_id: piano.id });
-        await registraAzione({
-          actorUserId: req.usuario.id, companyId: azienda.id, action: "plan_changed",
-          details: { da: pianoVecchio, a: piano.id },
-        });
-      }
-    }
 
     await registraAzione({ actorUserId: req.usuario.id, companyId: azienda.id, action: "company_updated", details: req.body });
     res.json(azienda);
@@ -205,14 +172,6 @@ const attivaIndefinitamenteController = async (req, res) => {
   } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
 };
 
-const aggiustaCreditiController = async (req, res) => {
-  try {
-    const { delta, motivo } = req.body;
-    const risultato = await aggiustaCrediti({ companyId: req.params.id, delta, motivo, actorUserId: req.usuario.id });
-    res.status(201).json(risultato);
-  } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
-};
-
 // Rigenera la password dell'account del cliente (es. l'ha persa) — mostrata
 // una sola volta all'admin, esattamente come alla creazione dell'azienda.
 const reimpostaPasswordController = async (req, res) => {
@@ -228,5 +187,5 @@ const reimpostaPasswordController = async (req, res) => {
 
 module.exports = {
   listaAziende, ottieniAzienda, creaAzienda, aggiornaAzienda, cambiaStato, eliminaAzienda,
-  registraPagamento, attivaProvaController, attivaIndefinitamenteController, aggiustaCreditiController, reimpostaPasswordController,
+  registraPagamento, attivaProvaController, attivaIndefinitamenteController, reimpostaPasswordController,
 };

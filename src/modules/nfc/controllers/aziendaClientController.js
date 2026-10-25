@@ -2,7 +2,7 @@ const pageCache = require("../utils/pageCache");
 
 // Il cliente puo' modificare i propri dati anagrafici (nome, settore, dati
 // fiscali) ma MAI slug (i tag NFC fisici gia' stampati puntano a quello),
-// ne' piano/crediti/stato, che restano decisioni solo dell'admin.
+// ne' abbonamento/pagamenti/stato, che restano decisioni solo dell'admin.
 const ottieniAzienda = async (req, res) => {
   const a = req.azienda;
   res.json({
