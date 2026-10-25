@@ -17,7 +17,6 @@ const ticketsRoutes      = require("./src/routers/ticketsRoutes");
 const spedizioneRoutes   = require("./src/routers/spedizioneRoutes");
 const gadget3dRoutes     = require("./src/routers/gadget3dRoutes");
 const kitRoutes          = require("./src/routers/kitRoutes");
-const funkoRoutes        = require("./src/routers/funkoRoutes");
 const puntiRoutes        = require("./src/routers/puntiRoutes");
 const promoRoutes           = require("./src/routers/promoRoutes");
 const impostazioniRoutes    = require("./src/routers/impostazioniRoutes");
@@ -60,7 +59,6 @@ app.use("/api/tickets",    limitAPI,  ticketsRoutes);
 app.use("/api/spedizione", limitAPI,  spedizioneRoutes);
 app.use("/api",           limitAPI,  gadget3dRoutes);
 app.use("/api/kit",       limitAPI,  kitRoutes);
-app.use("/api/funko",     limitAPI,  funkoRoutes);
 app.use("/api/punti",     limitAPI,  puntiRoutes);
 app.use("/api/promo",          limitAPI,  promoRoutes);
 app.use("/api/impostazioni",   limitAPI,  impostazioniRoutes);
@@ -83,7 +81,6 @@ app.get("/aziende", (req, res) => res.sendFile(path.join(__dirname, "public", "a
 app.get("/kit", (req, res) => res.sendFile(path.join(__dirname, "public", "kit-index.html")));
 app.get("/kit/merch", (req, res) => res.sendFile(path.join(__dirname, "public", "kit.html")));
 app.get("/kit/segnaposti", (req, res) => res.sendFile(path.join(__dirname, "public", "segnaposti.html")));
-app.get("/funko", (req, res) => res.sendFile(path.join(__dirname, "public", "funko.html")));
 
 // Pagina prodotto: stessa SPA, ma con titolo, meta e dati strutturati già nell'HTML (SEO).
 const { htmlProdotto } = require("./src/utils/seoProdotto");
