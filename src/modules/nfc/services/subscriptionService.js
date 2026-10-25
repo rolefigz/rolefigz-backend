@@ -1,27 +1,15 @@
-const { sequelize, Company, Subscription, Plan, Payment, CreditLedger } = require("../../../models");
-const { get: getImpostazione } = require("../../../controllers/impostazioniController");
+const { sequelize, Company, Subscription, Payment } = require("../../../models");
 const { addMonths } = require("../utils/dateHelpers");
 const { registraAzione } = require("./auditLogService");
 const ErroreAzienda = require("../utils/erroreAzienda");
 const pageCache = require("../utils/pageCache");
-const { unitaAReale, realeAUnita } = require("../utils/crediti");
-
-async function calcolaSaldoCrediti(companyId, transaction = null) {
-  const somma = await CreditLedger.sum("delta", {
-    where: { company_id: companyId },
-    ...(transaction ? { transaction } : {}),
-  });
-  return somma || 0;
-}
+const { MESI_MINIMI } = require("../utils/abbonamento");
 
 // Un pagamento in contanti, in un'unica transazione: crea il pagamento,
-// estende paid_until, accredita i crediti del ciclo (+ bonus fedelta' se la
-// racha di mesi pagati senza buchi raggiunge la soglia configurata), e
-// registra tutto in audit_logs.
+// estende paid_until e registra tutto in audit_logs. Il primo pagamento di
+// un'azienda deve coprire almeno MESI_MINIMI mesi (impegno minimo di un anno).
 async function registraPagamentoContanti({ companyId, amountCents, monthsCovered, receivedAt, note, actorUserId }) {
-  const sogliaMesi       = parseInt((await getImpostazione("nfc_bonus_meses_soglia")) ?? "6", 10);
-  const percentualeBonus = parseFloat((await getImpostazione("nfc_bonus_percentuale")) ?? "10");
-  const graceDays        = parseInt(process.env.NFC_GRACE_DAYS || "7", 10);
+  const graceDays = parseInt(process.env.NFC_GRACE_DAYS || "7", 10);
 
   return sequelize.transaction(async (t) => {
     const company = await Company.findByPk(companyId, { transaction: t, lock: t.LOCK.UPDATE });
@@ -32,8 +20,10 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
     });
     if (!subscription) throw new ErroreAzienda("Abbonamento non trovato", 404);
 
-    const piano = await Plan.findByPk(subscription.plan_id, { transaction: t });
-    if (!piano) throw new ErroreAzienda("Piano non trovato", 404);
+    const pagamentiPrecedenti = await Payment.count({ where: { company_id: companyId }, transaction: t });
+    if (!pagamentiPrecedenti && monthsCovered < MESI_MINIMI) {
+      throw new ErroreAzienda(`Il primo pagamento deve coprire almeno ${MESI_MINIMI} mesi`, 400);
+    }
 
     const dataRiferimento = receivedAt ? new Date(receivedAt) : new Date();
     const copertoFinoAPrima = subscription.paid_until ? new Date(subscription.paid_until) : null;
@@ -44,7 +34,7 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
       limiteSenzaBuco.setDate(limiteSenzaBuco.getDate() + graceDays);
       cEBuco = dataRiferimento > limiteSenzaBuco;
     }
-    const nuovaRacha = cEBuco ? 1 : (subscription.consecutive_paid_months || 0) + 1;
+    const nuovaRacha = cEBuco ? monthsCovered : (subscription.consecutive_paid_months || 0) + monthsCovered;
 
     const baseEstensione  = (copertoFinoAPrima && copertoFinoAPrima > dataRiferimento) ? copertoFinoAPrima : dataRiferimento;
     const nuovoPaidUntil  = addMonths(baseEstensione, monthsCovered);
@@ -59,39 +49,20 @@ async function registraPagamentoContanti({ companyId, amountCents, monthsCovered
       status: "active", paid_until: nuovoPaidUntil, consecutive_paid_months: nuovaRacha,
     }, { transaction: t });
 
-    const creditiBase = piano.monthly_credits * monthsCovered;
-    await CreditLedger.create({
-      company_id: companyId, delta: realeAUnita(creditiBase), reason: "cycle_grant",
-      reference_type: "payment", reference_id: payment.id, created_by_user_id: actorUserId,
-    }, { transaction: t });
-
-    let creditiBonus = 0;
-    if (nuovaRacha >= sogliaMesi && percentualeBonus > 0) {
-      creditiBonus = Math.round(creditiBase * percentualeBonus / 100);
-      if (creditiBonus > 0) {
-        await CreditLedger.create({
-          company_id: companyId, delta: realeAUnita(creditiBonus), reason: "loyalty_bonus",
-          reference_type: "payment", reference_id: payment.id, created_by_user_id: actorUserId,
-        }, { transaction: t });
-      }
-    }
-
     await registraAzione({
       actorUserId, companyId, action: "payment_registered",
       details: {
         paymentId: payment.id, amountCents, monthsCovered,
-        paidUntilBefore: copertoFinoAPrima, paidUntilAfter: nuovoPaidUntil,
-        creditiBase, creditiBonus, streak: nuovaRacha,
+        paidUntilBefore: copertoFinoAPrima, paidUntilAfter: nuovoPaidUntil, streak: nuovaRacha,
       },
     }, t);
 
-    const risultato = { payment, subscription, creditiBase, creditiBonus, streak: nuovaRacha, saldoCrediti: unitaAReale(await calcolaSaldoCrediti(companyId, t)) };
     pageCache.invalidate(company.slug);
-    return risultato;
+    return { payment, subscription, streak: nuovaRacha };
   });
 }
 
-// La prova gratuita non genera crediti; e' solo idonea prima del primo pagamento.
+// La prova gratuita e' idonea solo prima del primo pagamento.
 async function attivaProva({ companyId, actorUserId }) {
   return sequelize.transaction(async (t) => {
     const subscription = await Subscription.findOne({
@@ -112,30 +83,6 @@ async function attivaProva({ companyId, actorUserId }) {
     if (company) pageCache.invalidate(company.slug);
 
     return subscription;
-  });
-}
-
-// Aggiustamento manuale del saldo crediti — motivo sempre obbligatorio,
-// finisce in audit_logs (il ledger stesso resta append-only e anonimo sul motivo).
-// "delta" arriva gia' convertito in unita' (mezzi crediti) dal validatore.
-async function aggiustaCrediti({ companyId, delta, motivo, actorUserId }) {
-  if (!motivo || !motivo.trim()) throw new ErroreAzienda("Il motivo e' obbligatorio", 400);
-  if (!Number.isInteger(delta) || delta === 0) throw new ErroreAzienda("Il delta crediti non e' valido", 400);
-
-  return sequelize.transaction(async (t) => {
-    const company = await Company.findByPk(companyId, { transaction: t, lock: t.LOCK.UPDATE });
-    if (!company) throw new ErroreAzienda("Azienda non trovata", 404);
-
-    const voce = await CreditLedger.create({
-      company_id: companyId, delta, reason: "manual_adjustment", created_by_user_id: actorUserId,
-    }, { transaction: t });
-
-    await registraAzione({
-      actorUserId, companyId, action: "credit_manual_adjustment",
-      details: { delta, motivo, ledgerId: voce.id },
-    }, t);
-
-    return { voce, saldoCrediti: unitaAReale(await calcolaSaldoCrediti(companyId, t)) };
   });
 }
 
@@ -167,4 +114,4 @@ async function attivaIndefinitamente({ companyId, actorUserId }) {
   });
 }
 
-module.exports = { calcolaSaldoCrediti, registraPagamentoContanti, attivaProva, aggiustaCrediti, attivaIndefinitamente };
+module.exports = { registraPagamentoContanti, attivaProva, attivaIndefinitamente };

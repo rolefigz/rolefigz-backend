@@ -1,6 +1,6 @@
 const { Impostazione } = require("../models");
 
-const CHIAVI_VALIDE = ["stripe_attivo", "nfc_bonus_meses_soglia", "nfc_bonus_percentuale"];
+const CHIAVI_VALIDE = ["stripe_attivo"];
 
 async function get(chiave) {
   const row = await Impostazione.findOne({ where: { chiave } });

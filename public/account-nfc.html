@@ -92,7 +92,13 @@
     th{font-size:.68rem;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;padding:10px 8px;text-align:left;border-bottom:1px solid var(--line)}
     td{padding:12px 8px;border-bottom:1px solid var(--line)}
 
-    .link-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+    .link-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;background:var(--surface)}
+    @media (max-width:560px){.link-row{flex-wrap:wrap}}
+    .link-handle{display:flex;align-items:center;justify-content:center;width:36px;height:40px;flex:none;margin:-4px 0 -4px -4px;border-radius:10px;background:rgba(0,0,0,.04);color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+    .link-handle:hover{background:rgba(0,0,0,.04);color:var(--ink)}
+    .link-handle:active{cursor:grabbing}
+    .link-row--scelto{box-shadow:0 8px 24px rgba(0,0,0,.12);border-color:var(--accent)}
+    .link-row--ghost{opacity:.35}
     .link-row select,.link-row input[type=text]{font-size:.82rem;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--void);font-family:inherit}
     .link-row input[type=text]{flex:1;min-width:100px}
 
@@ -140,7 +146,8 @@
 </div>
 
 <script src="/vendor/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="/js/config.js"></script>
-<script src="/js/account-nfc.js"></script>
+<script src="/js/account-nfc.js?v=20261024a"></script>
 </body>
 </html>

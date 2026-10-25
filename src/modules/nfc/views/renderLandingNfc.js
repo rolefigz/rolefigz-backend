@@ -1,11 +1,9 @@
+const { PREZZO_MENSILE_CENTS, MESI_MINIMI } = require("../utils/abbonamento");
+
 function escapeHtml(valore) {
   return String(valore || "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
-}
-
-function centesimiAEuro(c) {
-  return (parseInt(c || 0, 10) / 100).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // Stesse icone a tratto usate nelle pagine reali delle aziende (renderPaginaPubblica.js),
@@ -15,33 +13,30 @@ const ICONA_MAPS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const ICONA_INSTAGRAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/></svg>';
 const ICONA_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h10"/></svg>';
 
-function cardPiano(piano, inEvidenza) {
-  const features = Array.isArray(piano.features) ? piano.features : [];
-  return `
-    <div class="piano-card${inEvidenza ? " piano-card--evidenza" : ""} reveal">
-      ${inEvidenza ? '<div class="piano-badge">Piu scelto</div>' : ""}
-      <div class="piano-nome">${escapeHtml(piano.name)}</div>
-      <div class="piano-prezzo">€${centesimiAEuro(piano.monthly_price_cents)}<span>/mese</span></div>
-      <div class="piano-crediti">${piano.monthly_credits} crediti merchandising al mese</div>
-      ${features.length ? `<ul class="piano-features">${features.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>` : ""}
-      <a class="piano-cta" href="#contatti">Contattaci</a>
-    </div>`;
+// Prezzo intero senza decimali inutili: 5 €, 2,50 €, 89 €.
+function prezzo(c) {
+  const euro = parseInt(c || 0, 10) / 100;
+  return euro.toLocaleString("it-IT", Number.isInteger(euro) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function renderLandingNfc(piani) {
+function rigaListino(p) {
+  const minimo = p.min_quantity > 1 ? ` <span>· minimo ${p.min_quantity}</span>` : "";
+  return `<li><div><strong>${escapeHtml(p.name)}</strong>${minimo}${p.description ? `<div class="listino-desc">${escapeHtml(p.description)}</div>` : ""}</div><div class="listino-prezzo">€${prezzo(p.price_cents)}</div></li>`;
+}
+
+function renderLandingNfc(prodotti) {
   const telefono = process.env.SHOP_TELEFONO || "";
   const telefonoWa = telefono.replace(/[^\d]/g, "");
   const email = process.env.SHOP_EMAIL || "info@rolefigz.com";
   const nomeAzienda = process.env.SHOP_NOME || "RoleFigz";
 
-  const pianiOrdinati = [...piani].sort((a, b) => (a.position || 0) - (b.position || 0));
-  const pianoEvidenza = pianiOrdinati[Math.min(1, pianiOrdinati.length - 1)];
-  const pianiPrincipali = pianiOrdinati.slice(0, 3);
-  const pianiExtra = pianiOrdinati.slice(3);
+  const mensile = prezzo(PREZZO_MENSILE_CENTS);
+  const annuale = prezzo(PREZZO_MENSILE_CENTS * MESI_MINIMI);
 
   const faq = [
     ["Si paga con carta o addebito automatico?", "No. Si paga solo in contanti, di persona. Nessuna carta salvata, nessun addebito a sorpresa."],
-    ["Cosa succede se disdico?", "Nessun vincolo di permanenza. I crediti gia' accumulati restano validi fino alla fine del periodo pagato, poi scadono."],
+    ["Quanto costa e per quanto tempo?", `${mensile} € al mese con un impegno minimo di ${MESI_MINIMI} mesi: ${annuale} € il primo anno, pagati in contanti. Poi rinnovi quando vuoi.`],
+    ["Il merchandising e' incluso?", "No, lo ordini a parte dal tuo pannello quando ti serve, ai prezzi del listino qui sopra, e lo paghi alla consegna."],
     ["Posso provare prima di abbonarmi?", "Si', fino a 7 giorni di prova gratuita con un gadget consegnato a mano, per vedere come funziona la tua pagina."],
     ["Se cambio Instagram o WhatsApp devo ristampare i tag?", "No. I tag puntano sempre alla tua pagina. Aggiorni i link dal pannello e sono aggiornati ovunque, senza ristampare nulla."],
     ["Che statistiche vedo?", "Visite alla pagina, scansioni per ogni tag fisico e click sui link, in forma anonima: nessun cookie, nessun dato personale salvato."],
@@ -51,14 +46,14 @@ function renderLandingNfc(piani) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>RoleFigz NFC per attivita' locali</title>
-<meta name="description" content="Pagina web per la tua attivita', tag NFC e QR fisici, merchandising personalizzato ogni mese. Un abbonamento pagato in contanti, di persona.">
+<meta name="description" content="Pagina web per la tua attivita', tag NFC e QR fisici e statistiche a ${mensile} € al mese. Il merchandising lo ordini dal pannello, ai prezzi di listino.">
 <link rel="icon" type="image/png" href="/assets/LogoSfondoNero.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify({
   "@context": "https://schema.org", "@graph": [
     { "@type": "Service", name: "RoleFigz NFC", provider: { "@type": "Organization", name: nomeAzienda },
-      description: "Pagina web, tag NFC/QR e merchandising fisico in abbonamento per attivita' locali." },
+      description: "Pagina web, tag NFC/QR e statistiche in abbonamento per attivita' locali, con merchandising fisico su ordinazione." },
     { "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
   ],
 }).replace(/</g, "\\u003c")}</script>
@@ -169,28 +164,26 @@ nav.top{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:ce
 .merch-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer;transition:background .2s ease,width .2s ease;border:none;padding:0}
 .merch-dot.active{background:#fff;width:18px;border-radius:3px}
 
-/* PIANI */
-.piani{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:28px}
-.piano-card{position:relative;border-radius:var(--card);padding:30px 26px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease}
-.piano-card:hover{transform:translateY(-4px);box-shadow:0 4px 8px rgba(0,0,0,.05),0 16px 36px rgba(0,0,0,.08)}
-.piano-card--evidenza{box-shadow:0 0 0 1.5px var(--accent),0 8px 24px rgba(0,0,0,.06)}
-.piano-badge{position:absolute;top:-11px;right:22px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em;padding:4px 12px;border-radius:var(--pill)}
+/* PREZZO */
+.prezzo-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:28px;align-items:start}
+@media (max-width:820px){ .prezzo-grid{grid-template-columns:1fr} }
+.piano-card{border-radius:var(--card);padding:30px 26px;background:var(--surface);box-shadow:0 0 0 1.5px var(--accent),0 8px 24px rgba(0,0,0,.06)}
 .piano-nome{font-weight:600;font-size:1.1rem;margin-bottom:6px}
-.piano-prezzo{font-size:2.2rem;font-weight:700;margin-bottom:4px}
+.piano-prezzo{font-size:2.6rem;font-weight:700;margin-bottom:4px}
 .piano-prezzo span{font-size:.85rem;color:var(--ink-dim);font-weight:400}
-.piano-crediti{color:var(--ink-dim);font-size:.82rem;margin-bottom:18px}
+.piano-nota{color:var(--ink-dim);font-size:.82rem;margin-bottom:18px}
 .piano-features{list-style:none;padding:0;margin:0 0 22px;font-size:.85rem;color:var(--ink-dim);line-height:1.9}
 .piano-features li::before{content:"• ";color:var(--accent)}
-.piano-cta{display:block;text-align:center;border-radius:var(--pill);padding:12px;font-size:.85rem;font-weight:600;text-decoration:none;background:rgba(0,0,0,.05);transition:background .2s ease}
-.piano-cta:hover{background:rgba(0,0,0,.08)}
-.piani-extra{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1)}
-.piani-extra>div{overflow:hidden}
-.piani-extra.in{grid-template-rows:1fr}
-.piani-extra .piani{margin-top:28px}
-.piani-toggle{display:flex;align-items:center;gap:8px;margin:28px auto 0;cursor:pointer;border:none;font-family:inherit}
-.piani-toggle svg{width:15px;height:15px;transition:transform .3s cubic-bezier(.16,1,.3,1)}
-.piani-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
-@media (prefers-reduced-motion: reduce){ .piani-extra,.piani-toggle svg{transition:none} }
+.piano-cta{display:block;text-align:center;border-radius:var(--pill);padding:12px;font-size:.85rem;font-weight:600;text-decoration:none;background:var(--accent);color:#fff;transition:opacity .2s ease}
+.piano-cta:hover{opacity:.9}
+.listino{border-radius:var(--card);padding:26px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05)}
+.listino h3{font-size:1rem;margin:0 0 4px}
+.listino>p{font-size:.8rem;margin:0 0 14px}
+.listino ul{list-style:none;padding:0;margin:0}
+.listino li{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-top:1px solid var(--line);font-size:.88rem}
+.listino li span{color:var(--ink-dim);font-size:.78rem}
+.listino-desc{color:var(--ink-dim);font-size:.76rem;margin-top:2px}
+.listino-prezzo{font-weight:700;white-space:nowrap}
 
 /* FAQ */
 details{border-top:1px solid var(--line);padding:20px 0}
@@ -273,11 +266,11 @@ section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;f
 
 <main class="wrap hero">
   <div>
-    <span class="hero-chip"><span class="hero-dot"></span>RoleFigz NFC · Piacenza</span>
-    <h1>I tuoi clienti, <em>a un tocco</em> di distanza.</h1>
-    <p>Pagina web, tag NFC/QR fisici e merchandising personalizzato ogni mese. Un abbonamento pagato in contanti, di persona.</p>
+    <img class="hero-logo" src="/assets/LogoSfondoNero.png" alt="RoleFigz">
+    <h1>I tuoi clienti, a un tocco di distanza.</h1>
+    <p>Pagina web, tag NFC/QR fisici e statistiche per ${mensile} € al mese. Il merchandising lo ordini dal tuo pannello, quando ti serve.</p>
     <div class="hero-cta">
-      <a class="btn btn--primary" href="#piani">Vedi i piani</a>
+      <a class="btn btn--primary" href="#piani">Vedi il prezzo</a>
       <a class="btn btn--ghost" href="#contatti">Contattaci</a>
     </div>
   </div>
@@ -305,10 +298,10 @@ section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;f
 <section class="wrap" style="border-top:1px solid var(--line)">
   <h2 class="reveal" style="font-size:1.7rem;margin-bottom:36px">Come funziona</h2>
   <div class="steps">
-    <div class="step reveal"><div class="n">01</div><h3>Attiviamo la tua pagina</h3><p>Scegliamo il piano insieme e attiviamo rolefigz.com/nfc/tuonome, pronta da personalizzare.</p></div>
-    <div class="step reveal" style="transition-delay:.06s"><div class="n">02</div><h3>Ricevi tag e merchandising</h3><p>Tag NFC e QR fisici, piu' i primi gadget del mese, pronti da esporre in negozio.</p></div>
+    <div class="step reveal"><div class="n">01</div><h3>Attiviamo la tua pagina</h3><p>Attiviamo rolefigz.com/nfc/tuonome, pronta da personalizzare dal tuo pannello.</p></div>
+    <div class="step reveal" style="transition-delay:.06s"><div class="n">02</div><h3>Ricevi i tag</h3><p>Tag NFC e QR fisici che portano alla tua pagina, pronti da esporre in negozio.</p></div>
     <div class="step reveal" style="transition-delay:.12s"><div class="n">03</div><h3>I clienti scansionano</h3><p>Un tocco o un'inquadratura e arrivano dritti alla tua pagina: contatti, menu, social, tutto insieme.</p></div>
-    <div class="step reveal" style="transition-delay:.18s"><div class="n">04</div><h3>Nuovi crediti ogni mese</h3><p>Statistiche di visite e scansioni, piu' nuovi crediti merchandising da spendere quando vuoi.</p></div>
+    <div class="step reveal" style="transition-delay:.18s"><div class="n">04</div><h3>Ordina quando vuoi</h3><p>Dal pannello ordini portachiavi, calamite e segnaposti ai prezzi di listino, e vedi le statistiche di visite e scansioni.</p></div>
   </div>
 </section>
 
@@ -318,7 +311,7 @@ section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;f
     <div class="incluso-voce reveal"><h3>Pagina web personalizzabile</h3><p>Logo, descrizione, orari e i link che contano davvero, senza scrivere una riga di codice.</p></div>
     <div class="incluso-voce reveal" style="transition-delay:.06s"><h3>Tag NFC e QR fisici</h3><p>Li porti tu, li scansiona chi entra nel tuo locale. Riassegnabili in qualsiasi momento.</p></div>
     <div class="incluso-voce reveal" style="transition-delay:.12s"><h3>Statistiche senza cookie</h3><p>Visite, scansioni per ogni tag e click sui link, raccolti in forma anonima.</p></div>
-    <div class="incluso-voce reveal" style="transition-delay:.18s"><h3>Nessun vincolo</h3><p>Disdici quando vuoi. I crediti gia' pagati restano tuoi fino a fine periodo.</p></div>
+    <div class="incluso-voce reveal" style="transition-delay:.18s"><h3>${mensile} € al mese</h3><p>Impegno minimo di ${MESI_MINIMI} mesi, pagati in contanti di persona. Nessuna carta, nessun addebito.</p></div>
   </div>
 </section>
 
@@ -339,25 +332,34 @@ section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;f
   <div class="reveal" style="transition-delay:.1s">
     <div class="eyebrow">Il merchandising</div>
     <h2 style="font-size:1.5rem;margin-bottom:14px">Portachiavi, calamite, tessere e display, stampati da noi</h2>
-    <p>Ogni mese usi i crediti del tuo piano per ordinare merchandising fisico personalizzato. Se ti serve di piu', paghi solo l'eccedenza alla consegna.</p>
+    <p>Li ordini dal tuo pannello quando ti servono, ai prezzi del listino, e li paghi alla consegna. Il prezzo che vedi e' quello finale.</p>
   </div>
 </section>
 
 <section class="wrap" id="piani" style="border-top:1px solid var(--line)">
-  <div class="eyebrow reveal">Piani</div>
-  <h2 class="reveal" style="font-size:1.7rem;margin-bottom:10px">Un abbonamento mensile, pagato in contanti</h2>
+  <div class="eyebrow reveal">Prezzo</div>
+  <h2 class="reveal" style="font-size:1.7rem;margin-bottom:10px">Un solo abbonamento, pagato in contanti</h2>
   <p class="reveal" style="color:var(--ink-dim);margin-bottom:36px;max-width:50ch">Nessuna carta, nessun addebito automatico. Paghi di persona quando passi in negozio.</p>
-  <div class="piani">
-    ${pianiPrincipali.length ? pianiPrincipali.map(p => cardPiano(p, p.id === pianoEvidenza?.id)).join("") : '<p style="color:var(--ink-dim)">I piani saranno disponibili a breve. Contattaci per saperne di piu\'.</p>'}
+  <div class="prezzo-grid">
+    <div class="piano-card reveal">
+      <div class="piano-nome">RoleFigz NFC</div>
+      <div class="piano-prezzo">€${mensile}<span>/mese</span></div>
+      <div class="piano-nota">Minimo ${MESI_MINIMI} mesi · €${annuale} il primo anno</div>
+      <ul class="piano-features">
+        <li>Pagina web personalizzabile</li>
+        <li>Tag NFC e QR fisici</li>
+        <li>Statistiche senza cookie</li>
+        <li>Ordini di merchandising dal pannello</li>
+      </ul>
+      <a class="piano-cta" href="#contatti">Contattaci</a>
+    </div>
+    ${prodotti.length ? `
+    <div class="listino reveal" style="transition-delay:.08s">
+      <h3>Listino merchandising</h3>
+      <p>Prezzi finali, da pagare alla consegna. Ordini dal tuo pannello quando vuoi.</p>
+      <ul>${prodotti.map(rigaListino).join("")}</ul>
+    </div>` : ""}
   </div>
-  ${pianiExtra.length ? `
-  <div class="piani-extra" id="piani-extra">
-    <div><div class="piani">${pianiExtra.map(p => cardPiano(p, p.id === pianoEvidenza?.id)).join("")}</div></div>
-  </div>
-  <button type="button" class="btn btn--ghost piani-toggle" id="piani-toggle" aria-expanded="false" aria-controls="piani-extra">
-    <span>Hai bisogno di piu'?</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-  </button>` : ""}
 </section>
 
 <section class="wrap" style="border-top:1px solid var(--line);max-width:760px">
@@ -402,19 +404,6 @@ section h2{font-family:"Barlow Condensed","DM Sans",sans-serif;font-weight:800;f
       });
     }, { threshold: .15, rootMargin: '0px 0px -40px 0px' });
     els.forEach(function(el){ obs.observe(el); });
-  } catch(e) {}
-
-  try {
-    var toggle = document.getElementById('piani-toggle');
-    var extra = document.getElementById('piani-extra');
-    if (toggle && extra) {
-      toggle.addEventListener('click', function(){
-        var aperto = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!aperto));
-        extra.classList.toggle('in', !aperto);
-        toggle.querySelector('span').textContent = aperto ? "Hai bisogno di piu'?" : 'Mostra meno piani';
-      });
-    }
   } catch(e) {}
 
   try {

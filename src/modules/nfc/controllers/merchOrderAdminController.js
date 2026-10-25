@@ -2,16 +2,6 @@ const { Op } = require("sequelize");
 const { sequelize, MerchOrder, MerchOrderItem, MerchProduct, Company } = require("../../../models");
 const { cambiaStatoOrdine, STATI_ATTIVI_PRODUZIONE } = require("../services/merchOrderService");
 const { STATI_ORDINE } = require("../models/MerchOrder");
-const { unitaAReale } = require("../utils/crediti");
-
-function ordineConCreditiReali(ordine) {
-  const o = ordine.toJSON ? ordine.toJSON() : ordine;
-  return {
-    ...o,
-    credits_used: unitaAReale(o.credits_used),
-    items: (o.items || []).map(it => ({ ...it, credits_each: unitaAReale(it.credits_each) })),
-  };
-}
 
 const listaOrdini = async (req, res) => {
   try {
@@ -27,7 +17,7 @@ const listaOrdini = async (req, res) => {
       ],
       order: [["createdAt", "DESC"]],
     });
-    res.json(ordini.map(ordineConCreditiReali));
+    res.json(ordini);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -36,7 +26,7 @@ const cambiaStato = async (req, res) => {
     const { status } = req.body;
     if (!STATI_ORDINE.includes(status)) return res.status(400).json({ error: "Stato non valido" });
     const ordine = await cambiaStatoOrdine({ orderId: req.params.id, status, actorUserId: req.usuario.id });
-    res.json(ordineConCreditiReali(ordine));
+    res.json(ordine);
   } catch (err) { res.status(err.status || 500).json({ error: err.message }); }
 };
 

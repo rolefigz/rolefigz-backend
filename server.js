@@ -147,6 +147,10 @@ app.listen(PORT, () => {
       .catch(err => console.error("pagine_demo, colonne foto:", err.message)))
     .then(() => require("./src/models/RichiestaKit").assicuraColonne()
       .catch(err => console.error("richieste_kit, colonna kit_tipo:", err.message)))
+    .then(() => require("./src/modules/nfc/models/MerchProduct").assicuraColonne()
+      .catch(err => console.error("merch_products, colonna min_quantity:", err.message)))
+    .then(() => require("./src/modules/nfc/utils/abbonamento").assicuraPianoUnico()
+      .catch(err => console.error("piano unico NFC:", err.message)))
     .then(() => console.log("db sincronizzato"))
     .then(() => {
       // Job giornaliero di analytics (aggregazione + purga retention) nello

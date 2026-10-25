@@ -1,40 +1,33 @@
 const {
-  sequelize, Company, MerchProduct, MerchOrder, MerchOrderItem, CreditLedger,
+  sequelize, Company, MerchProduct, MerchOrder, MerchOrderItem,
 } = require("../../../models");
-const { calcolaSaldoCrediti } = require("./subscriptionService");
 const { registraAzione } = require("./auditLogService");
 const ErroreAzienda = require("../utils/erroreAzienda");
-const { unitaAReale } = require("../utils/crediti");
+const { sendMessage } = require("../../../utils/telegram");
 
 const STATI_ATTIVI_PRODUZIONE = ["confermato", "in_produzione"];
 
-// Alloca i crediti disponibili sulle righe dell'ordine nell'ordine in cui
-// arrivano: quello che non ci sta nei crediti residui va in eccedenza euro,
-// al prezzo extra di quel prodotto specifico (snapshot al momento dell'ordine).
-// Lavora sempre in unita' (mezzi crediti, interi) — la conversione in crediti
-// reali avviene solo nella risposta finale di creaOrdine.
-function allocaCrediti(righe, creditiDisponibili) {
-  let residuo = creditiDisponibili;
-  let creditiTotali = 0;
-  let extraTotaleCents = 0;
-  const dettagli = righe.map(r => {
-    const unitaCoperte = Math.max(0, Math.min(r.quantity, Math.floor(residuo / r.credit_cost) || 0));
-    const creditiUsati = unitaCoperte * r.credit_cost;
-    residuo -= creditiUsati;
-    creditiTotali += creditiUsati;
-    const unitaExtra = r.quantity - unitaCoperte;
-    const extraCents = unitaExtra * r.extra_price_cents;
-    extraTotaleCents += extraCents;
-    return { ...r, unitaCoperte, unitaExtra, creditiUsati, extraCents };
-  });
-  return { dettagli, creditiTotali, extraTotaleCents };
+function euro(cents) {
+  return (cents / 100).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, notes, actorUserId, confermaEccedenza }) {
+// Telegram e' in parse_mode HTML: nomi e note del cliente vanno escapati.
+function escTg(v) {
+  return String(v || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+// Ordine fatto dal cliente nel suo pannello: ogni riga al prezzo del listino
+// del prodotto (snapshot al momento dell'ordine), rispettando la quantita'
+// minima del prodotto. Si paga in contanti alla consegna; l'admin riceve
+// subito l'avviso su Telegram e lo trova in NFC → Ordini.
+async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, notes, actorUserId }) {
   if (!Array.isArray(items) || !items.length) throw new ErroreAzienda("Il carrello e' vuoto", 400);
   if (items.length > 30) throw new ErroreAzienda("Troppi articoli nel carrello", 400);
+  if (deliveryMethod === "shipping" && !shippingAddress?.indirizzo) {
+    throw new ErroreAzienda("Indirizzo di spedizione obbligatorio", 400);
+  }
 
-  return sequelize.transaction(async (t) => {
+  const { ordine, company, righe, totaleCents } = await sequelize.transaction(async (t) => {
     const company = await Company.findByPk(companyId, { transaction: t, lock: t.LOCK.UPDATE });
     if (!company) throw new ErroreAzienda("Azienda non trovata", 404);
 
@@ -47,66 +40,42 @@ async function creaOrdine({ companyId, items, deliveryMethod, shippingAddress, n
       if (!prodotto) throw new ErroreAzienda(`Prodotto non disponibile: ${i.product_id}`, 400);
       const quantity = parseInt(i.quantity, 10);
       if (!Number.isInteger(quantity) || quantity < 1) throw new ErroreAzienda("Quantita' non valida", 400);
-      return {
-        product_id: prodotto.id, quantity,
-        credit_cost: prodotto.credit_cost, extra_price_cents: prodotto.extra_price_cents || 0,
-      };
+      const minimo = prodotto.min_quantity || 1;
+      if (quantity < minimo) throw new ErroreAzienda(`${prodotto.name}: minimo ${minimo}`, 400);
+      return { prodotto, quantity, price_each_cents: prodotto.price_cents || 0 };
     });
 
-    const saldoAttuale = await calcolaSaldoCrediti(companyId, t);
-    const { dettagli, creditiTotali, extraTotaleCents } = allocaCrediti(righe, saldoAttuale);
-
-    // Se il carrello supera i crediti disponibili, non si procede in silenzio:
-    // serve una conferma esplicita del cliente per pagare l'eccedenza in contanti.
-    if (extraTotaleCents > 0 && !confermaEccedenza) {
-      throw new ErroreAzienda("Superi i crediti disponibili per questo ordine", 409, {
-        richiedeConferma: true,
-        creditiUsati: unitaAReale(creditiTotali),
-        extraAmountCents: extraTotaleCents,
-        saldoCrediti: unitaAReale(saldoAttuale),
-      });
-    }
-
-    if (deliveryMethod === "shipping" && !shippingAddress?.indirizzo) {
-      throw new ErroreAzienda("Indirizzo di spedizione obbligatorio", 400);
-    }
+    const totaleCents = righe.reduce((s, r) => s + r.quantity * r.price_each_cents, 0);
 
     const ordine = await MerchOrder.create({
-      company_id: companyId, status: "in_attesa",
-      credits_used: creditiTotali, extra_amount_cents: extraTotaleCents,
+      company_id: companyId, status: "in_attesa", total_cents: totaleCents,
       shipping_address_snapshot: deliveryMethod === "shipping" ? shippingAddress : null,
       delivery_method: deliveryMethod === "shipping" ? "shipping" : "hand",
       notes: notes || null, created_by_user_id: actorUserId,
     }, { transaction: t });
 
-    for (const r of dettagli) {
+    for (const r of righe) {
       await MerchOrderItem.create({
-        order_id: ordine.id, product_id: r.product_id, quantity: r.quantity,
-        credits_each: r.credit_cost, price_each_cents: r.extra_price_cents,
-      }, { transaction: t });
-    }
-
-    if (creditiTotali > 0) {
-      await CreditLedger.create({
-        company_id: companyId, delta: -creditiTotali, reason: "order",
-        reference_type: "merch_order", reference_id: ordine.id, created_by_user_id: actorUserId,
+        order_id: ordine.id, product_id: r.prodotto.id, quantity: r.quantity, price_each_cents: r.price_each_cents,
       }, { transaction: t });
     }
 
     await registraAzione({
       actorUserId, companyId, action: "merch_order_created",
-      details: { orderId: ordine.id, creditiTotali, extraTotaleCents },
+      details: { orderId: ordine.id, totaleCents },
     }, t);
 
-    const ordineJson = ordine.toJSON();
-    ordineJson.credits_used = unitaAReale(ordineJson.credits_used);
-    return {
-      ordine: ordineJson,
-      creditiUsati: unitaAReale(creditiTotali),
-      extraAmountCents: extraTotaleCents,
-      saldoCreditiResiduo: unitaAReale(saldoAttuale - creditiTotali),
-    };
+    return { ordine, company, righe, totaleCents };
   });
+
+  sendMessage(
+    `🛒 <b>Nuovo ordine NFC #${ordine.id}</b> — ${escTg(company.name)}\n` +
+    righe.map(r => `• ${escTg(r.prodotto.name)} × ${r.quantity} = € ${euro(r.quantity * r.price_each_cents)}`).join("\n") +
+    `\n<b>Totale: € ${euro(totaleCents)}</b> · ${ordine.delivery_method === "shipping" ? "spedizione" : "ritiro a mano"}` +
+    (ordine.notes ? `\nNote: ${escTg(ordine.notes)}` : "")
+  ).catch(err => console.error("Telegram ordine NFC:", err.message));
+
+  return { ordine, totaleCents };
 }
 
 async function cambiaStatoOrdine({ orderId, status, actorUserId }) {
@@ -118,15 +87,6 @@ async function cambiaStatoOrdine({ orderId, status, actorUserId }) {
     }
 
     const statoPrecedente = ordine.status;
-    const eraGiaAnnullato = statoPrecedente === "annullato";
-
-    if (status === "annullato" && !eraGiaAnnullato && ordine.credits_used > 0) {
-      await CreditLedger.create({
-        company_id: ordine.company_id, delta: ordine.credits_used, reason: "order_cancelled",
-        reference_type: "merch_order", reference_id: ordine.id, created_by_user_id: actorUserId,
-      }, { transaction: t });
-    }
-
     await ordine.update({ status }, { transaction: t });
     await registraAzione({
       actorUserId, companyId: ordine.company_id, action: "merch_order_status_changed",
@@ -137,4 +97,4 @@ async function cambiaStatoOrdine({ orderId, status, actorUserId }) {
   });
 }
 
-module.exports = { creaOrdine, cambiaStatoOrdine, allocaCrediti, STATI_ATTIVI_PRODUZIONE };
+module.exports = { creaOrdine, cambiaStatoOrdine, STATI_ATTIVI_PRODUZIONE };

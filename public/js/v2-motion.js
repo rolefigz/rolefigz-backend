@@ -145,7 +145,7 @@
     start: 'top 92%',
     onEnter: els => gsap.fromTo(els, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'expo.out', stagger: 0.07, overwrite: true })
   });
-  batchReveal('.step, .why-card, .v2-faq-list details, .v2-f1-card, .footer-grid > div');
+  batchReveal('.step, .why-card, .v2-faq-list details, .footer-grid > div');
 
   // le card dei prodotti arrivano dall'API: le osserviamo quando compaiono
   const list = document.getElementById('productosList');
@@ -191,7 +191,7 @@
     });
 
     // inclinazione 3D di card e tessere (delegata: vale anche per le card caricate dopo)
-    const tiltSel = '.card, .v2-tile, .why-card, .v2-f1-card';
+    const tiltSel = '.card, .v2-tile, .why-card';
     let current = null;
     document.addEventListener('pointermove', e => {
       const el = e.target.closest && e.target.closest(tiltSel);
