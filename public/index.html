@@ -197,8 +197,8 @@
     <div class="v2-gate-copy">
       <span class="v2-gate-eyebrow">Per te</span>
       <h2 class="v2-gate-title">Privati</h2>
-      <p class="v2-gate-text">Figure dalla tua foto, regali su misura e portachiavi con il tuo nome.</p>
-      <ul class="v2-gate-chips"><li>Figure</li><li>Regali</li><li>Portachiavi</li></ul>
+      <p class="v2-gate-text">Figure dalla tua foto, regali su misura, portachiavi con il tuo nome e circuiti in scala.</p>
+      <ul class="v2-gate-chips"><li>Figure</li><li>Regali</li><li>Circuiti F1</li></ul>
       <span class="v2-gate-cta">Entra nel negozio <i aria-hidden="true">→</i></span>
     </div>
   </a>
@@ -229,6 +229,7 @@
   <nav class="header-nav">
     <button class="hn-link" onclick="mostraVista('tienda')">Negozio</button>
     <a class="hn-link" href="#figure-personalizzate" onclick="mostraVista('tienda');setTimeout(()=>document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'}),50);return false">Figure</a>
+    <a class="hn-link" href="/f1/">Circuiti F1</a>
     <button class="hn-link" onclick="mostraVista('blog');loadArticoli()">Blog</button>
   </nav>
 
@@ -348,7 +349,7 @@
       <div class="v2-hero-copy">
         <span class="v2-chip"><span class="v2-dot"></span>Stampa 3D per te · Piacenza</span>
         <h1 class="v2-hero-h1">Oggetti <em>unici</em>,<br>stampati per te.</h1>
-        <p class="v2-hero-p">Figure dalla tua foto, portachiavi con il tuo nome e regali che non trovi in nessun negozio. Stampati e rifiniti a mano a Piacenza.</p>
+        <p class="v2-hero-p">Figure dalla tua foto, portachiavi con il tuo nome, circuiti in scala e regali che non trovi in nessun negozio. Stampati e rifiniti a mano a Piacenza.</p>
         <div class="v2-hero-ctas">
           <button class="v2-btn v2-btn-primary" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
             Vai al catalogo <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon>
@@ -392,6 +393,22 @@
           <span class="v2-tag">Dalla tua foto</span>
           <h3>Figure personalizzate</h3>
           <p>Persone, coppie e animali, anche in stile Funko Pop.</p>
+        </div>
+      </a>
+      <a class="v2-tile" href="/f1/">
+        <img src="/f1/circuiti/monza.webp" alt="" loading="lazy" class="v2-tile-contain">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Collezione</span>
+          <h3>Circuiti in scala</h3>
+          <p>F1, GT e circuiti italiani in tre misure.</p>
+        </div>
+      </a>
+      <a class="v2-tile" href="/f1/">
+        <img src="/f1/gadget/sottobicchieri-f1.webp" alt="" loading="lazy">
+        <div class="v2-tile-body">
+          <span class="v2-tag">Motorsport</span>
+          <h3>Gadget F1</h3>
+          <p>Portachiavi, sottobicchieri e sagome dei circuiti.</p>
         </div>
       </a>
       <a class="v2-tile" href="https://wa.me/393928225406?text=Ciao%20RoleFigz!%20Vorrei%20un%20regalo%20su%20misura" target="_blank" rel="noopener">
@@ -445,6 +462,60 @@
     </div>
     <div class="filtri-bar" id="catsGrid"></div>
     <div id="productosList"></div>
+  </section>
+
+  <!-- CIRCUITI F1 -->
+  <section class="v2-section v2-dark v2-f1" id="circuiti">
+    <div class="v2-section-head v2-row">
+      <div>
+        <span class="v2-eyebrow">Collezione · in collaborazione con NRG</span>
+        <h2 class="v2-h2">Circuiti <em>in scala</em></h2>
+        <p class="v2-lead">I tracciati di F1, GT e World Challenge stampati in 3D, in tre misure. Da collezione, da regalo o per il tuo sim-rig.</p>
+      </div>
+      <a class="v2-btn v2-btn-primary" href="/f1/">Esplora la collezione <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon></a>
+    </div>
+    <div class="v2-f1-rail">
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/monza.webp" alt="Circuito di Monza stampato in 3D" loading="lazy"></div>
+          <span>Monza</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/spa.webp" alt="Circuito di Spa-Francorchamps stampato in 3D" loading="lazy"></div>
+          <span>Spa-Francorchamps</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/silverstone.webp" alt="Circuito di Silverstone stampato in 3D" loading="lazy"></div>
+          <span>Silverstone</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/monaco.webp" alt="Circuito di Monaco stampato in 3D" loading="lazy"></div>
+          <span>Monaco</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/suzuka.webp" alt="Circuito di Suzuka stampato in 3D" loading="lazy"></div>
+          <span>Suzuka</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/imola.webp" alt="Circuito di Imola stampato in 3D" loading="lazy"></div>
+          <span>Imola</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/interlagos.webp" alt="Circuito di Interlagos stampato in 3D" loading="lazy"></div>
+          <span>Interlagos</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/las-vegas.webp" alt="Circuito di Las Vegas stampato in 3D" loading="lazy"></div>
+          <span>Las Vegas</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/zandvoort.webp" alt="Circuito di Zandvoort stampato in 3D" loading="lazy"></div>
+          <span>Zandvoort</span>
+        </a>
+        <a class="v2-f1-card" href="/f1/">
+          <div class="v2-f1-img"><img src="/f1/circuiti/baku.webp" alt="Circuito di Baku stampato in 3D" loading="lazy"></div>
+          <span>Baku</span>
+        </a>
+    </div>
   </section>
 
   <!-- COME FUNZIONA -->
@@ -558,6 +629,7 @@
         <div class="footer-col-title">Privati</div>
         <a class="footer-link" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">Catalogo</a>
         <a class="footer-link" href="#figure-personalizzate" onclick="mostraVista('tienda');setTimeout(()=>document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'}),50);return false">Figure personalizzate</a>
+        <a class="footer-link" href="/f1/">Circuiti in scala</a>
         <a class="footer-link" onclick="mostraVista('blog');loadArticoli()">Blog</a>
         <a class="footer-link" onclick="apriAuth('register')">Crea account</a>
         <a class="footer-link" onclick="apriAuth('login')">Accedi</a>
