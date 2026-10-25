@@ -145,9 +145,9 @@ a.v2-biz-3d-hint:hover { background: var(--accent); border-color: var(--accent);
 }
 .v2-biz-collage figcaption { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(17,17,16,.85); }
 @media (max-width: 768px), (pointer: coarse) { .v2-biz-collage figure { animation: none; } }
-/* foto dei segnaposti scontornate: intere, su fondo scuro */
-.v2-biz-card img.is-cut {
-  object-fit: contain; padding: 18px 18px 10px; object-position: center bottom;
+/* tessera con icona al posto della foto, su fondo scuro */
+.v2-biz-card-icon {
+  width: 100%; aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(120% 90% at 50% 25%, #2a2925 0%, #111110 100%);
-  filter: drop-shadow(0 14px 18px rgba(0,0,0,.45));
 }
+.v2-biz-card-icon iconify-icon { color: var(--accent2); }
