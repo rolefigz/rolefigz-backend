@@ -1,6 +1,7 @@
 // Creatore Funko (/funko): il cliente carica una foto di sé, di un amico o del suo animale e riceve
-// la sua Funko Pop. Foto → immagine in stile Funko che conserva i tratti (Gemini se c'è GEMINI_API_KEY,
-// altrimenti fal.ai), poi, se c'è FAL_KEY, immagine → modello 3D (GLB). Senza 3D resta immagine + scatola. Niente database: i lavori in corso stanno in memoria, il risultato
+// la sua Funko Pop. Foto → immagine in stile Funko che conserva i tratti: Gemini se c'è GEMINI_API_KEY (il migliore),
+// altrimenti Cloudflare Workers AI se c'è CF_API_TOKEN (gratis ma più approssimativo), altrimenti fal.ai.
+// Poi, se c'è FAL_KEY, immagine → modello 3D (GLB). Senza 3D resta immagine + scatola. Niente database: i lavori in corso stanno in memoria, il risultato
 // finale (immagine + GLB, non la foto originale) si salva su Cloudinary per poterlo stampare se ordinato.
 const express   = require("express");
 const multer    = require("multer");
@@ -10,6 +11,7 @@ const { Readable } = require("stream");
 const cloudinary = require("cloudinary").v2;
 const fal = require("../utils/falApi");
 const gemini = require("../utils/geminiApi");
+const cf = require("../utils/cloudflareApi");
 const { sendMessage } = require("../utils/telegram");
 
 const router = express.Router();
@@ -66,6 +68,16 @@ function prompt(tipo, note) {
   return PROMPT[tipo] + extra;
 }
 
+// Cloudflare Workers AI usa Stable Diffusion 1.5: legge solo le prime ~77 parole del prompt,
+// quindi qui va dritto al punto invece delle istruzioni lunghe usate per Gemini e fal.ai.
+const PROMPT_BREVE = {
+  persona: "funko pop vinyl figure of the person in the photo, same hairstyle, same clothes and colors, big round head, big black eyes, standing on a small red square base, white background, product photo",
+  animale: "funko pop vinyl figure of the animal in the photo, same fur colors and markings, big round head, big black eyes, standing on a small red square base, white background, product photo",
+};
+function promptBreve(tipo, note) {
+  return PROMPT_BREVE[tipo] + (note ? `, ${note}` : "");
+}
+
 function input3d(urlImmagine) {
   return /hunyuan/i.test(MODELLO_3D)
     ? { input_image_url: urlImmagine, textured_mesh: true }
@@ -113,6 +125,11 @@ async function eseguiLavoro(id, foto) {
       const img = await gemini.generaImmagine(prompt(l.tipo, l.note), [foto]);
       l.immagineBuf = img.buffer;
       l.immagineMime = img.mime;
+    } else if (cf.configurato()) {
+      // motore gratuito di riserva: la somiglianza è approssimativa, non ha il livello di Gemini
+      const img = await cf.generaImmagine(promptBreve(l.tipo, l.note), foto);
+      l.immagineBuf = img.buffer;
+      l.immagineMime = img.mime;
     } else {
       const ris1 = await fal.esegui(MODELLO_IMMAGINE, {
         prompt: prompt(l.tipo, l.note), image_url: `data:${foto.mime};base64,${foto.buffer.toString("base64")}`,
@@ -148,7 +165,7 @@ async function eseguiLavoro(id, foto) {
 
 // ── POST /api/funko/genera ── foto (multipart) + tipo + note + consenso
 router.post("/genera", limiteOra, limiteGiorno, upload.single("foto"), (req, res) => {
-  if (!gemini.configurato() && !fal.configurato()) {
+  if (!gemini.configurato() && !cf.configurato() && !fal.configurato()) {
     return res.status(503).json({ demo: true, error: "Il creatore Funko non è ancora attivo." });
   }
   const tipo = req.body.tipo === "animale" ? "animale" : "persona";
@@ -166,7 +183,9 @@ router.post("/genera", limiteOra, limiteGiorno, upload.single("foto"), (req, res
   contatoreGiorno.n++;
 
   const id = crypto.randomBytes(6).toString("hex");
-  lavori.set(id, { stato: "immagine", tipo, note, nome, con3d: fal.configurato(), creato: Date.now() });
+  // il 3D (fal.ai) resta facoltativo; con Cloudflare come unico motore niente 3D, resta immagine + scatola
+  const con3d = fal.configurato();
+  lavori.set(id, { stato: "immagine", tipo, note, nome, con3d, creato: Date.now() });
   // la foto resta solo in questa chiamata: non si salva da nessuna parte
   eseguiLavoro(id, { buffer: req.file.buffer, mime: req.file.mimetype });
   res.status(202).json({ id });
