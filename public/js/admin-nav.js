@@ -18,7 +18,6 @@ const SEZIONI_ADMIN = {
   kit_campione:       ['Aziende · B2B', 'Kit campione', 'Prenotazioni del kit e revisioni del logo.'],
   kit_video:          ['Aziende · B2B', 'Video kit', 'Kit 3D e video con il logo di un locale, per proporlo.'],
   nfc_aziende:        ['RoleFigz NFC', 'Aziende', 'Clienti NFC: piano, crediti, pagamenti e pagina.'],
-  nfc_piani:          ['RoleFigz NFC', 'Piani', 'Abbonamenti mensili e crediti inclusi.'],
   nfc_tags:           ['RoleFigz NFC', 'Tag', 'Tag NFC e QR: link, assegnazione e stampa.'],
   nfc_prodotti:       ['RoleFigz NFC', 'Prodotti merch', 'Cosa possono ordinare le aziende con i crediti.'],
   nfc_ordini:         ['RoleFigz NFC', 'Ordini merch', 'Ordini delle aziende e stato di lavorazione.'],
