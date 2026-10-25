@@ -431,7 +431,7 @@ header.is-scrolled { height: 60px; background: rgba(246,245,242,.92); box-shadow
 .v2-marquee:hover .v2-marquee-track { animation-play-state: paused; }
 @keyframes v2Marquee { to { transform: translateX(-50%); } }
 
-/* ══ CIRCUITI F1 ══ */
+/* ══ CIRCUITI IN SCALA ══ */
 .v2-f1 { overflow: hidden; }
 .v2-f1-rail {
   display: grid; grid-auto-flow: column; grid-auto-columns: clamp(220px, 24vw, 320px); gap: 14px;
