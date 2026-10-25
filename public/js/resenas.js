@@ -123,13 +123,15 @@ async function inviaRecensione(prodottoId) {
 }
 
 async function caricaRecensioniInEvidenza() {
+  // la sezione parte nascosta (hidden nell'HTML): compare solo se ci sono recensioni da mostrare,
+  // così non si vede mai il titolo con lo spazio vuoto sotto mentre carica o se non ce ne sono
   const sec = document.getElementById('resenasDestacadas');
   if (!sec) return;
   try {
     const r = await fetch(`${API}/resenas/destacadas`);
     if (!r.ok) throw new Error();
     const recensioni = await r.json();
-    if (!recensioni.length) { sec.style.display = 'none'; return; }
+    if (!recensioni.length) return;
 
     sec.querySelector('.resenas-dest-grid').innerHTML = recensioni.map(r => `
       <div class="resena-dest-card">
@@ -140,5 +142,6 @@ async function caricaRecensioniInEvidenza() {
           <div class="resena-dest-prod">${r.Prodotto ? r.Prodotto.nombre : ''}</div>
         </div>
       </div>`).join('');
-  } catch { sec.style.display = 'none'; }
+    sec.hidden = false;
+  } catch { /* resta nascosta */ }
 }
