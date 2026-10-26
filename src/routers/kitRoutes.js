@@ -491,6 +491,45 @@ router.delete("/admin/prove/:id/sfondo", verifyToken, soloAdmin, async (req, res
   } catch (err) { rispondiErrore(res, err); }
 });
 
+// Tarjeta NFC pronta da stampare (3MF per la Bambu, come la tarjeta del kit) con l'URL della pagina da scrivere
+// nel chip. Logo: quello caricato ora (meglio SVG/PDF) o l'originale del profilo, senza la «piastrella».
+// forza=true: anche con un logo che il metodo automatico boccia (lo decide l'admin guardando il 3D).
+router.post("/admin/prove/:id/tarjeta", verifyToken, soloAdmin, caricaLogo, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    let buffer, nome, tipo;
+    if (req.file) {
+      ({ buffer, originalname: nome, mimetype: tipo } = req.file);
+    } else {
+      if (!p.logo_url) return res.status(400).json({ error: "Il profilo non ha un logo: caricane uno qui." });
+      const originale = p.logo_url.replace(/\/c_pad,w_600,h_600,b_rgb:[0-9A-Fa-f]{6},r_60\//, "/");
+      const r = await fetch(originale, { signal: AbortSignal.timeout(20000) });
+      if (!r.ok) return res.status(502).json({ error: "Non riesco a leggere il logo del profilo: caricalo qui." });
+      buffer = Buffer.from(await r.arrayBuffer());
+      tipo = r.headers.get("content-type") || "image/png";
+      nome = "logo" + ({ "image/svg+xml": ".svg", "image/jpeg": ".jpg", "image/webp": ".webp" }[tipo] || ".png");
+    }
+    const logo = await api.analizzaLogo(buffer, nome, tipo);
+    const forza = req.body?.forza === "true";
+    if (logo.verdetto === "manual" && !forza) {
+      return res.status(422).json({ error: "Logo difficile per il metodo automatico.", manual: true,
+                                    motivi: logo.motivi || [], consigli: logo.consigli || [] });
+    }
+    const base = process.env.BASE_URL || "https://www.rolefigz.com";
+    const urlChip = `${base}/nfc/${p.slug}`;
+    const t = await api.generaTarjeta(logo.logo_id, p.nome, urlChip, forza);
+    await api.conserva("kit", t.kit_id).catch(err => console.error("Conserva tarjeta:", err.message));
+    const tarjeta = {
+      kit_id: t.kit_id, numero: t.numero, file_3mf: t.file_3mf, glb: t.pezzi[0]?.glb, misure: t.pezzi[0]?.misure,
+      verdetto: t.verdetto, avvisi: (t.avvisi || []).slice(0, 10), url_chip: urlChip, creata: new Date(),
+    };
+    await p.update({ tarjeta });
+    console.log(`🪪 Tarjeta NFC ${t.numero} per /nfc/${p.slug} (${t.secondi} s)`);
+    res.json(tarjeta);
+  } catch (err) { rispondiErrore(res, err); }
+});
+
 // Modifica a mano (multipart, per il logo): testi, link, orari, slug, scadenza, attiva/disattiva, logo.
 // Un campo vuoto si svuota; un campo non mandato resta com'era.
 router.put("/admin/prove/:id", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {

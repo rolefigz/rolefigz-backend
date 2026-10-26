@@ -161,7 +161,8 @@ async function provaNfcModifica(id) {
         <button class="action-btn" onclick="provaNfcRicarica(${p.id})">RICARICA DA GOOGLE</button>
       </div>
       <div id="peStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>
-      ${provaNfcHtmlPagina(p)}`;
+      ${provaNfcHtmlPagina(p)}
+      ${provaNfcHtmlTarjeta(p)}`;
     provaNfc.links = Array.isArray(p.links) ? p.links.map(l => ({ ...l })) : null;
     provaNfc.linksAuto = p.links_auto || [];
     provaNfcRenderLinks();
@@ -241,6 +242,68 @@ function provaNfcHtmlPagina(p) {
     </details>
     <button class="btn-submit" id="ppSalva" onclick="provaNfcSalvaPagina(${p.id})" style="width:auto;padding:12px 22px">SALVA PAGINA</button>
     <div id="ppStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
+}
+
+// Tarjeta NFC da stampare (la stessa del kit: icono NFC davanti, logo dietro) con l'URL della pagina per il chip
+function provaNfcHtmlTarjeta(p) {
+  const t = p.tarjeta;
+  const pronta = t && t.kit_id ? `
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin:12px 0">
+      <model-viewer src="${API}/kit/file/${escKit(t.kit_id)}/${escKit(t.glb)}" camera-controls auto-rotate rotation-per-second="18deg"
+        shadow-intensity="0.8" exposure="1.05" environment-image="neutral" interaction-prompt="none" camera-orbit="0deg 55deg auto"
+        style="width:100%;max-width:420px;height:300px;background:radial-gradient(circle at 50% 40%,#f7f5f0 0%,#ddd8ce 100%)"></model-viewer>
+      <div style="font-size:12px;line-height:1.7">
+        <strong style="font-family:'DM Mono',monospace">${escKit(t.numero)}</strong> · ${escKit(t.misure)}<br>
+        <span style="color:var(--muted)">Creata il ${dataKit(t.creata)}${t.verdetto && t.verdetto !== 'automatico' ? ` · logo: <strong>${escKit(t.verdetto.toUpperCase())}</strong>, controlla bene il 3D` : ''}</span><br>
+        URL da scrivere nel chip NFC:<br>
+        <code style="font-size:11px;user-select:all">${escKit(t.url_chip)}</code>
+        <button class="action-btn" style="margin-left:6px" onclick="navigator.clipboard.writeText('${escKit(t.url_chip)}').then(()=>provaNfcStatoTarjeta('URL copiato.'))">COPIA</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <button class="action-btn" onclick="kitScarica('${escKit(t.kit_id)}','${escKit(t.file_3mf)}')" style="border-color:var(--accent);color:var(--accent)">3MF DA STAMPARE ⬇</button>
+          <button class="action-btn" onclick="kitScarica('${escKit(t.kit_id)}','hoja_montaje.html')">MONTAGGIO</button>
+        </div>
+        ${(t.avvisi || []).length ? `<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted)">Avvisi (${t.avvisi.length})</summary>
+          <ul style="font-size:11px;color:var(--muted);margin:6px 0 0 16px">${t.avvisi.map(a => `<li>${escKit(a)}</li>`).join('')}</ul></details>` : ''}
+      </div>
+    </div>` : '<p style="font-size:12px;color:var(--muted)">Nessuna tarjeta ancora.</p>';
+  return `
+    <div class="admin-form-title" style="margin-top:28px">TARJETA NFC · pronta da stampare</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">La tarjeta del kit (85×55 mm, icono NFC davanti e logo dietro) in un 3MF per la stampante,
+    con il link di questa pagina da scrivere nel chip. Ci vuole fino a un minuto. Se cambi lo slug, rigenerala.</p>
+    ${pronta}
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="field" style="flex:1;min-width:240px"><label>Logo per la stampa (vuoto = logo del profilo; meglio SVG o PDF)</label>
+        <input id="ptLogo" type="file" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp"/></div>
+      <button class="btn-submit" id="ptGenera" onclick="provaNfcTarjeta(${p.id})" style="width:auto;padding:12px 22px">${t ? 'RIGENERA' : 'GENERA'} TARJETA</button>
+    </div>
+    <div id="ptStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
+}
+
+function provaNfcStatoTarjeta(testo) { const e = document.getElementById('ptStato'); if (e) e.textContent = testo; }
+
+async function provaNfcTarjeta(id, forza = false) {
+  const fd = new FormData();
+  const logo = document.getElementById('ptLogo')?.files[0];
+  if (logo) fd.append('logo', logo);
+  if (forza) fd.append('forza', 'true');
+  const btn = document.getElementById('ptGenera'); btn.disabled = true;
+  provaNfcStatoTarjeta('Analizzo il logo e genero la tarjeta in 3D… (fino a un minuto)');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/tarjeta`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (r.status === 422 && d.manual && !forza) {
+      btn.disabled = false;
+      const motivi = (d.motivi || []).join('\n· ');
+      if (confirm(`Il logo è difficile per il metodo automatico${motivi ? ':\n· ' + motivi : '.'}\n\nGenerare lo stesso la tarjeta e controllarla nel 3D?`)) {
+        return provaNfcTarjeta(id, true);
+      }
+      return provaNfcStatoTarjeta('Tarjeta non generata: prova con un logo vettoriale (SVG/PDF) o più pulito.');
+    }
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    await provaNfcModifica(id);
+    provaNfcStatoTarjeta('Tarjeta pronta.');
+    document.getElementById('ptStato')?.scrollIntoView({ block: 'center' });
+  } catch (e) { provaNfcStatoTarjeta('Errore: ' + e.message); btn.disabled = false; }
 }
 
 function provaNfcStatoPagina(testo) { const e = document.getElementById('ppStato'); if (e) e.textContent = testo; }
