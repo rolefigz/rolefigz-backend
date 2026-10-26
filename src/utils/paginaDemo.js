@@ -70,6 +70,37 @@ async function creaPaginaDemo(richiesta, placeId) {
   return PaginaDemo.create(dati);
 }
 
+// Pagina di prova creata a mano dall'admin (pannello → Profili NFC di prova), senza prenotazione del kit:
+// stessi dati di Google Maps, logo facoltativo. richiesta_id resta vuoto: è così che si distinguono.
+// Errore (con status) se lo slug è già di un'azienda o di un'altra pagina di prova.
+async function creaPaginaProva({ placeId, slug, logoUrl, logoId, giorni }) {
+  if (!SLUG.test(slug || "") || slug === "rolefigz") {
+    throw Object.assign(new Error("Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino."), { status: 400 });
+  }
+  if (await Company.findOne({ where: { slug }, paranoid: false })) {
+    throw Object.assign(new Error(`Esiste già un'azienda con lo slug «${slug}».`), { status: 409 });
+  }
+  if (await PaginaDemo.findOne({ where: { slug } })) {
+    throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${slug}»: eliminala prima.`), { status: 409 });
+  }
+  const d = await places.dettaglioAttivita(placeId);                    // dati riletti da Google, mai dal browser
+  const durata = Math.min(Math.max(parseInt(giorni, 10) || GIORNI_VALIDITA, 1), 365);
+  return PaginaDemo.create({
+    slug, richiesta_id: null, place_id: d.place_id, nome: d.nome, categoria: d.categoria || null,
+    indirizzo: d.indirizzo || null, telefono: d.telefono || null, telefono_int: d.telefono_int || null,
+    sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari, valutazione: d.valutazione,
+    recensioni: d.recensioni, lat: d.lat, lng: d.lng,
+    logo_url: logoUrl ? await logoSuPiastrella(logoUrl, logoId) : null,
+    scadenza: new Date(Date.now() + durata * 24 * 60 * 60 * 1000), attiva: true,
+  });
+}
+
+// Slug proposto dal nome dell'attività: «Bar Stella & Co.» → «bar-stella-co»
+function slugDaNome(nome) {
+  return String(nome || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50).replace(/-+$/, "");
+}
+
 // La pagina di prova di un'altra prenotazione si può riprendere se quella prenotazione è annullata o non esiste
 // più, o se è dello stesso cliente (stessa email): così rifare la prova per la stessa attività non resta bloccato
 async function prenotazioneLibera(richiestaId, email) {
@@ -158,5 +189,5 @@ async function trovaPaginaDemo(slug) {
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
+module.exports = { creaPaginaDemo, creaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
                    logoSuPiastrella };

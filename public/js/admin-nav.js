@@ -15,6 +15,7 @@ const SEZIONI_ADMIN = {
   blog:               ['Contenuti e dati', 'Blog', 'Articoli pubblicati e bozze.'],
   analytics:          ['Contenuti e dati', 'Analytics', 'Visite, vendite e prodotti più visti.'],
   nfc_leads:          ['Aziende · B2B', 'Richieste', 'Contatti arrivati dal sito, da seguire.'],
+  nfc_prove:          ['Aziende · B2B', 'Profili di prova', 'Pagine NFC di prova private, create da Google Maps.'],
   kit_campione:       ['Aziende · B2B', 'Kit campione', 'Prenotazioni del kit e revisioni del logo.'],
   kit_video:          ['Aziende · B2B', 'Video kit', 'Kit 3D e video con il logo di un locale, per proporlo.'],
   nfc_aziende:        ['RoleFigz NFC', 'Aziende', 'Clienti NFC: piano, crediti, pagamenti e pagina.'],

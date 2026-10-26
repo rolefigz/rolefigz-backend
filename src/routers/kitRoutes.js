@@ -15,7 +15,7 @@ const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
-const { creaPaginaDemo, aziendaDaDemo } = require("../utils/paginaDemo");
+const { creaPaginaDemo, creaPaginaProva, slugDaNome, aziendaDaDemo } = require("../utils/paginaDemo");
 
 const router = express.Router();
 
@@ -349,6 +349,104 @@ router.get("/admin/file/:kitId/:file", verifyToken, soloAdmin, async (req, res) 
   const { kitId, file } = req.params;
   if (!ID_KIT.test(kitId) || !FILE_ADMIN.test(file)) return res.status(404).json({ error: "File non trovato" });
   try { await inoltraFile(res, kitId, file, 0); } catch (err) { rispondiErrore(res, err); }
+});
+
+// ── Admin → Profili NFC di prova ────────────────────────────────────
+// Pagine /nfc/<slug> create a mano dall'admin con i dati di Google Maps, senza prenotazione del kit (richiesta_id
+// vuoto): per mostrare a un locale la sua pagina prima della visita. Solo admin, noindex come le altre di prova.
+const uploadLogoProva = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.mimetype);
+    cb(ok ? null : Object.assign(new Error("Logo: usa PNG, JPG, WEBP o SVG."), { status: 415 }), ok);
+  },
+});
+
+function erroreProva(res, err) {
+  if (err instanceof places.ErrorePlaces || err.status) return res.status(err.status || 502).json({ error: err.message });
+  rispondiErrore(res, err);
+}
+
+// ricerca su Google Maps senza il limite orario della pagina pubblica (resta il tetto giornaliero di Places)
+router.post("/admin/attivita", verifyToken, soloAdmin, async (req, res) => {
+  const nome = testo(req.body?.azienda, 100), citta = testo(req.body?.citta, 80);
+  if (nome.length < 2) return res.status(400).json({ error: "Inserisci il nome dell'attività." });
+  try {
+    const risultati = await places.cercaAttivita(nome, citta);
+    res.json({ risultati: risultati.map(r => ({ ...r, slug: slugDaNome(r.nome) })) });
+  } catch (err) { erroreProva(res, err); }
+});
+
+router.get("/admin/prove", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const lista = await PaginaDemo.findAll({ where: { richiesta_id: null }, order: [["createdAt", "DESC"]], limit: 300 });
+    const aziende = lista.length
+      ? await Company.findAll({ where: { slug: { [Op.in]: lista.map(p => p.slug) } }, attributes: ["id", "slug"] })
+      : [];
+    res.json(lista.map(p => ({
+      id: p.id, slug: p.slug, nome: p.nome, categoria: p.categoria, indirizzo: p.indirizzo, logo_url: p.logo_url,
+      valutazione: p.valutazione, recensioni: p.recensioni, scadenza: p.scadenza, createdAt: p.createdAt,
+      attiva: p.attiva && new Date(p.scadenza) > new Date(),
+      azienda_id: aziende.find(a => a.slug === p.slug)?.id || null,
+    })));
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+router.post("/admin/prove", verifyToken, soloAdmin, (req, res, next) => {
+  uploadLogoProva.single("logo")(req, res, err => {
+    if (!err) return next();
+    res.status(err.status || 400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Logo troppo grande (massimo 5 MB)." : err.message });
+  });
+}, async (req, res) => {
+  const b = req.body || {};
+  const slug = testo(b.slug, 50).toLowerCase();
+  if (!places.ID_PLACE.test(b.place_id || "")) return res.status(400).json({ error: "Scegli un'attività dalla ricerca." });
+  // prima del caricamento del logo, che usa lo slug nel nome del file (creaPaginaProva lo ricontrolla)
+  if (!/^[a-z0-9-]{2,50}$/.test(slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
+  try {
+    let logoUrl = null, logoId = null;
+    if (req.file) {
+      // stessa cartella dei loghi del kit: logoSuPiastrella legge i colori da «kit-logos/kit-<logoId>»
+      logoId = `prova-${slug}`;
+      logoUrl = await new Promise((ok, ko) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "rolefigz/kit-logos", public_id: `kit-${logoId}`, overwrite: true, resource_type: "image" },
+          (err, r) => (err ? ko(err) : ok(r.secure_url)),
+        ).end(req.file.buffer);
+      });
+    }
+    const p = await creaPaginaProva({ placeId: b.place_id, slug, logoUrl, logoId, giorni: b.giorni });
+    console.log(`🧪 Profilo NFC di prova /nfc/${p.slug} — ${p.nome} (admin #${req.usuario.id})`);
+    res.json({ id: p.id, slug: p.slug, nome: p.nome, scadenza: p.scadenza });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Solo le pagine di prova create dall'admin: quelle delle prenotazioni si gestiscono da Kit campione
+router.delete("/admin/prove/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const n = await PaginaDemo.destroy({ where: { id: parseInt(req.params.id, 10) || 0, richiesta_id: null } });
+    if (!n) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    res.json({ eliminati: n });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Come «Crea azienda» del kit campione, con l'admin come proprietario (provvisorio: si cambia da Aziende)
+router.post("/admin/prove/:id/azienda", verifyToken, soloAdmin, async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const demo = await PaginaDemo.findOne({ where: { id: parseInt(req.params.id, 10) || 0, richiesta_id: null }, transaction: t });
+    if (!demo) throw Object.assign(new Error("Profilo di prova non trovato."), { status: 404 });
+    const azienda = await aziendaDaDemo(demo, req.usuario.id, req.usuario.id, t);
+    await demo.update({ attiva: false }, { transaction: t });
+    await t.commit();
+    console.log(`🏢 Profilo di prova /nfc/${demo.slug} → azienda #${azienda.id}`);
+    res.json({ azienda_id: azienda.id, slug: azienda.slug });
+  } catch (err) {
+    await t.rollback();
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    rispondiErrore(res, err);
+  }
 });
 
 router.get("/admin/logo/:logoId", verifyToken, soloAdmin, async (req, res) => {
