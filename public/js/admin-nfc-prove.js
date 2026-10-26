@@ -22,7 +22,8 @@ async function adminTabNfcProve(content) {
         <td>
           ${p.azienda_id
             ? `<button class="action-btn" onclick="adminTabNfcAziendaDettaglio(${p.azienda_id})">IN AZIENDE ✓ · MODIFICA</button>`
-            : `<button class="action-btn" onclick="provaNfcAzienda(${p.id}, '${escKit(p.slug)}')" style="border-color:var(--accent);color:var(--accent)">CREA AZIENDA</button>`}
+            : `<button class="action-btn" onclick="provaNfcModifica(${p.id})" style="border-color:var(--accent);color:var(--accent)">MODIFICA</button>
+               <button class="action-btn" onclick="provaNfcAzienda(${p.id}, '${escKit(p.slug)}')" style="display:block;margin-top:6px">CREA AZIENDA</button>`}
           <button class="action-btn" onclick="provaNfcElimina(${p.id}, '${escKit(p.slug)}')" style="display:block;margin-top:6px;border-color:#c0392b;color:#c0392b">ELIMINA</button>
         </td>
       </tr>`).join('');
@@ -104,6 +105,102 @@ async function provaNfcCrea() {
     window.open(`/nfc/${d.slug}`, '_blank');
     adminTabNfcProve(document.getElementById('adminContent'));
   } catch (e) { provaNfcStato('Errore: ' + e.message); btn.disabled = false; }
+}
+
+// ── Modifica di un profilo di prova, senza crearne l'azienda ──
+async function provaNfcModifica(id) {
+  const content = document.getElementById('adminContent');
+  content.innerHTML = '<div class="loading">CARICAMENTO</div>';
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    const p = await r.json();
+    if (!r.ok) throw new Error(p.error || `HTTP ${r.status}`);
+    const campo = (id, label, valore, extra = '') => `
+      <div class="field" style="flex:1;min-width:220px"><label>${label}</label><input id="${id}" type="text" value="${escKit(valore)}" ${extra}/></div>`;
+    const voto = p.valutazione ? `★ ${escKit(p.valutazione)} (${escKit(p.recensioni)} recensioni)` : 'nessuna';
+    content.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <button class="action-btn" onclick="adminTabNfcProve(document.getElementById('adminContent'))">← PROFILI DI PROVA</button>
+        <a href="/nfc/${escKit(p.slug)}" target="_blank" id="peLink" style="color:var(--accent);font-family:'DM Mono',monospace">/nfc/${escKit(p.slug)} ↗</a>
+        ${p.attiva ? '<span class="pill green">ATTIVA</span>' : p.attiva_db ? '<span class="pill red">SCADUTA · rinnova i giorni</span>' : '<span class="pill red">DISATTIVATA</span>'}
+        <span style="color:var(--muted);font-size:11px">fino al ${dataKit(p.scadenza)}</span>
+      </div>
+      <div class="admin-form-title">MODIFICA · ${escKit(p.nome)}</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">I bottoni della pagina si creano da questi dati: <strong>Chiama</strong> e <strong>WhatsApp</strong> (se è un cellulare) dal telefono,
+      <strong>Sito web</strong>, <strong>Come arrivare</strong> dal link di Maps; la mappa usa nome + indirizzo. Un campo vuoto toglie il bottone.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        ${campo('peNome', 'Nome *', p.nome, 'maxlength="120"')}
+        ${campo('peCategoria', 'Categoria', p.categoria, 'maxlength="120"')}
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        ${campo('peIndirizzo', 'Indirizzo', p.indirizzo, 'maxlength="250"')}
+        ${campo('peTelefono', 'Telefono', p.telefono, 'maxlength="40" placeholder="0523 123456"')}
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        ${campo('peSito', 'Sito web', p.sito, 'maxlength="500" placeholder="https://"')}
+        ${campo('peMaps', 'Link Google Maps («Come arrivare»)', p.maps_url, 'maxlength="500" placeholder="https://"')}
+      </div>
+      <div class="field" style="margin-bottom:10px"><label>Orari (una riga per giorno, es. «lunedì: 9:00–19:00»)</label>
+        <textarea id="peOrari" rows="7" style="width:100%;font-family:'DM Mono',monospace;font-size:11px">${escKit((p.orari || []).join('\n'))}</textarea></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+        ${campo('peSlug', 'Slug (rolefigz.com/nfc/…) *', p.slug, `maxlength="50" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'')"`)}
+        <div class="field" style="width:200px"><label>Rinnova: giorni da oggi</label><input id="peGiorni" type="number" min="1" max="365" placeholder="non cambiare"/></div>
+        <label style="display:flex;gap:6px;align-items:center;font-size:12px;padding-bottom:12px"><input type="checkbox" id="peAttiva" ${p.attiva_db ? 'checked' : ''}/> Pagina attiva</label>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+        <div>${p.logo_url ? `<img src="${escKit(p.logo_url)}" alt="" style="width:64px;height:64px;object-fit:contain;border:1px solid var(--border)">` : '<span style="color:var(--muted);font-size:11px">Nessun logo</span>'}</div>
+        <div class="field" style="flex:1;min-width:220px"><label>${p.logo_url ? 'Cambia logo' : 'Aggiungi logo'} (PNG, JPG, WEBP, SVG)</label><input id="peLogo" type="file" accept=".png,.jpg,.jpeg,.webp,.svg"/></div>
+        ${p.logo_url ? '<label style="display:flex;gap:6px;align-items:center;font-size:12px;padding-bottom:12px"><input type="checkbox" id="peTogliLogo"/> Togli il logo</label>' : ''}
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;font-size:12px">
+        <span>Valutazione Google: <strong>${voto}</strong></span>
+        ${p.valutazione ? '<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="peNascondiVoto"/> Nascondi la valutazione</label>' : ''}
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-submit" id="peSalva" onclick="provaNfcSalva(${p.id})" style="width:auto;padding:12px 22px">SALVA</button>
+        <button class="action-btn" onclick="provaNfcRicarica(${p.id})">RICARICA DA GOOGLE</button>
+      </div>
+      <div id="peStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
+  } catch (e) { content.innerHTML = `<div class="msg err">Errore: ${escKit(e.message)}</div>`; }
+}
+
+function provaNfcStatoModifica(testo) { const e = document.getElementById('peStato'); if (e) e.textContent = testo; }
+
+async function provaNfcSalva(id) {
+  const v = id => document.getElementById(id).value.trim();
+  const slug = v('peSlug');
+  if (v('peNome').length < 2) return provaNfcStatoModifica('Il nome è obbligatorio.');
+  if (!/^[a-z0-9-]{2,50}$/.test(slug)) return provaNfcStatoModifica('Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino.');
+  const fd = new FormData();
+  fd.append('nome', v('peNome')); fd.append('categoria', v('peCategoria')); fd.append('indirizzo', v('peIndirizzo'));
+  fd.append('telefono', v('peTelefono')); fd.append('sito', v('peSito')); fd.append('maps_url', v('peMaps'));
+  fd.append('orari', document.getElementById('peOrari').value); fd.append('slug', slug);
+  fd.append('giorni', v('peGiorni')); fd.append('attiva', String(document.getElementById('peAttiva').checked));
+  const togli = document.getElementById('peTogliLogo'), voto = document.getElementById('peNascondiVoto');
+  if (togli?.checked) fd.append('togli_logo', 'true');
+  if (voto?.checked) fd.append('nascondi_voto', 'true');
+  const logo = document.getElementById('peLogo').files[0];
+  if (logo) fd.append('logo', logo);
+  const btn = document.getElementById('peSalva'); btn.disabled = true; provaNfcStatoModifica('Salvo…');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    await provaNfcModifica(id);
+    provaNfcStatoModifica('Salvato.');
+  } catch (e) { provaNfcStatoModifica('Errore: ' + e.message); btn.disabled = false; }
+}
+
+async function provaNfcRicarica(id) {
+  if (!confirm('Rileggere i dati da Google Maps?\n\nNome, categoria, indirizzo, telefono, sito, link di Maps, orari e valutazione tornano quelli di Google: le modifiche fatte a mano su questi campi si perdono.')) return;
+  provaNfcStatoModifica('Rileggo da Google Maps…');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/ricarica`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    await provaNfcModifica(id);
+    provaNfcStatoModifica('Dati di Google ricaricati.');
+  } catch (e) { provaNfcStatoModifica('Errore: ' + e.message); }
 }
 
 async function provaNfcElimina(id, slug) {

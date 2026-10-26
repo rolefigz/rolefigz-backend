@@ -95,6 +95,36 @@ async function creaPaginaProva({ placeId, slug, logoUrl, logoId, giorni }) {
   });
 }
 
+// Modifica a mano di un profilo di prova (pannello → Profili di prova → MODIFICA), senza crearne l'azienda.
+// `campi`: solo quelli mandati dal form, già ripuliti; i dati di Google non toccati restano com'erano.
+// Lo slug nuovo deve essere libero come alla creazione (escluso il profilo stesso).
+async function aggiornaPaginaProva(p, campi) {
+  if (campi.slug !== undefined && campi.slug !== p.slug) {
+    if (!SLUG.test(campi.slug) || campi.slug === "rolefigz") {
+      throw Object.assign(new Error("Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino."), { status: 400 });
+    }
+    if (await Company.findOne({ where: { slug: campi.slug }, paranoid: false })) {
+      throw Object.assign(new Error(`Esiste già un'azienda con lo slug «${campi.slug}».`), { status: 409 });
+    }
+    if (await PaginaDemo.findOne({ where: { slug: campi.slug } })) {
+      throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${campi.slug}».`), { status: 409 });
+    }
+  }
+  // telefono cambiato a mano: il formato internazionale di Google non vale più (il link «Chiama» usa quello nuovo)
+  if (campi.telefono !== undefined && campi.telefono !== p.telefono) campi.telefono_int = null;
+  return p.update(campi);
+}
+
+// «Ricarica da Google»: rilegge i dati dell'attività e sovrascrive le modifiche fatte a mano su quei campi
+async function ricaricaPaginaProva(p) {
+  const d = await places.dettaglioAttivita(p.place_id);
+  return p.update({
+    nome: d.nome, categoria: d.categoria || null, indirizzo: d.indirizzo || null, telefono: d.telefono || null,
+    telefono_int: d.telefono_int || null, sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari,
+    valutazione: d.valutazione, recensioni: d.recensioni, lat: d.lat, lng: d.lng,
+  });
+}
+
 // Slug proposto dal nome dell'attività: «Bar Stella & Co.» → «bar-stella-co»
 function slugDaNome(nome) {
   return String(nome || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
@@ -189,5 +219,5 @@ async function trovaPaginaDemo(slug) {
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, creaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
+module.exports = { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
                    logoSuPiastrella };

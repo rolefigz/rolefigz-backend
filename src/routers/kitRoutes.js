@@ -15,7 +15,8 @@ const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
-const { creaPaginaDemo, creaPaginaProva, slugDaNome, aziendaDaDemo } = require("../utils/paginaDemo");
+const { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo,
+        logoSuPiastrella } = require("../utils/paginaDemo");
 
 const router = express.Router();
 
@@ -393,32 +394,112 @@ router.get("/admin/prove", verifyToken, soloAdmin, async (req, res) => {
   } catch (err) { rispondiErrore(res, err); }
 });
 
-router.post("/admin/prove", verifyToken, soloAdmin, (req, res, next) => {
+function riceviLogoProva(req, res, next) {
   uploadLogoProva.single("logo")(req, res, err => {
     if (!err) return next();
     res.status(err.status || 400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Logo troppo grande (massimo 5 MB)." : err.message });
   });
-}, async (req, res) => {
+}
+
+// stessa cartella dei loghi del kit: logoSuPiastrella legge i colori da «kit-logos/kit-<logoId>»
+async function caricaLogoProva(buffer, slug) {
+  const logoId = `prova-${slug}`;
+  const logoUrl = await new Promise((ok, ko) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "rolefigz/kit-logos", public_id: `kit-${logoId}`, overwrite: true, resource_type: "image" },
+      (err, r) => (err ? ko(err) : ok(r.secure_url)),
+    ).end(buffer);
+  });
+  return { logoUrl, logoId };
+}
+
+const SLUG_PROVA = /^[a-z0-9-]{2,50}$/;
+const URL_WEB = /^https?:\/\/[^\s<>"']+$/i;
+
+async function trovaProva(id) {
+  return PaginaDemo.findOne({ where: { id: parseInt(id, 10) || 0, richiesta_id: null } });
+}
+
+router.post("/admin/prove", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {
   const b = req.body || {};
   const slug = testo(b.slug, 50).toLowerCase();
   if (!places.ID_PLACE.test(b.place_id || "")) return res.status(400).json({ error: "Scegli un'attività dalla ricerca." });
   // prima del caricamento del logo, che usa lo slug nel nome del file (creaPaginaProva lo ricontrolla)
-  if (!/^[a-z0-9-]{2,50}$/.test(slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
+  if (!SLUG_PROVA.test(slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
   try {
-    let logoUrl = null, logoId = null;
-    if (req.file) {
-      // stessa cartella dei loghi del kit: logoSuPiastrella legge i colori da «kit-logos/kit-<logoId>»
-      logoId = `prova-${slug}`;
-      logoUrl = await new Promise((ok, ko) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "rolefigz/kit-logos", public_id: `kit-${logoId}`, overwrite: true, resource_type: "image" },
-          (err, r) => (err ? ko(err) : ok(r.secure_url)),
-        ).end(req.file.buffer);
-      });
-    }
+    const { logoUrl = null, logoId = null } = req.file ? await caricaLogoProva(req.file.buffer, slug) : {};
     const p = await creaPaginaProva({ placeId: b.place_id, slug, logoUrl, logoId, giorni: b.giorni });
     console.log(`🧪 Profilo NFC di prova /nfc/${p.slug} — ${p.nome} (admin #${req.usuario.id})`);
     res.json({ id: p.id, slug: p.slug, nome: p.nome, scadenza: p.scadenza });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Tutti i campi di un profilo, per il form di modifica
+router.get("/admin/prove/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Modifica a mano (multipart, per il logo): testi, link, orari, slug, scadenza, attiva/disattiva, logo.
+// Un campo vuoto si svuota; un campo non mandato resta com'era.
+router.put("/admin/prove/:id", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {
+  const b = req.body || {};
+  const campi = {};
+  const vuoto = v => v === "" ? null : v;
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    if (b.nome !== undefined) {
+      campi.nome = testo(b.nome, 120);
+      if (campi.nome.length < 2) return res.status(400).json({ error: "Il nome è obbligatorio." });
+    }
+    if (b.categoria !== undefined) campi.categoria = vuoto(testo(b.categoria, 120));
+    if (b.indirizzo !== undefined) campi.indirizzo = vuoto(testo(b.indirizzo, 250));
+    if (b.telefono !== undefined) {
+      campi.telefono = vuoto(testo(b.telefono, 40));
+      if (campi.telefono && !/^\+?[\d\s./-]{6,}$/.test(campi.telefono)) return res.status(400).json({ error: "Telefono non valido." });
+    }
+    for (const k of ["sito", "maps_url"]) {
+      if (b[k] === undefined) continue;
+      campi[k] = vuoto(testo(b[k], 500));
+      if (campi[k] && !URL_WEB.test(campi[k])) {
+        return res.status(400).json({ error: `${k === "sito" ? "Sito web" : "Link di Google Maps"}: deve iniziare con https://` });
+      }
+    }
+    // una riga per giorno, come le dà Google («lunedì: 9:00–19:00»): così funziona anche «Oggi: …»
+    if (b.orari !== undefined) {
+      campi.orari = String(b.orari).split(/\r?\n/).map(r => testo(r, 120)).filter(Boolean).slice(0, 7);
+    }
+    if (b.nascondi_voto === "true") Object.assign(campi, { valutazione: null, recensioni: 0 });
+    if (b.slug !== undefined) {
+      campi.slug = testo(b.slug, 50).toLowerCase();
+      if (!SLUG_PROVA.test(campi.slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
+    }
+    if (b.giorni !== undefined && b.giorni !== "") {
+      const g = parseInt(b.giorni, 10);
+      if (!(g >= 1 && g <= 365)) return res.status(400).json({ error: "Giorni: da 1 a 365." });
+      campi.scadenza = new Date(Date.now() + g * 24 * 60 * 60 * 1000);
+    }
+    if (b.attiva !== undefined) campi.attiva = b.attiva === "true";
+    if (b.togli_logo === "true") campi.logo_url = null;
+    if (req.file) {
+      const { logoUrl, logoId } = await caricaLogoProva(req.file.buffer, campi.slug || p.slug);
+      campi.logo_url = await logoSuPiastrella(logoUrl, logoId);
+    }
+    await aggiornaPaginaProva(p, campi);
+    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
+  } catch (err) { erroreProva(res, err); }
+});
+
+router.post("/admin/prove/:id/ricarica", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    await ricaricaPaginaProva(p);
+    res.json(p);
   } catch (err) { erroreProva(res, err); }
 });
 
