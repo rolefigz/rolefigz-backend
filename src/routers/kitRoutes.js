@@ -491,7 +491,7 @@ router.delete("/admin/prove/:id/sfondo", verifyToken, soloAdmin, async (req, res
   } catch (err) { rispondiErrore(res, err); }
 });
 
-// Tarjeta NFC pronta da stampare (3MF per la Bambu, come la tarjeta del kit) con l'URL della pagina da scrivere
+// Biglietto da visita NFC pronto da stampare (3MF per la Bambu: la «tarjeta» del kit) con l'URL della pagina da scrivere
 // nel chip. Logo: quello caricato ora (meglio SVG/PDF) o l'originale del profilo, senza la «piastrella».
 // forza=true: anche con un logo che il metodo automatico boccia (lo decide l'admin guardando il 3D).
 router.post("/admin/prove/:id/tarjeta", verifyToken, soloAdmin, caricaLogo, async (req, res) => {
@@ -519,13 +519,13 @@ router.post("/admin/prove/:id/tarjeta", verifyToken, soloAdmin, caricaLogo, asyn
     const base = process.env.BASE_URL || "https://www.rolefigz.com";
     const urlChip = `${base}/nfc/${p.slug}`;
     const t = await api.generaTarjeta(logo.logo_id, p.nome, urlChip, forza);
-    await api.conserva("kit", t.kit_id).catch(err => console.error("Conserva tarjeta:", err.message));
+    await api.conserva("kit", t.kit_id).catch(err => console.error("Conserva biglietto NFC:", err.message));
     const tarjeta = {
       kit_id: t.kit_id, numero: t.numero, file_3mf: t.file_3mf, glb: t.pezzi[0]?.glb, misure: t.pezzi[0]?.misure,
       verdetto: t.verdetto, avvisi: (t.avvisi || []).slice(0, 10), url_chip: urlChip, creata: new Date(),
     };
     await p.update({ tarjeta });
-    console.log(`🪪 Tarjeta NFC ${t.numero} per /nfc/${p.slug} (${t.secondi} s)`);
+    console.log(`🪪 Biglietto NFC ${t.numero} per /nfc/${p.slug} (${t.secondi} s)`);
     res.json(tarjeta);
   } catch (err) { rispondiErrore(res, err); }
 });

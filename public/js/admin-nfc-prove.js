@@ -244,7 +244,7 @@ function provaNfcHtmlPagina(p) {
     <div id="ppStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
 }
 
-// Tarjeta NFC da stampare (la stessa del kit: icono NFC davanti, logo dietro) con l'URL della pagina per il chip
+// Biglietto da visita NFC da stampare (la «tarjeta» del kit: icona NFC davanti, logo dietro) con l'URL della pagina per il chip
 function provaNfcHtmlTarjeta(p) {
   const t = p.tarjeta;
   const pronta = t && t.kit_id ? `
@@ -265,16 +265,16 @@ function provaNfcHtmlTarjeta(p) {
         ${(t.avvisi || []).length ? `<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted)">Avvisi (${t.avvisi.length})</summary>
           <ul style="font-size:11px;color:var(--muted);margin:6px 0 0 16px">${t.avvisi.map(a => `<li>${escKit(a)}</li>`).join('')}</ul></details>` : ''}
       </div>
-    </div>` : '<p style="font-size:12px;color:var(--muted)">Nessuna tarjeta ancora.</p>';
+    </div>` : '<p style="font-size:12px;color:var(--muted)">Nessun biglietto ancora.</p>';
   return `
-    <div class="admin-form-title" style="margin-top:28px">TARJETA NFC · pronta da stampare</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">La tarjeta del kit (85×55 mm, icono NFC davanti e logo dietro) in un 3MF per la stampante,
-    con il link di questa pagina da scrivere nel chip. Ci vuole fino a un minuto. Se cambi lo slug, rigenerala.</p>
+    <div class="admin-form-title" style="margin-top:28px">BIGLIETTO DA VISITA NFC · pronto da stampare</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Il biglietto da visita NFC del kit (85×55 mm, icona NFC davanti e logo dietro) in un 3MF per la stampante,
+    con il link di questa pagina da scrivere nel chip. Ci vuole fino a un minuto. Se cambi lo slug, rigeneralo.</p>
     ${pronta}
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
       <div class="field" style="flex:1;min-width:240px"><label>Logo per la stampa (vuoto = logo del profilo; meglio SVG o PDF)</label>
         <input id="ptLogo" type="file" accept=".png,.svg,.pdf,.ai,.jpg,.jpeg,.webp"/></div>
-      <button class="btn-submit" id="ptGenera" onclick="provaNfcTarjeta(${p.id})" style="width:auto;padding:12px 22px">${t ? 'RIGENERA' : 'GENERA'} TARJETA</button>
+      <button class="btn-submit" id="ptGenera" onclick="provaNfcTarjeta(${p.id})" style="width:auto;padding:12px 22px">${t ? 'RIGENERA' : 'GENERA'} BIGLIETTO</button>
     </div>
     <div id="ptStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
 }
@@ -287,21 +287,21 @@ async function provaNfcTarjeta(id, forza = false) {
   if (logo) fd.append('logo', logo);
   if (forza) fd.append('forza', 'true');
   const btn = document.getElementById('ptGenera'); btn.disabled = true;
-  provaNfcStatoTarjeta('Analizzo il logo e genero la tarjeta in 3D… (fino a un minuto)');
+  provaNfcStatoTarjeta('Analizzo il logo e genero il biglietto in 3D… (fino a un minuto)');
   try {
     const r = await fetch(`${API}/kit/admin/prove/${id}/tarjeta`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
     const d = await r.json();
     if (r.status === 422 && d.manual && !forza) {
       btn.disabled = false;
       const motivi = (d.motivi || []).join('\n· ');
-      if (confirm(`Il logo è difficile per il metodo automatico${motivi ? ':\n· ' + motivi : '.'}\n\nGenerare lo stesso la tarjeta e controllarla nel 3D?`)) {
+      if (confirm(`Il logo è difficile per il metodo automatico${motivi ? ':\n· ' + motivi : '.'}\n\nGenerare lo stesso il biglietto e controllarlo nel 3D?`)) {
         return provaNfcTarjeta(id, true);
       }
-      return provaNfcStatoTarjeta('Tarjeta non generata: prova con un logo vettoriale (SVG/PDF) o più pulito.');
+      return provaNfcStatoTarjeta('Biglietto non generato: prova con un logo vettoriale (SVG/PDF) o più pulito.');
     }
     if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
     await provaNfcModifica(id);
-    provaNfcStatoTarjeta('Tarjeta pronta.');
+    provaNfcStatoTarjeta('Biglietto pronto.');
     document.getElementById('ptStato')?.scrollIntoView({ block: 'center' });
   } catch (e) { provaNfcStatoTarjeta('Errore: ' + e.message); btn.disabled = false; }
 }
