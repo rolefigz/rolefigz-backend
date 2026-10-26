@@ -1,6 +1,7 @@
 const cors      = require("cors");
 const helmet    = require("helmet");
 const rateLimit = require("express-rate-limit");
+const jwt       = require("jsonwebtoken");
 
 // CORS — domini consentiti
 const corsOptions = {
@@ -14,7 +15,20 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Rate limit generale — 300 req / 15 min per IP (esclude file statici)
+// L'admin con la sessione aperta (token valido con rol "admin") non conta nei limiti: il pannello fa polling
+// da solo (messaggi ogni 20 s, Benchys ogni 30 s) e con un po' di lavoro arrivava a «Troppe richieste».
+// Un token falso o scaduto non passa la verifica della firma, quindi conta come tutti gli altri.
+function esAdmin(req) {
+  const token = (req.headers.authorization || "").split(" ")[1];
+  if (!token) return false;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET).rol === "admin";
+  } catch {
+    return false;
+  }
+}
+
+// Rate limit generale — 300 req / 15 min per IP (esclude file statici e l'admin)
 const limitGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -25,7 +39,8 @@ const limitGeneral = rateLimit({
     return req.path.startsWith('/css') ||
            req.path.startsWith('/js') ||
            req.path.startsWith('/assets') ||
-           req.path.startsWith('/uploads');
+           req.path.startsWith('/uploads') ||
+           esAdmin(req);
   }
 });
 
@@ -38,11 +53,12 @@ const limitAuth = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limit per route API — 200 req / 15 min
+// Rate limit per route API — 200 req / 15 min (l'admin con la sessione aperta non conta)
 const limitAPI = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
   message: { error: "Troppe richieste API, riprova tra qualche minuto" },
+  skip: esAdmin,
 });
 
 // Rate limit per gli scan dei tag NFC — piu' permissivo di limitAPI perche'
