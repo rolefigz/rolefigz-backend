@@ -162,20 +162,69 @@ function linkDemo(p) {
   return links;
 }
 
+// Aspetto automatico (sfondo liso, bianco o nero secondo il logo del cliente) + quello scelto a mano dal pannello
+function designDemo(p) {
+  const fondo = coloreSfondo(p.logo_url);
+  return { backgroundType: "colore", backgroundColor: fondo, logoSize: "grande",
+           buttonColor: fondo === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6, loadingColor: fondo,
+           ...(p.design || {}) };
+}
+
+// I bottoni scelti a mano (solo i visibili) o, se non sono mai stati personalizzati, quelli dai dati di Google
+function linkPagina(p) {
+  if (!Array.isArray(p.links)) return linkDemo(p);
+  return p.links.filter(l => l.is_visible !== false).map((l, i) => ({ id: i + 1, type: l.type, label: l.label, url: l.url }));
+}
+
+// Solo le chiavi dell'aspetto che usa la pagina pubblica, con valori controllati (colori #RRGGBB, 0–100…)
+const COLORE = /^#[0-9a-f]{6}$/i;
+function pulisciDesign(d) {
+  if (!d || typeof d !== "object") return {};
+  const out = {};
+  for (const k of ["primaryColor", "backgroundColor", "buttonColor", "loadingColor"]) {
+    if (COLORE.test(d[k] || "")) out[k] = d[k];
+  }
+  if (["piccolo", "medio", "grande"].includes(d.logoSize)) out.logoSize = d.logoSize;
+  if (["nessuno", "colore", "foto"].includes(d.backgroundType)) out.backgroundType = d.backgroundType;
+  for (const k of ["backgroundOpacity", "buttonOpacity"]) {
+    const n = parseInt(d[k], 10);
+    if (n >= 0 && n <= 100) out[k] = n;
+  }
+  if (typeof d.youtube === "string") out.youtube = d.youtube.trim().slice(0, 300);
+  if (Array.isArray(d.allergeni)) out.allergeni = d.allergeni.map(Number).filter(n => n >= 1 && n <= 14);
+  return out;
+}
+
+// Bottoni dal pannello: stessi tipi e stesse regole sugli URL dei link delle aziende (wa.me, tel:, mailto:…)
+function pulisciLinks(links) {
+  const { costruisciUrlLink } = require("../modules/nfc/utils/urlSicuro");
+  const { TIPI_LINK } = require("../modules/nfc/models/PageLink");
+  if (!Array.isArray(links)) throw Object.assign(new Error("Bottoni: formato non valido."), { status: 400 });
+  if (links.length > 20) throw Object.assign(new Error("Massimo 20 bottoni."), { status: 400 });
+  return links.map(l => {
+    if (!TIPI_LINK.includes(l.type)) throw Object.assign(new Error(`Tipo di bottone non valido: ${l.type}`), { status: 400 });
+    const label = String(l.label || "").trim().slice(0, 60);
+    if (!label) throw Object.assign(new Error("Ogni bottone deve avere un'etichetta."), { status: 400 });
+    // i bottoni automatici hanno già «mailto:»: costruisciUrlLink lo rimetterebbe
+    const valore = l.type === "email" ? String(l.url || "").replace(/^mailto:/i, "") : l.url;
+    let url;
+    try { url = costruisciUrlLink(l.type, valore); } catch (err) {
+      throw Object.assign(new Error(`«${label}»: ${err.message}`), { status: 400 });
+    }
+    return { type: l.type, label, url, is_visible: l.is_visible !== false };
+  });
+}
+
 function renderPaginaDemo(p) {
   const voto = p.valutazione ? ` · ★ ${String(Number(p.valutazione).toFixed(1)).replace(".", ",")}` +
     (p.recensioni ? ` (${p.recensioni} recensioni)` : "") : "";
   const azienda = { name: p.nome, sector: (p.categoria || "") + voto || null };
   const pagina = {
-    // sfondo liso, bianco o nero secondo il logo del cliente
-    logo_url: p.logo_url, background_url: null,
-    design: { backgroundType: "colore", backgroundColor: coloreSfondo(p.logo_url), logoSize: "grande",
-              buttonColor: coloreSfondo(p.logo_url) === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6,
-              loadingColor: coloreSfondo(p.logo_url) },
-    map_embed_url: places.mappaEmbed(p), description: p.indirizzo, hours: orarioDiOggi(p.orari),
+    logo_url: p.logo_url, background_url: p.background_url || null, design: designDemo(p),
+    map_embed_url: places.mappaEmbed(p), description: p.descrizione || p.indirizzo, hours: orarioDiOggi(p.orari),
     seo_title: `${p.nome} — anteprima RoleFigz NFC`,
   };
-  return renderPaginaPubblica(azienda, pagina, linkDemo(p), {
+  return renderPaginaPubblica(azienda, pagina, linkPagina(p), {
     anteprima: true, linkDiretti: true, testoBanner: "ANTEPRIMA DI PROVA CREATA DA ROLEFIGZ",
   });
 }
@@ -193,17 +242,18 @@ async function aziendaDaDemo(p, ownerUserId, actorUserId, transaction) {
     throw new ErroreAzienda(`Esiste già un'azienda con lo slug «${p.slug}»`, 400);
   }
   const piano = await pianoUnico(transaction);
-  const fondo = coloreSfondo(p.logo_url);
   const azienda = await Company.create({ owner_user_id: ownerUserId, name: p.nome, slug: p.slug,
                                          sector: p.categoria || null }, t);
+  // aspetto, sfondo, descrizione e bottoni passano così come sono nella pagina di prova (anche quelli scelti a mano)
   await CompanyPage.create({
     company_id: azienda.id, is_published: true, published_at: new Date(),
-    logo_url: p.logo_url, map_embed_url: places.mappaEmbed(p), description: p.indirizzo || null, seo_title: p.nome,
-    design: { backgroundType: "colore", backgroundColor: fondo, logoSize: "grande",
-              buttonColor: fondo === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6, loadingColor: fondo },
+    logo_url: p.logo_url, background_url: p.background_url || null, map_embed_url: places.mappaEmbed(p),
+    description: p.descrizione || p.indirizzo || null, seo_title: p.nome, design: designDemo(p),
   }, t);
-  for (const [i, l] of linkDemo(p).entries()) {
-    await PageLink.create({ company_id: azienda.id, type: l.type, label: l.label, url: l.url, position: i }, t);
+  // anche i bottoni nascosti, per riattivarli poi da Aziende
+  for (const [i, l] of (Array.isArray(p.links) ? p.links : linkDemo(p)).entries()) {
+    await PageLink.create({ company_id: azienda.id, type: l.type, label: l.label, url: l.url, position: i,
+                            is_visible: l.is_visible !== false }, t);
   }
   const fine = new Date(p.scadenza) > new Date() ? p.scadenza : new Date(Date.now() + GIORNI_VALIDITA * 864e5);
   await Subscription.create({ company_id: azienda.id, plan_id: piano.id, status: "trial", started_at: new Date(),
@@ -220,4 +270,4 @@ async function trovaPaginaDemo(slug) {
 }
 
 module.exports = { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
-                   logoSuPiastrella };
+                   logoSuPiastrella, designDemo, pulisciDesign, pulisciLinks };

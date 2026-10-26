@@ -160,8 +160,222 @@ async function provaNfcModifica(id) {
         <button class="btn-submit" id="peSalva" onclick="provaNfcSalva(${p.id})" style="width:auto;padding:12px 22px">SALVA</button>
         <button class="action-btn" onclick="provaNfcRicarica(${p.id})">RICARICA DA GOOGLE</button>
       </div>
-      <div id="peStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
+      <div id="peStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>
+      ${provaNfcHtmlPagina(p)}`;
+    provaNfc.links = Array.isArray(p.links) ? p.links.map(l => ({ ...l })) : null;
+    provaNfc.linksAuto = p.links_auto || [];
+    provaNfcRenderLinks();
   } catch (e) { content.innerHTML = `<div class="msg err">Errore: ${escKit(e.message)}</div>`; }
+}
+
+// Aspetto, sfondo, video, allergeni e bottoni: gli stessi controlli della pagina di un'azienda (admin-nfc.js)
+function provaNfcHtmlPagina(p) {
+  const d = p.design || {};
+  const tipo = d.backgroundType || 'colore';
+  const colore = (id, label, v) => `<div class="field"><label>${label}</label><input id="${id}" type="color" value="${escKit(v)}" style="height:42px;padding:4px;width:100px"/></div>`;
+  const op = (id, v) => `<div class="range-row"><input type="range" id="${id}" min="0" max="100" value="${v}" oninput="this.nextElementSibling.textContent=this.value+'%'"/><span class="val">${v}%</span></div>`;
+  return `
+    <div class="admin-form-title" style="margin-top:28px">PAGINA · aspetto e bottoni</div>
+    <details class="pg-sezione" open>
+      <summary>📝 DESCRIZIONE</summary>
+      <div class="pg-sezione-body">
+        <div class="field"><label>Testo sotto il nome (vuoto = indirizzo)</label><textarea id="ppDescrizione" maxlength="1000">${escKit(p.descrizione)}</textarea></div>
+      </div>
+    </details>
+    <details class="pg-sezione" open>
+      <summary>🎨 ASPETTO</summary>
+      <div class="pg-sezione-body">
+        <div class="form-row">
+          ${colore('ppColore', 'Colore principale', d.primaryColor || '#FF6A2C')}
+          <div class="field"><label>Dimensione logo</label><select id="ppLogoSize">
+            ${['piccolo', 'medio', 'grande'].map(s => `<option value="${s}" ${(d.logoSize || 'grande') === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}
+          </select></div>
+        </div>
+        <div class="field"><label>Sfondo pagina</label>
+          <select id="ppTipoSfondo" onchange="provaNfcTipoSfondo()">
+            <option value="nessuno" ${tipo === 'nessuno' ? 'selected' : ''}>Nessuno (scuro, più leggera)</option>
+            <option value="colore" ${tipo === 'colore' ? 'selected' : ''}>Colore pieno</option>
+            <option value="foto" ${tipo === 'foto' ? 'selected' : ''}>Foto</option>
+          </select></div>
+        <div id="ppSfondoColore" style="display:${tipo === 'colore' ? '' : 'none'}">${colore('ppColoreSfondo', 'Colore di sfondo', d.backgroundColor || '#FFFFFF')}</div>
+        <div id="ppSfondoFoto" class="field" style="display:${tipo === 'foto' ? '' : 'none'}">
+          <label>Foto di sfondo (JPG, PNG, WEBP, max 5 MB)</label>
+          ${p.background_url ? `<img src="${escKit(p.background_url)}" alt="" style="width:100%;max-width:180px;height:76px;object-fit:cover;border:1px solid var(--border);display:block;margin-bottom:6px"/>` : ''}
+          <input type="file" id="ppFoto" accept="image/png,image/jpeg,image/webp" onchange="provaNfcCaricaSfondo(${p.id})"/>
+          ${p.background_url ? `<button class="action-btn danger" style="margin-top:6px" onclick="provaNfcRimuoviSfondo(${p.id})">RIMUOVI FOTO</button>` : ''}
+          <label style="margin-top:12px">Filtro scuro sulla foto (0 = colori pieni, 100 = più scura e leggibile)</label>
+          ${op('ppOpFoto', d.backgroundOpacity ?? 70)}
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          ${colore('ppColoreBottoni', 'Colore dei bottoni', d.buttonColor || '#F4F1EA')}
+          ${colore('ppColoreCaricamento', 'Colore schermata di caricamento', d.loadingColor || '#0A0A0A')}
+        </div>
+        <div class="field"><label>Opacità dei bottoni</label>${op('ppOpBottoni', d.buttonOpacity ?? 6)}</div>
+        <button class="action-btn" onclick="provaNfcAspettoAuto(${p.id})">RIPRISTINA ASPETTO AUTOMATICO</button>
+      </div>
+    </details>
+    <details class="pg-sezione">
+      <summary>▶️ VIDEO YOUTUBE</summary>
+      <div class="pg-sezione-body">
+        <div class="field"><label>Link del video (vuoto = nessun video)</label>
+          <input id="ppYoutube" type="url" placeholder="https://www.youtube.com/watch?v=… oppure https://youtu.be/…" value="${escKit(d.youtube)}"/>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Parte da solo, senza audio. Vale anche uno «Shorts».</div></div>
+      </div>
+    </details>
+    <details class="pg-sezione">
+      <summary>⚠️ ALLERGENI</summary>
+      <div class="pg-sezione-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+          ${ALLERGENI_NOMI.map((nome, i) => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" name="ppAllergene" value="${i + 1}" ${(d.allergeni || []).map(Number).includes(i + 1) ? 'checked' : ''}/>${i + 1}. ${nome}</label>`).join('')}
+        </div>
+      </div>
+    </details>
+    <details class="pg-sezione" open>
+      <summary>🔗 BOTTONI</summary>
+      <div class="pg-sezione-body">
+        <div id="ppLinksInfo" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px"></div>
+        <div id="ppLinksLista"></div>
+        <button class="action-btn" onclick="provaNfcAggiungiLink()">+ AGGIUNGI BOTTONE</button>
+        <button class="action-btn" id="ppLinksAuto" onclick="provaNfcLinksAuto()">USA I BOTTONI AUTOMATICI</button>
+      </div>
+    </details>
+    <button class="btn-submit" id="ppSalva" onclick="provaNfcSalvaPagina(${p.id})" style="width:auto;padding:12px 22px">SALVA PAGINA</button>
+    <div id="ppStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>`;
+}
+
+function provaNfcStatoPagina(testo) { const e = document.getElementById('ppStato'); if (e) e.textContent = testo; }
+
+function provaNfcTipoSfondo() {
+  const tipo = document.getElementById('ppTipoSfondo').value;
+  document.getElementById('ppSfondoColore').style.display = tipo === 'colore' ? '' : 'none';
+  document.getElementById('ppSfondoFoto').style.display = tipo === 'foto' ? '' : 'none';
+}
+
+// provaNfc.links === null: bottoni automatici (si vedono, ma toccandoli diventano scelti a mano)
+function provaNfcRenderLinks() {
+  const wrap = document.getElementById('ppLinksLista');
+  if (!wrap) return;
+  const auto = provaNfc.links === null;
+  const lista = auto ? provaNfc.linksAuto : provaNfc.links;
+  document.getElementById('ppLinksInfo').textContent = auto
+    ? 'Automatici: nascono dai dati qui sopra (telefono, sito, Maps) + recensione Google. Cambiane uno e diventano tutti modificabili a mano.'
+    : "Scelti a mano: i dati qui sopra non li cambiano più. L'icona dipende dal Tipo. Trascina ⠿ per l'ordine.";
+  document.getElementById('ppLinksAuto').style.display = auto ? 'none' : '';
+  wrap.innerHTML = lista.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--surface);padding:8px;margin-bottom:6px;flex-wrap:wrap">
+      <span class="pp-handle" title="Trascina per riordinare" style="cursor:grab;touch-action:none;user-select:none;color:var(--muted);display:flex;padding:6px 2px"><iconify-icon icon="mdi:drag" width="18"></iconify-icon></span>
+      <select onchange="provaNfcLink(${i},'type',this.value)" style="font-family:'DM Mono',monospace;font-size:10px">
+        ${TIPI_LINK_NFC_ADMIN.map(([v, lbl]) => `<option value="${v}" ${l.type === v ? 'selected' : ''}>${v === 'tripadvisor' ? 'Recensioni' : lbl}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="Etichetta" value="${escKit(l.label)}" onchange="provaNfcLink(${i},'label',this.value)" style="flex:1;min-width:100px;font-family:'DM Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--border)"/>
+      <input type="text" placeholder="URL o numero" value="${escKit(l.url)}" onchange="provaNfcLink(${i},'url',this.value)" style="flex:1;min-width:100px;font-family:'DM Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--border)"/>
+      <label style="font-size:9px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;white-space:nowrap">
+        <input type="checkbox" style="width:auto" ${l.is_visible !== false ? 'checked' : ''} onchange="provaNfcLink(${i},'is_visible',this.checked)"/> visibile</label>
+      <button class="action-btn danger" onclick="provaNfcRimuoviLink(${i})">✕</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:12px">Nessun bottone.</p>';
+
+  if (window.provaNfcSortable) window.provaNfcSortable.destroy();
+  window.provaNfcSortable = window.Sortable && lista.length > 1 ? Sortable.create(wrap, {
+    handle: '.pp-handle', animation: 180, delay: 120, delayOnTouchOnly: true, touchStartThreshold: 4,
+    onEnd: (e) => {
+      if (e.oldIndex === e.newIndex) return;
+      provaNfcPersonalizza();
+      const [spostato] = provaNfc.links.splice(e.oldIndex, 1);
+      provaNfc.links.splice(e.newIndex, 0, spostato);
+      provaNfcRenderLinks();
+    },
+  }) : null;
+}
+
+// dal primo cambiamento i bottoni automatici diventano una lista scelta a mano
+function provaNfcPersonalizza() {
+  if (provaNfc.links === null) {
+    provaNfc.links = provaNfc.linksAuto.map(({ type, label, url }) => ({ type, label, url, is_visible: true }));
+  }
+}
+
+function provaNfcLink(i, campo, valore) {
+  provaNfcPersonalizza();
+  provaNfc.links[i][campo] = valore;
+  provaNfcRenderLinks();
+}
+
+function provaNfcAggiungiLink() {
+  provaNfcPersonalizza();
+  provaNfc.links.push({ type: 'instagram', label: '', url: '', is_visible: true });
+  provaNfcRenderLinks();
+}
+
+function provaNfcRimuoviLink(i) {
+  provaNfcPersonalizza();
+  provaNfc.links.splice(i, 1);
+  provaNfcRenderLinks();
+}
+
+function provaNfcLinksAuto() {
+  if (!confirm('Tornare ai bottoni automatici? I bottoni scelti a mano si perdono quando salvi la pagina.')) return;
+  provaNfc.links = null;
+  provaNfcRenderLinks();
+}
+
+async function provaNfcSalvaPagina(id) {
+  const v = id => document.getElementById(id)?.value;
+  const body = {
+    descrizione: v('ppDescrizione'),
+    design: {
+      primaryColor: v('ppColore'), logoSize: v('ppLogoSize'), backgroundType: v('ppTipoSfondo'),
+      backgroundColor: v('ppColoreSfondo'), backgroundOpacity: parseInt(v('ppOpFoto'), 10),
+      buttonColor: v('ppColoreBottoni'), buttonOpacity: parseInt(v('ppOpBottoni'), 10), loadingColor: v('ppColoreCaricamento'),
+      youtube: (v('ppYoutube') || '').trim(),
+      allergeni: [...document.querySelectorAll('input[name="ppAllergene"]:checked')].map(c => Number(c.value)),
+    },
+    links: provaNfc.links,
+  };
+  const btn = document.getElementById('ppSalva'); btn.disabled = true; provaNfcStatoPagina('Salvo…');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/pagina`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    await provaNfcModifica(id);
+    provaNfcStatoPagina('Pagina salvata.');
+  } catch (e) { provaNfcStatoPagina('Errore: ' + e.message); btn.disabled = false; }
+}
+
+async function provaNfcAspettoAuto(id) {
+  if (!confirm("Tornare all'aspetto automatico (sfondo bianco o nero secondo il logo)? Video e allergeni si tolgono, la foto resta caricata.")) return;
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/pagina`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ design: {} }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error);
+    await provaNfcModifica(id);
+    provaNfcStatoPagina('Aspetto automatico ripristinato.');
+  } catch (e) { provaNfcStatoPagina('Errore: ' + e.message); }
+}
+
+async function provaNfcCaricaSfondo(id) {
+  const file = document.getElementById('ppFoto')?.files[0];
+  if (!file) return;
+  const fd = new FormData(); fd.append('background', file);
+  provaNfcStatoPagina('Carico la foto…');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/sfondo`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    await provaNfcModifica(id);
+    provaNfcStatoPagina('Foto di sfondo caricata.');
+  } catch (e) { provaNfcStatoPagina('Errore: ' + e.message); }
+}
+
+async function provaNfcRimuoviSfondo(id) {
+  if (!confirm('Togliere la foto di sfondo?')) return;
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/sfondo`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error((await r.json()).error);
+    await provaNfcModifica(id);
+  } catch (e) { provaNfcStatoPagina('Errore: ' + e.message); }
 }
 
 function provaNfcStatoModifica(testo) { const e = document.getElementById('peStato'); if (e) e.textContent = testo; }

@@ -16,7 +16,8 @@ const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
 const { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo,
-        logoSuPiastrella } = require("../utils/paginaDemo");
+        logoSuPiastrella, linkDemo, designDemo, pulisciDesign, pulisciLinks } = require("../utils/paginaDemo");
+const uploadImmagine = require("../utils/upload");
 
 const router = express.Router();
 
@@ -439,7 +440,54 @@ router.get("/admin/prove/:id", verifyToken, soloAdmin, async (req, res) => {
   try {
     const p = await trovaProva(req.params.id);
     if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
-    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
+    // design: quello che si vede ora (automatico + scelto a mano); links_auto: i bottoni dai dati di Google
+    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date(),
+               design: designDemo(p), links_auto: linkDemo(p) });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Pagina del profilo (JSON): aspetto, video YouTube, allergeni, descrizione e bottoni.
+// links: null = torna ai bottoni automatici dai dati di Google; un elenco = bottoni scelti a mano.
+router.put("/admin/prove/:id/pagina", verifyToken, soloAdmin, async (req, res) => {
+  const b = req.body || {};
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const campi = {};
+    if (b.design !== undefined) campi.design = pulisciDesign(b.design);
+    if (b.descrizione !== undefined) campi.descrizione = String(b.descrizione || "").trim().slice(0, 1000) || null;
+    if (b.links !== undefined) campi.links = b.links === null ? null : pulisciLinks(b.links);
+    await p.update(campi);
+    res.json({ ok: true });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Foto di sfondo (come per le aziende: Cloudinary, JPG/PNG/WEBP fino a 5 MB)
+router.post("/admin/prove/:id/sfondo", verifyToken, soloAdmin, (req, res, next) => {
+  uploadImmagine.single("background")(req, res, err => {
+    if (!err) return next();
+    res.status(400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Foto troppo grande (massimo 5 MB)." : "Foto: usa JPG, PNG o WEBP." });
+  });
+}, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    if (!req.file) return res.status(400).json({ error: "Nessuna foto caricata." });
+    // con una foto nuova lo sfondo diventa «foto», se non era già così
+    await p.update({ background_url: req.file.path || req.file.secure_url,
+                     design: { ...(p.design || {}), backgroundType: "foto" } });
+    res.json({ background_url: p.background_url });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+router.delete("/admin/prove/:id/sfondo", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const design = { ...(p.design || {}) };
+    if (design.backgroundType === "foto") delete design.backgroundType;          // torna allo sfondo automatico
+    await p.update({ background_url: null, design });
+    res.json({ ok: true });
   } catch (err) { rispondiErrore(res, err); }
 });
 
