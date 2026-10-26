@@ -24,6 +24,7 @@ async function adminTabNfcProve(content) {
             ? `<button class="action-btn" onclick="adminTabNfcAziendaDettaglio(${p.azienda_id})">IN AZIENDE ✓ · MODIFICA</button>`
             : `<button class="action-btn" onclick="provaNfcModifica(${p.id})" style="border-color:var(--accent);color:var(--accent)">MODIFICA</button>
                <button class="action-btn" onclick="provaNfcAzienda(${p.id}, '${escKit(p.slug)}')" style="display:block;margin-top:6px">CREA AZIENDA</button>`}
+          <button class="action-btn" onclick="provaNfcDuplica(${p.id}, '${escKit(p.slug)}')" style="display:block;margin-top:6px">DUPLICA</button>
           <button class="action-btn" onclick="provaNfcElimina(${p.id}, '${escKit(p.slug)}')" style="display:block;margin-top:6px;border-color:#c0392b;color:#c0392b">ELIMINA</button>
         </td>
       </tr>`).join('');
@@ -32,11 +33,22 @@ async function adminTabNfcProve(content) {
       <div class="admin-form-title">PROFILI NFC DI PROVA · privati</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Cerca un locale su Google Maps e crea la sua pagina <strong>/nfc/&lt;slug&gt;</strong> con indirizzo, telefono,
       orari, mappa e bottone per le recensioni Google. Non è un'azienda: non ha account né abbonamento, non è indicizzata, mostra il banner
-      «anteprima» e scade da sola. Se il locale compra, <strong>CREA AZIENDA</strong> la trasforma in un'azienda vera (proprietario tu, da cambiare in Aziende).</p>
+      «anteprima» e scade da sola. Se il locale compra, <strong>CREA AZIENDA</strong> la trasforma in un'azienda vera (proprietario tu, da cambiare in Aziende).
+      Per una persona: <strong>DUPLICA</strong> il profilo dell'azienda e cambia i dati, oppure crealo <strong>senza Google Maps</strong>.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
         <div class="field" style="flex:1;min-width:200px"><label>Attività *</label><input id="pnNome" type="text" placeholder="Bar Stella" onkeydown="if(event.key==='Enter')provaNfcCerca()"/></div>
         <div class="field" style="flex:1;min-width:160px"><label>Città</label><input id="pnCitta" type="text" placeholder="Piacenza" onkeydown="if(event.key==='Enter')provaNfcCerca()"/></div>
         <button class="btn-submit" id="pnCerca" onclick="provaNfcCerca()" style="width:auto;padding:12px 22px">CERCA SU GOOGLE MAPS</button>
+        <button class="action-btn" onclick="provaNfcMostraManuale()" style="padding:12px 16px">+ SENZA GOOGLE MAPS (PERSONA)</button>
+      </div>
+      <div id="pnManuale" style="display:none;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px;border:1px solid var(--border)">
+        <div class="field" style="flex:1;min-width:200px"><label>Nome *</label><input id="pmNome" type="text" maxlength="120" placeholder="Mario Rossi"
+          oninput="document.getElementById('pmSlug').value=provaNfcSlug(this.value)"/></div>
+        <div class="field" style="min-width:200px"><label>Slug (rolefigz.com/nfc/…) *</label><input id="pmSlug" type="text" maxlength="50" placeholder="mario-rossi"
+          oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'')"/></div>
+        <div class="field" style="width:110px"><label>Giorni</label><input id="pmGiorni" type="number" min="1" max="365" value="60"/></div>
+        <div class="field" style="flex:1;min-width:200px"><label>Logo o foto (facoltativo)</label><input id="pmLogo" type="file" accept=".png,.jpg,.jpeg,.webp,.svg"/></div>
+        <button class="btn-submit" id="pmCrea" onclick="provaNfcCreaManuale()" style="width:auto;padding:12px 22px">CREA E MODIFICA</button>
       </div>
       <div id="pnRisultati" style="margin-bottom:12px"></div>
       <div id="pnForm" style="display:none;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px;border:1px solid var(--border)">
@@ -107,6 +119,56 @@ async function provaNfcCrea() {
   } catch (e) { provaNfcStato('Errore: ' + e.message); btn.disabled = false; }
 }
 
+// Come slugDaNome del server: «Mario Rossì» → «mario-rossi»
+function provaNfcSlug(nome) {
+  return String(nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/, '');
+}
+
+function provaNfcMostraManuale() {
+  const f = document.getElementById('pnManuale');
+  f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+  if (f.style.display === 'flex') document.getElementById('pmNome').focus();
+}
+
+// Profilo senza Google Maps (una persona): solo nome e slug, il resto (telefono, bottoni, aspetto…) in MODIFICA
+async function provaNfcCreaManuale() {
+  const nome = document.getElementById('pmNome').value.trim(), slug = document.getElementById('pmSlug').value.trim();
+  if (nome.length < 2) return provaNfcStato('Inserisci il nome.');
+  if (!/^[a-z0-9-]{2,50}$/.test(slug)) return provaNfcStato('Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino.');
+  const fd = new FormData();
+  fd.append('nome', nome); fd.append('slug', slug); fd.append('giorni', document.getElementById('pmGiorni').value);
+  const logo = document.getElementById('pmLogo').files[0];
+  if (logo) fd.append('logo', logo);
+  const btn = document.getElementById('pmCrea'); btn.disabled = true; provaNfcStato('Creo il profilo…');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    provaNfcModifica(d.id);
+  } catch (e) { provaNfcStato('Errore: ' + e.message); btn.disabled = false; }
+}
+
+// Copia del profilo con un altro slug (es. dallo studio alla pagina di una persona), poi si apre in MODIFICA
+async function provaNfcDuplica(id, slug) {
+  const nuovo = prompt(`Duplica /nfc/${slug}
+
+Slug della nuova pagina (es. il nome della persona):`, `${slug}-`);
+  if (nuovo === null) return;
+  const s = provaNfcSlug(nuovo);
+  if (!/^[a-z0-9-]{2,50}$/.test(s)) return alert('Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino.');
+  try {
+    const r = await fetch(`${API}/kit/admin/prove/${id}/duplica`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ slug: s }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    await provaNfcModifica(d.id);
+    const e = document.getElementById('peStato');
+    if (e) e.textContent = `Copia creata: /nfc/${d.slug}. Cambia nome, telefono e il resto, poi SALVA.`;
+  } catch (e) { alert('Errore: ' + e.message); }
+}
+
 // ── Modifica di un profilo di prova, senza crearne l'azienda ──
 async function provaNfcModifica(id) {
   const content = document.getElementById('adminContent');
@@ -124,6 +186,7 @@ async function provaNfcModifica(id) {
         <a href="/nfc/${escKit(p.slug)}" target="_blank" id="peLink" style="color:var(--accent);font-family:'DM Mono',monospace">/nfc/${escKit(p.slug)} ↗</a>
         ${p.attiva ? '<span class="pill green">ATTIVA</span>' : p.attiva_db ? '<span class="pill red">SCADUTA · rinnova i giorni</span>' : '<span class="pill red">DISATTIVATA</span>'}
         <span style="color:var(--muted);font-size:11px">fino al ${dataKit(p.scadenza)}</span>
+        <button class="action-btn" onclick="provaNfcDuplica(${p.id}, '${escKit(p.slug)}')">DUPLICA</button>
       </div>
       <div class="admin-form-title">MODIFICA · ${escKit(p.nome)}</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:14px">I bottoni della pagina si creano da questi dati: <strong>Chiama</strong> e <strong>WhatsApp</strong> (se è un cellulare) dal telefono,
@@ -158,7 +221,7 @@ async function provaNfcModifica(id) {
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-submit" id="peSalva" onclick="provaNfcSalva(${p.id})" style="width:auto;padding:12px 22px">SALVA</button>
-        <button class="action-btn" onclick="provaNfcRicarica(${p.id})">RICARICA DA GOOGLE</button>
+        ${p.place_id ? `<button class="action-btn" onclick="provaNfcRicarica(${p.id})">RICARICA DA GOOGLE</button>` : ''}
       </div>
       <div id="peStato" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px"></div>
       ${provaNfcHtmlPagina(p)}

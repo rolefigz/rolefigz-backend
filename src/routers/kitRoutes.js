@@ -15,7 +15,7 @@ const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
-const { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo,
+const { creaPaginaDemo, creaPaginaProva, duplicaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo,
         logoSuPiastrella, linkDemo, designDemo, pulisciDesign, pulisciLinks } = require("../utils/paginaDemo");
 const uploadImmagine = require("../utils/upload");
 
@@ -424,12 +424,15 @@ async function trovaProva(id) {
 router.post("/admin/prove", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {
   const b = req.body || {};
   const slug = testo(b.slug, 50).toLowerCase();
-  if (!places.ID_PLACE.test(b.place_id || "")) return res.status(400).json({ error: "Scegli un'attività dalla ricerca." });
+  // senza place_id: profilo a mano (una persona), basta il nome; il resto da MODIFICA
+  const placeId = b.place_id ? String(b.place_id) : null, nome = testo(b.nome, 120);
+  if (placeId && !places.ID_PLACE.test(placeId)) return res.status(400).json({ error: "Scegli un'attività dalla ricerca." });
+  if (!placeId && nome.length < 2) return res.status(400).json({ error: "Inserisci il nome." });
   // prima del caricamento del logo, che usa lo slug nel nome del file (creaPaginaProva lo ricontrolla)
   if (!SLUG_PROVA.test(slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
   try {
     const { logoUrl = null, logoId = null } = req.file ? await caricaLogoProva(req.file.buffer, slug) : {};
-    const p = await creaPaginaProva({ placeId: b.place_id, slug, logoUrl, logoId, giorni: b.giorni });
+    const p = await creaPaginaProva({ placeId, nome, slug, logoUrl, logoId, giorni: b.giorni });
     console.log(`🧪 Profilo NFC di prova /nfc/${p.slug} — ${p.nome} (admin #${req.usuario.id})`);
     res.json({ id: p.id, slug: p.slug, nome: p.nome, scadenza: p.scadenza });
   } catch (err) { erroreProva(res, err); }
@@ -578,6 +581,17 @@ router.put("/admin/prove/:id", verifyToken, soloAdmin, riceviLogoProva, async (r
     }
     await aggiornaPaginaProva(p, campi);
     res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// «DUPLICA»: copia del profilo con un altro slug (es. la pagina di una persona dello studio), da cambiare in MODIFICA
+router.post("/admin/prove/:id/duplica", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const copia = await duplicaPaginaProva(p, testo(req.body?.slug, 50).toLowerCase());
+    console.log(`🧪 Profilo di prova /nfc/${p.slug} duplicato in /nfc/${copia.slug}`);
+    res.json({ id: copia.id, slug: copia.slug });
   } catch (err) { erroreProva(res, err); }
 });
 

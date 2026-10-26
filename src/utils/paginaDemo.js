@@ -70,10 +70,8 @@ async function creaPaginaDemo(richiesta, placeId) {
   return PaginaDemo.create(dati);
 }
 
-// Pagina di prova creata a mano dall'admin (pannello → Profili NFC di prova), senza prenotazione del kit:
-// stessi dati di Google Maps, logo facoltativo. richiesta_id resta vuoto: è così che si distinguono.
-// Errore (con status) se lo slug è già di un'azienda o di un'altra pagina di prova.
-async function creaPaginaProva({ placeId, slug, logoUrl, logoId, giorni }) {
+// Errore (con status) se lo slug non è valido o è già di un'azienda o di un'altra pagina di prova
+async function verificaSlugLibero(slug) {
   if (!SLUG.test(slug || "") || slug === "rolefigz") {
     throw Object.assign(new Error("Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino."), { status: 400 });
   }
@@ -81,35 +79,46 @@ async function creaPaginaProva({ placeId, slug, logoUrl, logoId, giorni }) {
     throw Object.assign(new Error(`Esiste già un'azienda con lo slug «${slug}».`), { status: 409 });
   }
   if (await PaginaDemo.findOne({ where: { slug } })) {
-    throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${slug}»: eliminala prima.`), { status: 409 });
+    throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${slug}».`), { status: 409 });
   }
-  const d = await places.dettaglioAttivita(placeId);                    // dati riletti da Google, mai dal browser
+}
+
+function scadenzaTra(giorni) {
   const durata = Math.min(Math.max(parseInt(giorni, 10) || GIORNI_VALIDITA, 1), 365);
+  return new Date(Date.now() + durata * 24 * 60 * 60 * 1000);
+}
+
+// Pagina di prova creata a mano dall'admin (pannello → Profili NFC di prova), senza prenotazione del kit:
+// con placeId, i dati di Google Maps; senza (una persona, non un locale), solo il nome e il resto da MODIFICA
+// (place_id vuoto: niente recensione Google né «Ricarica da Google»). Logo facoltativo.
+// richiesta_id resta vuoto: è così che si distinguono da quelle del kit campione.
+async function creaPaginaProva({ placeId, nome, slug, logoUrl, logoId, giorni }) {
+  await verificaSlugLibero(slug);
+  const d = placeId ? await places.dettaglioAttivita(placeId) : { place_id: "", nome };   // Google, mai il browser
   return PaginaDemo.create({
     slug, richiesta_id: null, place_id: d.place_id, nome: d.nome, categoria: d.categoria || null,
     indirizzo: d.indirizzo || null, telefono: d.telefono || null, telefono_int: d.telefono_int || null,
-    sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari, valutazione: d.valutazione,
-    recensioni: d.recensioni, lat: d.lat, lng: d.lng,
+    sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari || [], valutazione: d.valutazione || null,
+    recensioni: d.recensioni || 0, lat: d.lat ?? null, lng: d.lng ?? null,
     logo_url: logoUrl ? await logoSuPiastrella(logoUrl, logoId) : null,
-    scadenza: new Date(Date.now() + durata * 24 * 60 * 60 * 1000), attiva: true,
+    scadenza: scadenzaTra(giorni), attiva: true,
   });
+}
+
+// «DUPLICA»: copia di un profilo (es. dalla pagina dello studio a quella di una persona che ci lavora) con un
+// altro slug; dati, aspetto, sfondo e bottoni uguali, da cambiare poi in MODIFICA. Il biglietto NFC no: il suo
+// chip porta all'URL del profilo di partenza.
+async function duplicaPaginaProva(p, slug) {
+  await verificaSlugLibero(slug);
+  const { id, createdAt, updatedAt, tarjeta, ...dati } = p.toJSON();
+  return PaginaDemo.create({ ...dati, slug, richiesta_id: null, scadenza: scadenzaTra(), attiva: true });
 }
 
 // Modifica a mano di un profilo di prova (pannello → Profili di prova → MODIFICA), senza crearne l'azienda.
 // `campi`: solo quelli mandati dal form, già ripuliti; i dati di Google non toccati restano com'erano.
 // Lo slug nuovo deve essere libero come alla creazione (escluso il profilo stesso).
 async function aggiornaPaginaProva(p, campi) {
-  if (campi.slug !== undefined && campi.slug !== p.slug) {
-    if (!SLUG.test(campi.slug) || campi.slug === "rolefigz") {
-      throw Object.assign(new Error("Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino."), { status: 400 });
-    }
-    if (await Company.findOne({ where: { slug: campi.slug }, paranoid: false })) {
-      throw Object.assign(new Error(`Esiste già un'azienda con lo slug «${campi.slug}».`), { status: 409 });
-    }
-    if (await PaginaDemo.findOne({ where: { slug: campi.slug } })) {
-      throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${campi.slug}».`), { status: 409 });
-    }
-  }
+  if (campi.slug !== undefined && campi.slug !== p.slug) await verificaSlugLibero(campi.slug);
   // telefono cambiato a mano: il formato internazionale di Google non vale più (il link «Chiama» usa quello nuovo)
   if (campi.telefono !== undefined && campi.telefono !== p.telefono) campi.telefono_int = null;
   return p.update(campi);
@@ -117,6 +126,7 @@ async function aggiornaPaginaProva(p, campi) {
 
 // «Ricarica da Google»: rilegge i dati dell'attività e sovrascrive le modifiche fatte a mano su quei campi
 async function ricaricaPaginaProva(p) {
+  if (!p.place_id) throw Object.assign(new Error("Questo profilo non viene da Google Maps."), { status: 400 });
   const d = await places.dettaglioAttivita(p.place_id);
   return p.update({
     nome: d.nome, categoria: d.categoria || null, indirizzo: d.indirizzo || null, telefono: d.telefono || null,
@@ -158,7 +168,8 @@ function linkDemo(p) {
   if (naz.startsWith("3") && naz.length >= 9) aggiungi("whatsapp", "Scrivici su WhatsApp", `https://wa.me/39${naz}`);
   if (p.sito) aggiungi("website", "Sito web", p.sito);
   if (p.maps_url) aggiungi("maps", "Come arrivare", p.maps_url);
-  aggiungi("tripadvisor", "Lascia una recensione su Google", places.linkRecensione(p.place_id));
+  // profili creati a mano (una persona): non hanno una scheda su Google da recensire
+  if (p.place_id) aggiungi("tripadvisor", "Lascia una recensione su Google", places.linkRecensione(p.place_id));
   return links;
 }
 
@@ -215,13 +226,18 @@ function pulisciLinks(links) {
   });
 }
 
+// La mappa solo se c'è un indirizzo o una posizione (una persona senza indirizzo: niente mappa)
+function mappaDemo(p) {
+  return p.indirizzo || (p.lat != null && p.lng != null) ? places.mappaEmbed(p) : null;
+}
+
 function renderPaginaDemo(p) {
   const voto = p.valutazione ? ` · ★ ${String(Number(p.valutazione).toFixed(1)).replace(".", ",")}` +
     (p.recensioni ? ` (${p.recensioni} recensioni)` : "") : "";
   const azienda = { name: p.nome, sector: (p.categoria || "") + voto || null };
   const pagina = {
     logo_url: p.logo_url, background_url: p.background_url || null, design: designDemo(p),
-    map_embed_url: places.mappaEmbed(p), description: p.descrizione || p.indirizzo, hours: orarioDiOggi(p.orari),
+    map_embed_url: mappaDemo(p), description: p.descrizione || p.indirizzo, hours: orarioDiOggi(p.orari),
     seo_title: `${p.nome} — anteprima RoleFigz NFC`,
   };
   return renderPaginaPubblica(azienda, pagina, linkPagina(p), {
@@ -247,7 +263,7 @@ async function aziendaDaDemo(p, ownerUserId, actorUserId, transaction) {
   // aspetto, sfondo, descrizione e bottoni passano così come sono nella pagina di prova (anche quelli scelti a mano)
   await CompanyPage.create({
     company_id: azienda.id, is_published: true, published_at: new Date(),
-    logo_url: p.logo_url, background_url: p.background_url || null, map_embed_url: places.mappaEmbed(p),
+    logo_url: p.logo_url, background_url: p.background_url || null, map_embed_url: mappaDemo(p),
     description: p.descrizione || p.indirizzo || null, seo_title: p.nome, design: designDemo(p),
   }, t);
   // anche i bottoni nascosti, per riattivarli poi da Aziende
@@ -269,5 +285,5 @@ async function trovaPaginaDemo(slug) {
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, creaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
+module.exports = { creaPaginaDemo, creaPaginaProva, duplicaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
                    logoSuPiastrella, designDemo, pulisciDesign, pulisciLinks };
