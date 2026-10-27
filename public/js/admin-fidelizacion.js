@@ -40,6 +40,7 @@ async function adminTabFidelizzazione(content, query) {
               <button class="action-btn" onclick="fedeltaAggiungiTimbro('${c.email}','${(c.nombre || '').replace(/'/g, "\\'")}')">+ TIMBRO</button>
               ${c.timbri_attuali > 0 ? `<button class="action-btn" onclick="fedeltaAnnullaTimbro(${c.id})">ANNULLA</button>` : ''}
               ${c.premi_disponibili > 0 ? `<button class="action-btn" style="border-color:var(--green);color:var(--green)" onclick="fedeltaRiscattaPremio(${c.id})">RISCATTA PREMIO</button>` : ''}
+              <button class="action-btn" onclick="fedeltaCopiaLink('${c.codice_tarjeta}')" title="Copia il link della tessera (da caricare sulla tessera NFC)">🔗 LINK</button>
             </td>
           </tr>`).join('')
       : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">${query ? 'Nessun cliente trovato' : 'Nessuna tessera ancora — aggiungine una qui sotto'}</td></tr>`;
@@ -119,6 +120,15 @@ async function fedeltaAnnullaTimbro(id) {
     if (!r.ok) throw new Error(data.error || 'Errore');
     adminTabFidelizzazione(document.getElementById('adminContent'));
   } catch (e) { alert('Errore: ' + e.message); }
+}
+
+function fedeltaCopiaLink(codice) {
+  const url = `${location.origin}/fedelta/${codice}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => alert('Link copiato:\n' + url)).catch(() => prompt('Link della tessera (copia a mano):', url));
+  } else {
+    prompt('Link della tessera (copia a mano):', url);
+  }
 }
 
 async function fedeltaRiscattaPremio(id) {
