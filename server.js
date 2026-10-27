@@ -96,6 +96,10 @@ app.get("/producto/:slug", async (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Tessera fedeltà pubblica: la apre il cliente dalla sua tessera fisica NFC.
+const { mostraTessera } = require("./src/controllers/fedeltaController");
+app.get("/fedelta/:codice", mostraTessera);
+
 // Landing del módulo (marketing del servicio, planes reales desde la BD).
 app.get("/nfc", mostraLandingNfc);
 

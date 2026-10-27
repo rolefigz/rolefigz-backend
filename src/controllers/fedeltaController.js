@@ -1,6 +1,10 @@
 const { ClienteFedelta, FedeltaMovimiento } = require("../models");
 const { Op } = require("sequelize");
 const crypto = require("crypto");
+const path = require("path");
+const { renderTesseraFedelta } = require("../views/renderTesseraFedelta");
+
+const PAGINA_404 = path.join(__dirname, "..", "..", "public", "404.html");
 
 const TIMBRI_PER_PREMIO = 4;
 const VALORE_PREMIO     = 100; // €, senza minimo d'ordine
@@ -127,4 +131,16 @@ const riscattaPremio = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio, TIMBRI_PER_PREMIO, VALORE_PREMIO };
+// ── GET /fedelta/:codice — pagina pubblica della tessera (letta dal QR/NFC) ──
+const mostraTessera = async (req, res) => {
+  try {
+    const codice = String(req.params.codice || "").trim().toUpperCase();
+    const cliente = await ClienteFedelta.findOne({ where: { codice_tarjeta: codice } });
+    if (!cliente) return res.status(404).sendFile(PAGINA_404);
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderTesseraFedelta({ cliente, timbriPerPremio: TIMBRI_PER_PREMIO, valorePremio: VALORE_PREMIO }));
+  } catch (err) { res.status(500).send("Errore"); }
+};
+
+module.exports = { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio, mostraTessera, TIMBRI_PER_PREMIO, VALORE_PREMIO };
