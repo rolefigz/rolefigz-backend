@@ -66,6 +66,17 @@ async function generaSegnaposti(logoId, azienda, opzioni = {}) {
   return r.json();
 }
 
+// Solo la tarjeta NFC del kit, pronta da stampare (pannello → Profili di prova). qrUrl: l'URL da scrivere nel chip.
+// forza: anche con un logo «manual» (lo decide l'admin guardando il 3D)
+async function generaTarjeta(logoId, azienda, qrUrl, forza = false) {
+  const r = await chiama("/tarjeta", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ logo_id: logoId, azienda: azienda || "", qr_url: qrUrl || "", forza: !!forza }),
+  }, 240000);
+  return r.json();
+}
+
 // Response grezza (per inoltrare il file in streaming al browser)
 async function fileKit(kitId, nomeFile) {
   return chiama(`/kit/${encodeURIComponent(kitId)}/${encodeURIComponent(nomeFile)}`, {}, 60000);
@@ -85,4 +96,4 @@ async function conserva(tipo, id) {
   await chiama(percorso, { method: "POST" }, 30000);
 }
 
-module.exports = { analizzaLogo, generaKit, generaSegnaposti, fileKit, infoKit, logoPng, conserva, ErroreServizio };
+module.exports = { analizzaLogo, generaKit, generaSegnaposti, generaTarjeta, fileKit, infoKit, logoPng, conserva, ErroreServizio };

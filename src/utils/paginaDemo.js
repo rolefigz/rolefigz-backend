@@ -70,6 +70,77 @@ async function creaPaginaDemo(richiesta, placeId) {
   return PaginaDemo.create(dati);
 }
 
+// Errore (con status) se lo slug non è valido o è già di un'azienda o di un'altra pagina di prova
+async function verificaSlugLibero(slug) {
+  if (!SLUG.test(slug || "") || slug === "rolefigz") {
+    throw Object.assign(new Error("Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino."), { status: 400 });
+  }
+  if (await Company.findOne({ where: { slug }, paranoid: false })) {
+    throw Object.assign(new Error(`Esiste già un'azienda con lo slug «${slug}».`), { status: 409 });
+  }
+  if (await PaginaDemo.findOne({ where: { slug } })) {
+    throw Object.assign(new Error(`Esiste già una pagina di prova con lo slug «${slug}».`), { status: 409 });
+  }
+}
+
+function scadenzaTra(giorni) {
+  const durata = Math.min(Math.max(parseInt(giorni, 10) || GIORNI_VALIDITA, 1), 365);
+  return new Date(Date.now() + durata * 24 * 60 * 60 * 1000);
+}
+
+// Pagina di prova creata a mano dall'admin (pannello → Profili NFC di prova), senza prenotazione del kit:
+// con placeId, i dati di Google Maps; senza (una persona, non un locale), solo il nome e il resto da MODIFICA
+// (place_id vuoto: niente recensione Google né «Ricarica da Google»). Logo facoltativo.
+// richiesta_id resta vuoto: è così che si distinguono da quelle del kit campione.
+async function creaPaginaProva({ placeId, nome, slug, logoUrl, logoId, giorni }) {
+  await verificaSlugLibero(slug);
+  const d = placeId ? await places.dettaglioAttivita(placeId) : { place_id: "", nome };   // Google, mai il browser
+  return PaginaDemo.create({
+    slug, richiesta_id: null, place_id: d.place_id, nome: d.nome, categoria: d.categoria || null,
+    indirizzo: d.indirizzo || null, telefono: d.telefono || null, telefono_int: d.telefono_int || null,
+    sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari || [], valutazione: d.valutazione || null,
+    recensioni: d.recensioni || 0, lat: d.lat ?? null, lng: d.lng ?? null,
+    logo_url: logoUrl ? await logoSuPiastrella(logoUrl, logoId) : null,
+    scadenza: scadenzaTra(giorni), attiva: true,
+  });
+}
+
+// «DUPLICA»: copia di un profilo (es. dalla pagina dello studio a quella di una persona che ci lavora) con un
+// altro slug; dati, aspetto, sfondo e bottoni uguali, da cambiare poi in MODIFICA. Il biglietto NFC no: il suo
+// chip porta all'URL del profilo di partenza.
+async function duplicaPaginaProva(p, slug) {
+  await verificaSlugLibero(slug);
+  const { id, createdAt, updatedAt, tarjeta, ...dati } = p.toJSON();
+  return PaginaDemo.create({ ...dati, slug, richiesta_id: null, scadenza: scadenzaTra(), attiva: true });
+}
+
+// Modifica a mano di un profilo di prova (pannello → Profili di prova → MODIFICA), senza crearne l'azienda.
+// `campi`: solo quelli mandati dal form, già ripuliti; i dati di Google non toccati restano com'erano.
+// Lo slug nuovo deve essere libero come alla creazione (escluso il profilo stesso).
+async function aggiornaPaginaProva(p, campi) {
+  if (campi.slug !== undefined && campi.slug !== p.slug) await verificaSlugLibero(campi.slug);
+  // telefono cambiato a mano: il formato internazionale di Google non vale più (il link «Chiama» usa quello nuovo)
+  if (campi.telefono !== undefined && campi.telefono !== p.telefono) campi.telefono_int = null;
+  return p.update(campi);
+}
+
+// «Ricarica da Google»: rilegge i dati dell'attività e sovrascrive le modifiche fatte a mano su quei campi
+async function ricaricaPaginaProva(p) {
+  if (!p.place_id) throw Object.assign(new Error("Questo profilo non viene da Google Maps."), { status: 400 });
+  const d = await places.dettaglioAttivita(p.place_id);
+  return p.update({
+    nome: d.nome, categoria: d.categoria || null, indirizzo: d.indirizzo || null, telefono: d.telefono || null,
+    telefono_int: d.telefono_int || null, sito: d.sito || null, maps_url: d.maps_url || null, orari: d.orari,
+    valutazione: d.valutazione, recensioni: d.recensioni, lat: d.lat, lng: d.lng,
+  });
+}
+
+// Slug proposto dal nome dell'attività: «Bar Stella & Co.» → «bar-stella-co»
+function slugDaNome(nome) {
+  return String(nome || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50).replace(/-+$/, "");
+}
+
 // La pagina di prova di un'altra prenotazione si può riprendere se quella prenotazione è annullata o non esiste
 // più, o se è dello stesso cliente (stessa email): così rifare la prova per la stessa attività non resta bloccato
 async function prenotazioneLibera(richiestaId, email) {
@@ -97,8 +168,67 @@ function linkDemo(p) {
   if (naz.startsWith("3") && naz.length >= 9) aggiungi("whatsapp", "Scrivici su WhatsApp", `https://wa.me/39${naz}`);
   if (p.sito) aggiungi("website", "Sito web", p.sito);
   if (p.maps_url) aggiungi("maps", "Come arrivare", p.maps_url);
-  aggiungi("tripadvisor", "Lascia una recensione su Google", places.linkRecensione(p.place_id));
+  // profili creati a mano (una persona): non hanno una scheda su Google da recensire
+  if (p.place_id) aggiungi("tripadvisor", "Lascia una recensione su Google", places.linkRecensione(p.place_id));
   return links;
+}
+
+// Aspetto automatico (sfondo liso, bianco o nero secondo il logo del cliente) + quello scelto a mano dal pannello
+function designDemo(p) {
+  const fondo = coloreSfondo(p.logo_url);
+  return { backgroundType: "colore", backgroundColor: fondo, logoSize: "grande",
+           buttonColor: fondo === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6, loadingColor: fondo,
+           ...(p.design || {}) };
+}
+
+// I bottoni scelti a mano (solo i visibili) o, se non sono mai stati personalizzati, quelli dai dati di Google
+function linkPagina(p) {
+  if (!Array.isArray(p.links)) return linkDemo(p);
+  return p.links.filter(l => l.is_visible !== false).map((l, i) => ({ id: i + 1, type: l.type, label: l.label, url: l.url }));
+}
+
+// Solo le chiavi dell'aspetto che usa la pagina pubblica, con valori controllati (colori #RRGGBB, 0–100…)
+const COLORE = /^#[0-9a-f]{6}$/i;
+function pulisciDesign(d) {
+  if (!d || typeof d !== "object") return {};
+  const out = {};
+  for (const k of ["primaryColor", "backgroundColor", "buttonColor", "loadingColor"]) {
+    if (COLORE.test(d[k] || "")) out[k] = d[k];
+  }
+  if (["piccolo", "medio", "grande"].includes(d.logoSize)) out.logoSize = d.logoSize;
+  if (["nessuno", "colore", "foto"].includes(d.backgroundType)) out.backgroundType = d.backgroundType;
+  for (const k of ["backgroundOpacity", "buttonOpacity"]) {
+    const n = parseInt(d[k], 10);
+    if (n >= 0 && n <= 100) out[k] = n;
+  }
+  if (typeof d.youtube === "string") out.youtube = d.youtube.trim().slice(0, 300);
+  if (Array.isArray(d.allergeni)) out.allergeni = d.allergeni.map(Number).filter(n => n >= 1 && n <= 14);
+  return out;
+}
+
+// Bottoni dal pannello: stessi tipi e stesse regole sugli URL dei link delle aziende (wa.me, tel:, mailto:…)
+function pulisciLinks(links) {
+  const { costruisciUrlLink } = require("../modules/nfc/utils/urlSicuro");
+  const { TIPI_LINK } = require("../modules/nfc/models/PageLink");
+  if (!Array.isArray(links)) throw Object.assign(new Error("Bottoni: formato non valido."), { status: 400 });
+  if (links.length > 20) throw Object.assign(new Error("Massimo 20 bottoni."), { status: 400 });
+  return links.map(l => {
+    if (!TIPI_LINK.includes(l.type)) throw Object.assign(new Error(`Tipo di bottone non valido: ${l.type}`), { status: 400 });
+    const label = String(l.label || "").trim().slice(0, 60);
+    if (!label) throw Object.assign(new Error("Ogni bottone deve avere un'etichetta."), { status: 400 });
+    // i bottoni automatici hanno già «mailto:»: costruisciUrlLink lo rimetterebbe
+    const valore = l.type === "email" ? String(l.url || "").replace(/^mailto:/i, "") : l.url;
+    let url;
+    try { url = costruisciUrlLink(l.type, valore); } catch (err) {
+      throw Object.assign(new Error(`«${label}»: ${err.message}`), { status: 400 });
+    }
+    return { type: l.type, label, url, is_visible: l.is_visible !== false };
+  });
+}
+
+// La mappa solo se c'è un indirizzo o una posizione (una persona senza indirizzo: niente mappa)
+function mappaDemo(p) {
+  return p.indirizzo || (p.lat != null && p.lng != null) ? places.mappaEmbed(p) : null;
 }
 
 function renderPaginaDemo(p) {
@@ -106,15 +236,11 @@ function renderPaginaDemo(p) {
     (p.recensioni ? ` (${p.recensioni} recensioni)` : "") : "";
   const azienda = { name: p.nome, sector: (p.categoria || "") + voto || null };
   const pagina = {
-    // sfondo liso, bianco o nero secondo il logo del cliente
-    logo_url: p.logo_url, background_url: null,
-    design: { backgroundType: "colore", backgroundColor: coloreSfondo(p.logo_url), logoSize: "grande",
-              buttonColor: coloreSfondo(p.logo_url) === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6,
-              loadingColor: coloreSfondo(p.logo_url) },
-    map_embed_url: places.mappaEmbed(p), description: p.indirizzo, hours: orarioDiOggi(p.orari),
+    logo_url: p.logo_url, background_url: p.background_url || null, design: designDemo(p),
+    map_embed_url: mappaDemo(p), description: p.descrizione || p.indirizzo, hours: orarioDiOggi(p.orari),
     seo_title: `${p.nome} — anteprima RoleFigz NFC`,
   };
-  return renderPaginaPubblica(azienda, pagina, linkDemo(p), {
+  return renderPaginaPubblica(azienda, pagina, linkPagina(p), {
     anteprima: true, linkDiretti: true, testoBanner: "ANTEPRIMA DI PROVA CREATA DA ROLEFIGZ",
   });
 }
@@ -132,17 +258,18 @@ async function aziendaDaDemo(p, ownerUserId, actorUserId, transaction) {
     throw new ErroreAzienda(`Esiste già un'azienda con lo slug «${p.slug}»`, 400);
   }
   const piano = await pianoUnico(transaction);
-  const fondo = coloreSfondo(p.logo_url);
   const azienda = await Company.create({ owner_user_id: ownerUserId, name: p.nome, slug: p.slug,
                                          sector: p.categoria || null }, t);
+  // aspetto, sfondo, descrizione e bottoni passano così come sono nella pagina di prova (anche quelli scelti a mano)
   await CompanyPage.create({
     company_id: azienda.id, is_published: true, published_at: new Date(),
-    logo_url: p.logo_url, map_embed_url: places.mappaEmbed(p), description: p.indirizzo || null, seo_title: p.nome,
-    design: { backgroundType: "colore", backgroundColor: fondo, logoSize: "grande",
-              buttonColor: fondo === "#FFFFFF" ? "#141412" : "#F4F1EA", buttonOpacity: 6, loadingColor: fondo },
+    logo_url: p.logo_url, background_url: p.background_url || null, map_embed_url: mappaDemo(p),
+    description: p.descrizione || p.indirizzo || null, seo_title: p.nome, design: designDemo(p),
   }, t);
-  for (const [i, l] of linkDemo(p).entries()) {
-    await PageLink.create({ company_id: azienda.id, type: l.type, label: l.label, url: l.url, position: i }, t);
+  // anche i bottoni nascosti, per riattivarli poi da Aziende
+  for (const [i, l] of (Array.isArray(p.links) ? p.links : linkDemo(p)).entries()) {
+    await PageLink.create({ company_id: azienda.id, type: l.type, label: l.label, url: l.url, position: i,
+                            is_visible: l.is_visible !== false }, t);
   }
   const fine = new Date(p.scadenza) > new Date() ? p.scadenza : new Date(Date.now() + GIORNI_VALIDITA * 864e5);
   await Subscription.create({ company_id: azienda.id, plan_id: piano.id, status: "trial", started_at: new Date(),
@@ -158,5 +285,5 @@ async function trovaPaginaDemo(slug) {
   return p && new Date(p.scadenza) > new Date() ? p : null;
 }
 
-module.exports = { creaPaginaDemo, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
-                   logoSuPiastrella };
+module.exports = { creaPaginaDemo, creaPaginaProva, duplicaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo, renderPaginaDemo, trovaPaginaDemo, slugDaQr, linkDemo, orarioDiOggi, coloreSfondo,
+                   logoSuPiastrella, designDemo, pulisciDesign, pulisciLinks };

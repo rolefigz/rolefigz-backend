@@ -272,6 +272,9 @@
     .k-perks li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; color: #bbb; line-height: 1.6; }
     .k-perks li .iconify { color: var(--accent); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
     .k-perks strong { color: #f0ece4; }
+    /* #k-bonus è una sezione chiara: .k-perks è pensato per sfondo scuro, qui serve il contrario */
+    #k-bonus .k-perks li { color: var(--muted); border-bottom-color: var(--border); }
+    #k-bonus .k-perks strong { color: var(--text); }
     .k-form-dark .field label { color: #888; }
     .k-form-dark .field input, .k-form-dark .field textarea { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); color: #f0ece4; }
     .k-form-dark .field input:focus, .k-form-dark .field textarea:focus { border-color: var(--accent); }

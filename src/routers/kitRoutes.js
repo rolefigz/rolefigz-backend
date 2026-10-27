@@ -15,7 +15,9 @@ const api = require("../utils/rolemakerApi");
 const { emailKitCliente, emailKitAdmin } = require("../utils/mailer");
 const { sendMessage } = require("../utils/telegram");
 const places = require("../utils/googlePlaces");
-const { creaPaginaDemo, aziendaDaDemo } = require("../utils/paginaDemo");
+const { creaPaginaDemo, creaPaginaProva, duplicaPaginaProva, aggiornaPaginaProva, ricaricaPaginaProva, slugDaNome, aziendaDaDemo,
+        logoSuPiastrella, linkDemo, designDemo, pulisciDesign, pulisciLinks } = require("../utils/paginaDemo");
+const uploadImmagine = require("../utils/upload");
 
 const router = express.Router();
 
@@ -349,6 +351,284 @@ router.get("/admin/file/:kitId/:file", verifyToken, soloAdmin, async (req, res) 
   const { kitId, file } = req.params;
   if (!ID_KIT.test(kitId) || !FILE_ADMIN.test(file)) return res.status(404).json({ error: "File non trovato" });
   try { await inoltraFile(res, kitId, file, 0); } catch (err) { rispondiErrore(res, err); }
+});
+
+// ── Admin → Profili NFC di prova ────────────────────────────────────
+// Pagine /nfc/<slug> create a mano dall'admin con i dati di Google Maps, senza prenotazione del kit (richiesta_id
+// vuoto): per mostrare a un locale la sua pagina prima della visita. Solo admin, noindex come le altre di prova.
+const uploadLogoProva = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.mimetype);
+    cb(ok ? null : Object.assign(new Error("Logo: usa PNG, JPG, WEBP o SVG."), { status: 415 }), ok);
+  },
+});
+
+function erroreProva(res, err) {
+  if (err instanceof places.ErrorePlaces || err.status) return res.status(err.status || 502).json({ error: err.message });
+  rispondiErrore(res, err);
+}
+
+// ricerca su Google Maps senza il limite orario della pagina pubblica (resta il tetto giornaliero di Places)
+router.post("/admin/attivita", verifyToken, soloAdmin, async (req, res) => {
+  const nome = testo(req.body?.azienda, 100), citta = testo(req.body?.citta, 80);
+  if (nome.length < 2) return res.status(400).json({ error: "Inserisci il nome dell'attività." });
+  try {
+    const risultati = await places.cercaAttivita(nome, citta);
+    res.json({ risultati: risultati.map(r => ({ ...r, slug: slugDaNome(r.nome) })) });
+  } catch (err) { erroreProva(res, err); }
+});
+
+router.get("/admin/prove", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const lista = await PaginaDemo.findAll({ where: { richiesta_id: null }, order: [["createdAt", "DESC"]], limit: 300 });
+    const aziende = lista.length
+      ? await Company.findAll({ where: { slug: { [Op.in]: lista.map(p => p.slug) } }, attributes: ["id", "slug"] })
+      : [];
+    res.json(lista.map(p => ({
+      id: p.id, slug: p.slug, nome: p.nome, categoria: p.categoria, indirizzo: p.indirizzo, logo_url: p.logo_url,
+      valutazione: p.valutazione, recensioni: p.recensioni, scadenza: p.scadenza, createdAt: p.createdAt,
+      attiva: p.attiva && new Date(p.scadenza) > new Date(),
+      azienda_id: aziende.find(a => a.slug === p.slug)?.id || null,
+    })));
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+function riceviLogoProva(req, res, next) {
+  uploadLogoProva.single("logo")(req, res, err => {
+    if (!err) return next();
+    res.status(err.status || 400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Logo troppo grande (massimo 5 MB)." : err.message });
+  });
+}
+
+// stessa cartella dei loghi del kit: logoSuPiastrella legge i colori da «kit-logos/kit-<logoId>»
+async function caricaLogoProva(buffer, slug) {
+  const logoId = `prova-${slug}`;
+  const logoUrl = await new Promise((ok, ko) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "rolefigz/kit-logos", public_id: `kit-${logoId}`, overwrite: true, resource_type: "image" },
+      (err, r) => (err ? ko(err) : ok(r.secure_url)),
+    ).end(buffer);
+  });
+  return { logoUrl, logoId };
+}
+
+const SLUG_PROVA = /^[a-z0-9-]{2,50}$/;
+const URL_WEB = /^https?:\/\/[^\s<>"']+$/i;
+
+async function trovaProva(id) {
+  return PaginaDemo.findOne({ where: { id: parseInt(id, 10) || 0, richiesta_id: null } });
+}
+
+router.post("/admin/prove", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {
+  const b = req.body || {};
+  const slug = testo(b.slug, 50).toLowerCase();
+  // senza place_id: profilo a mano (una persona), basta il nome; il resto da MODIFICA
+  const placeId = b.place_id ? String(b.place_id) : null, nome = testo(b.nome, 120);
+  if (placeId && !places.ID_PLACE.test(placeId)) return res.status(400).json({ error: "Scegli un'attività dalla ricerca." });
+  if (!placeId && nome.length < 2) return res.status(400).json({ error: "Inserisci il nome." });
+  // prima del caricamento del logo, che usa lo slug nel nome del file (creaPaginaProva lo ricontrolla)
+  if (!SLUG_PROVA.test(slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
+  try {
+    const { logoUrl = null, logoId = null } = req.file ? await caricaLogoProva(req.file.buffer, slug) : {};
+    const p = await creaPaginaProva({ placeId, nome, slug, logoUrl, logoId, giorni: b.giorni });
+    console.log(`🧪 Profilo NFC di prova /nfc/${p.slug} — ${p.nome} (admin #${req.usuario.id})`);
+    res.json({ id: p.id, slug: p.slug, nome: p.nome, scadenza: p.scadenza });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Tutti i campi di un profilo, per il form di modifica
+router.get("/admin/prove/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    // design: quello che si vede ora (automatico + scelto a mano); links_auto: i bottoni dai dati di Google
+    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date(),
+               design: designDemo(p), links_auto: linkDemo(p) });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Pagina del profilo (JSON): aspetto, video YouTube, allergeni, descrizione e bottoni.
+// links: null = torna ai bottoni automatici dai dati di Google; un elenco = bottoni scelti a mano.
+router.put("/admin/prove/:id/pagina", verifyToken, soloAdmin, async (req, res) => {
+  const b = req.body || {};
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const campi = {};
+    if (b.design !== undefined) campi.design = pulisciDesign(b.design);
+    if (b.descrizione !== undefined) campi.descrizione = String(b.descrizione || "").trim().slice(0, 1000) || null;
+    if (b.links !== undefined) campi.links = b.links === null ? null : pulisciLinks(b.links);
+    await p.update(campi);
+    res.json({ ok: true });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Foto di sfondo (come per le aziende: Cloudinary, JPG/PNG/WEBP fino a 5 MB)
+router.post("/admin/prove/:id/sfondo", verifyToken, soloAdmin, (req, res, next) => {
+  uploadImmagine.single("background")(req, res, err => {
+    if (!err) return next();
+    res.status(400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Foto troppo grande (massimo 5 MB)." : "Foto: usa JPG, PNG o WEBP." });
+  });
+}, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    if (!req.file) return res.status(400).json({ error: "Nessuna foto caricata." });
+    // con una foto nuova lo sfondo diventa «foto», se non era già così
+    await p.update({ background_url: req.file.path || req.file.secure_url,
+                     design: { ...(p.design || {}), backgroundType: "foto" } });
+    res.json({ background_url: p.background_url });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+router.delete("/admin/prove/:id/sfondo", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const design = { ...(p.design || {}) };
+    if (design.backgroundType === "foto") delete design.backgroundType;          // torna allo sfondo automatico
+    await p.update({ background_url: null, design });
+    res.json({ ok: true });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Biglietto da visita NFC pronto da stampare (3MF per la Bambu: la «tarjeta» del kit) con l'URL della pagina da scrivere
+// nel chip. Logo: quello caricato ora (meglio SVG/PDF) o l'originale del profilo, senza la «piastrella».
+// forza=true: anche con un logo che il metodo automatico boccia (lo decide l'admin guardando il 3D).
+router.post("/admin/prove/:id/tarjeta", verifyToken, soloAdmin, caricaLogo, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    let buffer, nome, tipo;
+    if (req.file) {
+      ({ buffer, originalname: nome, mimetype: tipo } = req.file);
+    } else {
+      if (!p.logo_url) return res.status(400).json({ error: "Il profilo non ha un logo: caricane uno qui." });
+      const originale = p.logo_url.replace(/\/c_pad,w_600,h_600,b_rgb:[0-9A-Fa-f]{6},r_60\//, "/");
+      const r = await fetch(originale, { signal: AbortSignal.timeout(20000) });
+      if (!r.ok) return res.status(502).json({ error: "Non riesco a leggere il logo del profilo: caricalo qui." });
+      buffer = Buffer.from(await r.arrayBuffer());
+      tipo = r.headers.get("content-type") || "image/png";
+      nome = "logo" + ({ "image/svg+xml": ".svg", "image/jpeg": ".jpg", "image/webp": ".webp" }[tipo] || ".png");
+    }
+    const logo = await api.analizzaLogo(buffer, nome, tipo);
+    const forza = req.body?.forza === "true";
+    if (logo.verdetto === "manual" && !forza) {
+      return res.status(422).json({ error: "Logo difficile per il metodo automatico.", manual: true,
+                                    motivi: logo.motivi || [], consigli: logo.consigli || [] });
+    }
+    const base = process.env.BASE_URL || "https://www.rolefigz.com";
+    const urlChip = `${base}/nfc/${p.slug}`;
+    const t = await api.generaTarjeta(logo.logo_id, p.nome, urlChip, forza);
+    await api.conserva("kit", t.kit_id).catch(err => console.error("Conserva biglietto NFC:", err.message));
+    const tarjeta = {
+      kit_id: t.kit_id, numero: t.numero, file_3mf: t.file_3mf, glb: t.pezzi[0]?.glb, misure: t.pezzi[0]?.misure,
+      verdetto: t.verdetto, avvisi: (t.avvisi || []).slice(0, 10), url_chip: urlChip, creata: new Date(),
+    };
+    await p.update({ tarjeta });
+    console.log(`🪪 Biglietto NFC ${t.numero} per /nfc/${p.slug} (${t.secondi} s)`);
+    res.json(tarjeta);
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Modifica a mano (multipart, per il logo): testi, link, orari, slug, scadenza, attiva/disattiva, logo.
+// Un campo vuoto si svuota; un campo non mandato resta com'era.
+router.put("/admin/prove/:id", verifyToken, soloAdmin, riceviLogoProva, async (req, res) => {
+  const b = req.body || {};
+  const campi = {};
+  const vuoto = v => v === "" ? null : v;
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    if (b.nome !== undefined) {
+      campi.nome = testo(b.nome, 120);
+      if (campi.nome.length < 2) return res.status(400).json({ error: "Il nome è obbligatorio." });
+    }
+    if (b.categoria !== undefined) campi.categoria = vuoto(testo(b.categoria, 120));
+    if (b.indirizzo !== undefined) campi.indirizzo = vuoto(testo(b.indirizzo, 250));
+    if (b.telefono !== undefined) {
+      campi.telefono = vuoto(testo(b.telefono, 40));
+      if (campi.telefono && !/^\+?[\d\s./-]{6,}$/.test(campi.telefono)) return res.status(400).json({ error: "Telefono non valido." });
+    }
+    for (const k of ["sito", "maps_url"]) {
+      if (b[k] === undefined) continue;
+      campi[k] = vuoto(testo(b[k], 500));
+      if (campi[k] && !URL_WEB.test(campi[k])) {
+        return res.status(400).json({ error: `${k === "sito" ? "Sito web" : "Link di Google Maps"}: deve iniziare con https://` });
+      }
+    }
+    // una riga per giorno, come le dà Google («lunedì: 9:00–19:00»): così funziona anche «Oggi: …»
+    if (b.orari !== undefined) {
+      campi.orari = String(b.orari).split(/\r?\n/).map(r => testo(r, 120)).filter(Boolean).slice(0, 7);
+    }
+    if (b.nascondi_voto === "true") Object.assign(campi, { valutazione: null, recensioni: 0 });
+    if (b.slug !== undefined) {
+      campi.slug = testo(b.slug, 50).toLowerCase();
+      if (!SLUG_PROVA.test(campi.slug)) return res.status(400).json({ error: "Slug non valido: 2–50 caratteri tra a-z, 0-9 e trattino." });
+    }
+    if (b.giorni !== undefined && b.giorni !== "") {
+      const g = parseInt(b.giorni, 10);
+      if (!(g >= 1 && g <= 365)) return res.status(400).json({ error: "Giorni: da 1 a 365." });
+      campi.scadenza = new Date(Date.now() + g * 24 * 60 * 60 * 1000);
+    }
+    if (b.attiva !== undefined) campi.attiva = b.attiva === "true";
+    if (b.togli_logo === "true") campi.logo_url = null;
+    if (req.file) {
+      const { logoUrl, logoId } = await caricaLogoProva(req.file.buffer, campi.slug || p.slug);
+      campi.logo_url = await logoSuPiastrella(logoUrl, logoId);
+    }
+    await aggiornaPaginaProva(p, campi);
+    res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
+  } catch (err) { erroreProva(res, err); }
+});
+
+// «DUPLICA»: copia del profilo con un altro slug (es. la pagina di una persona dello studio), da cambiare in MODIFICA
+router.post("/admin/prove/:id/duplica", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    const copia = await duplicaPaginaProva(p, testo(req.body?.slug, 50).toLowerCase());
+    console.log(`🧪 Profilo di prova /nfc/${p.slug} duplicato in /nfc/${copia.slug}`);
+    res.json({ id: copia.id, slug: copia.slug });
+  } catch (err) { erroreProva(res, err); }
+});
+
+router.post("/admin/prove/:id/ricarica", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const p = await trovaProva(req.params.id);
+    if (!p) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    await ricaricaPaginaProva(p);
+    res.json(p);
+  } catch (err) { erroreProva(res, err); }
+});
+
+// Solo le pagine di prova create dall'admin: quelle delle prenotazioni si gestiscono da Kit campione
+router.delete("/admin/prove/:id", verifyToken, soloAdmin, async (req, res) => {
+  try {
+    const n = await PaginaDemo.destroy({ where: { id: parseInt(req.params.id, 10) || 0, richiesta_id: null } });
+    if (!n) return res.status(404).json({ error: "Profilo di prova non trovato." });
+    res.json({ eliminati: n });
+  } catch (err) { rispondiErrore(res, err); }
+});
+
+// Come «Crea azienda» del kit campione, con l'admin come proprietario (provvisorio: si cambia da Aziende)
+router.post("/admin/prove/:id/azienda", verifyToken, soloAdmin, async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const demo = await PaginaDemo.findOne({ where: { id: parseInt(req.params.id, 10) || 0, richiesta_id: null }, transaction: t });
+    if (!demo) throw Object.assign(new Error("Profilo di prova non trovato."), { status: 404 });
+    const azienda = await aziendaDaDemo(demo, req.usuario.id, req.usuario.id, t);
+    await demo.update({ attiva: false }, { transaction: t });
+    await t.commit();
+    console.log(`🏢 Profilo di prova /nfc/${demo.slug} → azienda #${azienda.id}`);
+    res.json({ azienda_id: azienda.id, slug: azienda.slug });
+  } catch (err) {
+    await t.rollback();
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    rispondiErrore(res, err);
+  }
 });
 
 router.get("/admin/logo/:logoId", verifyToken, soloAdmin, async (req, res) => {

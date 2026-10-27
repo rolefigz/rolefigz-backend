@@ -26,6 +26,12 @@ const PaginaDemo = sequelize.define("PaginaDemo", {
   foto_autore: { type: DataTypes.STRING },                         // attribuzione obbligatoria
   scadenza:    { type: DataTypes.DATE, allowNull: false },
   attiva:      { type: DataTypes.BOOLEAN, defaultValue: true },
+  // personalizzazione dal pannello (Profili di prova → MODIFICA): vuoti = aspetto e bottoni automatici
+  design:      { type: DataTypes.JSON },                             // stesse chiavi di company_pages.design
+  links:       { type: DataTypes.JSON },                             // [{ type, label, url, is_visible }]
+  background_url: { type: DataTypes.STRING(500) },                   // foto di sfondo
+  descrizione: { type: DataTypes.TEXT },                             // testo sotto il nome (vuoto = indirizzo)
+  tarjeta:     { type: DataTypes.JSON },                             // ultima tarjeta NFC generata (rolemaker-api)
 }, { tableName: "pagine_demo" });
 
 // Le colonne aggiunte dopo la creazione della tabella (sync non altera mai le tabelle esistenti, vedi server.js):
@@ -35,6 +41,11 @@ PaginaDemo.assicuraColonne = async function () {
   const colonne = await qi.describeTable("pagine_demo");
   if (!colonne.foto) await qi.addColumn("pagine_demo", "foto", { type: DataTypes.STRING(400) });
   if (!colonne.foto_autore) await qi.addColumn("pagine_demo", "foto_autore", { type: DataTypes.STRING });
+  if (!colonne.design) await qi.addColumn("pagine_demo", "design", { type: DataTypes.JSON });
+  if (!colonne.links) await qi.addColumn("pagine_demo", "links", { type: DataTypes.JSON });
+  if (!colonne.background_url) await qi.addColumn("pagine_demo", "background_url", { type: DataTypes.STRING(500) });
+  if (!colonne.descrizione) await qi.addColumn("pagine_demo", "descrizione", { type: DataTypes.TEXT });
+  if (!colonne.tarjeta) await qi.addColumn("pagine_demo", "tarjeta", { type: DataTypes.JSON });
 };
 
 module.exports = PaginaDemo;

@@ -299,6 +299,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'nfc_prove') {
+    await adminTabNfcProve(content);
+    return;
+  }
+
   if (tab === 'kit_campione') {
     await adminTabKit(content);
     return;
