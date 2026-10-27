@@ -259,6 +259,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'fidelizzazione') {
+    await adminTabFidelizzazione(content);
+    return;
+  }
+
   if (tab === 'promo') {
     await adminTabPromo(content);
     return;
