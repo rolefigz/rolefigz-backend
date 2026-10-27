@@ -19,13 +19,16 @@ const { TAGLIE } = require("../public/js/prezzi-segnaposti.js");
 const MINIMO_LINEA_NFC = 25;
 
 // `era`: nome con cui il prodotto esiste gia' nel catalogo (si rinomina, tenendo foto e ordini).
+// Il catalogo merch mostra solo merchandising: i segnaposti (S/M/L/LH) si
+// ordinano dalla pagina /kit/segnaposti, non da qui. Lo stand da banco (XL)
+// resta, perche' e' merchandising a tutti gli effetti.
+const STAND_XL = TAGLIE.find(t => t.chiave === "XL");
 const LISTINO = [
-  ...TAGLIE.map(t => ({
-    name: t.chiave === "XL" ? `Stand NFC con QR — pack da ${t.pezzi}` : `Segnaposti ${t.nome} — pack da ${t.pezzi}`,
-    era: t.chiave === "XL" ? "Stand NFC con QR" : null,
-    description: t.chiave === "XL" ? "Da banco, base zavorrata, QR + NFC" : `${t.include}, ${t.pezzi} segnaposti per pack`,
-    price_cents: t.prezzo * 100, min_quantity: 1,
-  })),
+  {
+    name: `Stand NFC con QR — pack da ${STAND_XL.pezzi}`,
+    description: "Da banco, base zavorrata, QR + NFC",
+    price_cents: STAND_XL.prezzo * 100, min_quantity: 1,
+  },
   { name: "Portachiavi NFC",            price_cents: 250, min_quantity: MINIMO_LINEA_NFC },
   { name: "Portachiavi NFC con resina", price_cents: 350, min_quantity: MINIMO_LINEA_NFC },
   { name: "Calamita con logo",          price_cents: 250, min_quantity: MINIMO_LINEA_NFC },
