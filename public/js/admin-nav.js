@@ -12,6 +12,7 @@ const SEZIONI_ADMIN = {
   tickets:            ['Clienti', 'Messaggi', 'Conversazioni di assistenza con i clienti.'],
   resenas:            ['Clienti', 'Recensioni', 'Approva o revoca le recensioni prima che compaiano.'],
   benchys:            ['Clienti', 'Benchys', 'Richieste di punti fedeltà da verificare.'],
+  fidelizzazione:     ['Clienti', 'Fidelizzazione', 'Tessere fedeltà: timbri a mano, premio ogni 4 ordini.'],
   blog:               ['Contenuti e dati', 'Blog', 'Articoli pubblicati e bozze.'],
   analytics:          ['Contenuti e dati', 'Analytics', 'Visite, vendite e prodotti più visti.'],
   nfc_leads:          ['Aziende · B2B', 'Richieste', 'Contatti arrivati dal sito, da seguire.'],
