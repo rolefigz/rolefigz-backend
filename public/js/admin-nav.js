@@ -24,7 +24,9 @@ const SEZIONI_ADMIN = {
   nfc_prodotti:       ['RoleFigz NFC', 'Prodotti merch', 'Cosa possono ordinare le aziende con i crediti.'],
   nfc_ordini:         ['RoleFigz NFC', 'Ordini merch', 'Ordini delle aziende e stato di lavorazione.'],
   nfc_produzione:     ['RoleFigz NFC', 'Produzione', 'Pezzi da stampare per gli ordini confermati.'],
-  circuiti_ordini:    ['Circuiti 3D', 'Ordini', 'Ordini arrivati dalla pagina pubblica /circuiti.'],
+  circuiti_ordini:    ['Circuiti 3D', 'Ordini', 'Ordini dal sito /circuiti e inseriti a mano.'],
+  circuiti_analytics: ['Circuiti 3D', 'Analytics', 'Vendite, circuiti più richiesti, taglie, canali e clienti.'],
+  circuiti_movimenti: ['Circuiti 3D', 'Registro modifiche', 'Chi ha creato, modificato o eliminato ogni ordine.'],
   impostazioni:       ['Sistema', 'Impostazioni', 'Pagamenti e bonus fedeltà NFC.'],
 };
 

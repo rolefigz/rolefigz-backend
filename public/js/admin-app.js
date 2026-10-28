@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (utente.rol === 'circuiti') {
     document.querySelectorAll('.adm-nav > .adm-group').forEach(g => { if (g.id !== 'admGroupCircuiti') g.remove(); });
     document.getElementById('admItemPanoramica')?.remove();
+    document.querySelectorAll('.adm-solo-admin').forEach(el => el.remove());
     await verificaAPI();
     adminTab('circuiti_ordini');
     setInterval(verificaToken, 5 * 60 * 1000);
