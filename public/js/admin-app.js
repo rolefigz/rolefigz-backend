@@ -2,9 +2,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!verificaToken()) { window.location.href = '/index.html'; return; }
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.rol !== 'admin') { window.location.href = '/index.html'; return; }
+    if (payload.rol !== 'admin' && payload.rol !== 'circuiti') { window.location.href = '/index.html'; return; }
     utente = payload;
   } catch(e) { window.location.href = '/index.html'; return; }
+
+  // Accesso limitato: solo la sezione "Circuiti 3D", il resto del menu resta nascosto.
+  if (utente.rol === 'circuiti') {
+    document.querySelectorAll('.adm-nav > .adm-group').forEach(g => { if (g.id !== 'admGroupCircuiti') g.remove(); });
+    document.getElementById('admItemPanoramica')?.remove();
+    await verificaAPI();
+    adminTab('circuiti_ordini');
+    setInterval(verificaToken, 5 * 60 * 1000);
+    const guard = document.getElementById('adminGuard');
+    if (guard) guard.style.display = 'none';
+    document.documentElement.style.display = '';
+    return;
+  }
+
   await verificaAPI();
   await caricaCategorie();
   adminTab('panoramica');
