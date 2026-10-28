@@ -264,6 +264,11 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'circuiti_ordini') {
+    await adminTabCircuitiOrdini(content);
+    return;
+  }
+
   if (tab === 'promo') {
     await adminTabPromo(content);
     return;
