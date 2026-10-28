@@ -72,7 +72,7 @@ async function accedi() {
     utente = data.usuario;
     impostaSessione();
     chiudiModalAuth();
-    if (utente.rol === 'admin') { window.location.href = '/admin.html'; return; }
+    if (utente.rol === 'admin' || utente.rol === 'circuiti') { window.location.href = '/admin.html'; return; }
     try {
       const rNfc = await fetch(`${API}/nfc/azienda`, { headers: { Authorization: `Bearer ${token}` } });
       if (rNfc.ok) { window.location.href = '/account-nfc.html'; return; }
@@ -229,7 +229,7 @@ function impostaSessione() {
   document.getElementById('logoutBtn').style.display    = 'block';
   document.getElementById('headerLoginBtn').style.display = 'none';
   document.getElementById('perfilBtn').style.display    = 'block';
-  document.getElementById('adminBtn').style.display     = utente.rol === 'admin' ? 'block' : 'none';
+  document.getElementById('adminBtn').style.display     = (utente.rol === 'admin' || utente.rol === 'circuiti') ? 'block' : 'none';
 
   // Avatar header
   const wrap = document.getElementById('avatarWrap');
