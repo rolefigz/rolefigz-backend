@@ -17,7 +17,7 @@ router.get("/sitemap.xml", async (req, res) => {
       { loc: `${base}/kit`,     priority: "0.8", changefreq: "monthly" },
       { loc: `${base}/kit/merch`,      priority: "0.8", changefreq: "monthly" },
       { loc: `${base}/kit/segnaposti`, priority: "0.8", changefreq: "monthly" },
-      { loc: `${base}/f1/`,            priority: "0.8", changefreq: "monthly" },
+      { loc: `${base}/circuiti/`,            priority: "0.8", changefreq: "monthly" },
       { loc: `${base}/nfc`,            priority: "0.7", changefreq: "monthly" },
       { loc: `${base}/gadget3d.html`,  priority: "0.6", changefreq: "monthly" },
     ];
