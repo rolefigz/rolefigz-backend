@@ -1,6 +1,6 @@
 // Pannello "Fidelizzazione": tessere fedeltà con timbri dati a mano
-// dall'admin. Ogni 4 timbri (ordini da almeno 100€, controllati da
-// chi dà il timbro) sblocca un premio di 100€ senza minimo d'ordine,
+// dall'admin. 1 timbro ogni 100€ di ordine (300€ = 3, controllati da
+// chi dà il timbro); ogni 4 timbri sblocca un premio di 100€ senza minimo d'ordine,
 // da riscattare a mano sul 5° ordine. Non c'è ancora un collegamento
 // a Apple/Google Wallet: codice_tarjeta è già pronto per quando arriva.
 
@@ -47,7 +47,7 @@ async function adminTabFidelizzazione(content, query) {
 
     content.innerHTML = `
       <div class="admin-form-title">FIDELIZZAZIONE (${clienti.length})</div>
-      <p style="color:var(--muted);font-size:13px;margin:-12px 0 20px">Ogni ${fedeltaConfig.timbri_per_premio} ordini da almeno 100€ danno un premio di €${fedeltaConfig.valore_premio} senza minimo, da riscattare sul 5° ordine. I timbri si danno a mano, dopo aver controllato l'importo dell'ordine.</p>
+      <p style="color:var(--muted);font-size:13px;margin:-12px 0 20px">1 timbro ogni 100€ di ordine, arrotondato per difetto (300€ = 3 timbri: premi + TIMBRO 3 volte). Ogni ${fedeltaConfig.timbri_per_premio} timbri danno un premio di €${fedeltaConfig.valore_premio} senza minimo, da riscattare sull'ordine successivo. I timbri si danno a mano, dopo aver controllato l'importo dell'ordine.</p>
 
       <div class="field"><label>Cerca cliente</label><input id="fedeltaCerca" type="text" placeholder="Nome o email..." oninput="fedeltaCercaDebounce(this.value)"/></div>
 
