@@ -351,10 +351,9 @@
         <h1 class="v2-hero-h1">Oggetti <em>unici</em>,<br>stampati per te.</h1>
         <p class="v2-hero-p">Figure dalla tua foto, portachiavi con il tuo nome, circuiti in scala e regali che non trovi in nessun negozio. Stampati e rifiniti a mano a Piacenza.</p>
         <div class="v2-hero-ctas">
-          <button class="v2-btn v2-btn-primary" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
-            Vai al catalogo <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon>
-          </button>
-          <a class="v2-btn v2-btn-glass" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">Crea la tua figura</a>
+          <a class="v2-btn v2-btn-primary" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
+            Crea la tua figura <iconify-icon icon="mdi:arrow-right" width="18"></iconify-icon>
+          </a>
         </div>
       </div>
       <div class="v2-hero-3d" id="hero3d" aria-hidden="true">
@@ -379,15 +378,7 @@
       <h2 class="v2-h2">Cosa possiamo <em>stampare per te</em></h2>
     </div>
     <div class="v2-bento">
-      <a class="v2-tile v2-tile-xl" href="#catalogo" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});return false">
-        <img src="/assets/opt/llaveros.webp" alt="" loading="lazy">
-        <div class="v2-tile-body">
-          <span class="v2-tag">Negozio</span>
-          <h3>Catalogo pronto</h3>
-          <p>Portachiavi, calamite e oggetti stampati in 3D, pronti da ordinare online.</p>
-        </div>
-      </a>
-      <a class="v2-tile" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
+      <a class="v2-tile v2-tile-xl" href="#figure-personalizzate" onclick="document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'});return false">
         <img src="/assets/opt/daniel-funko.webp" alt="" loading="lazy">
         <div class="v2-tile-body">
           <span class="v2-tag">Dalla tua foto</span>
@@ -449,7 +440,8 @@
   </section>
 
   <!-- CATALOGO -->
-  <section class="v2-section v2-catalogo catalogue-section" id="catalogo">
+  <!-- Nascosto per ora (2026-10-28): togliere hidden per riattivarlo -->
+  <section class="v2-section v2-catalogo catalogue-section" id="catalogo" hidden>
     <div class="v2-section-head v2-row">
       <div>
         <span class="v2-eyebrow">Negozio</span>
@@ -627,7 +619,6 @@
       </div>
       <div>
         <div class="footer-col-title">Privati</div>
-        <a class="footer-link" onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">Catalogo</a>
         <a class="footer-link" href="#figure-personalizzate" onclick="mostraVista('tienda');setTimeout(()=>document.getElementById('figure-personalizzate').scrollIntoView({behavior:'smooth'}),50);return false">Figure personalizzate</a>
         <a class="footer-link" href="/circuiti/">Circuiti in scala</a>
         <a class="footer-link" onclick="mostraVista('blog');loadArticoli()">Blog</a>

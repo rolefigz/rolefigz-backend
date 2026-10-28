@@ -24,6 +24,7 @@ const SEZIONI_ADMIN = {
   nfc_prodotti:       ['RoleFigz NFC', 'Prodotti merch', 'Cosa possono ordinare le aziende con i crediti.'],
   nfc_ordini:         ['RoleFigz NFC', 'Ordini merch', 'Ordini delle aziende e stato di lavorazione.'],
   nfc_produzione:     ['RoleFigz NFC', 'Produzione', 'Pezzi da stampare per gli ordini confermati.'],
+  circuiti_ordini:    ['Circuiti 3D', 'Ordini', 'Ordini arrivati dalla pagina pubblica /circuiti.'],
   impostazioni:       ['Sistema', 'Impostazioni', 'Pagamenti e bonus fedeltà NFC.'],
 };
 

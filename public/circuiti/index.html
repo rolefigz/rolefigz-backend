@@ -1383,7 +1383,9 @@
         countEl.classList.remove("bump"); void countEl.offsetWidth; countEl.classList.add("bump");
       });
 
-      // Orders are relayed to this inbox by FormSubmit (static site, no backend).
+      // Orders are relayed to this inbox by FormSubmit, and also saved to the
+      // admin panel (POST /api/circuiti/ordini, below) so they show up in
+      // the "Circuiti 3D" section — best-effort, doesn't block the checkout.
       const ORDER_EMAIL = "rolefigz@gmail.com";
       const ORDER_ENDPOINT = "https://formsubmit.co/ajax/" + ORDER_EMAIL;
       const form = $("step-checkout");
@@ -1491,6 +1493,21 @@
           });
           const json = await res.json().catch(() => ({}));
           if (!res.ok || String(json.success) !== "true") throw new Error(json.message || "HTTP " + res.status);
+
+          // Salva l'ordine anche nel pannello admin (best-effort: se fallisce
+          // non blocca l'utente, l'email sopra e' gia' partita).
+          fetch("/api/circuiti/ordini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              numero: orderId,
+              nombre: data.nombre, email: data.email, telefono: data.telefono || null,
+              direccion: data.direccion, codigo_postal: data.codigo_postal, ciudad: data.ciudad, pais: data.pais,
+              notas: data.notas || null,
+              articoli: cart.map(it => { const l = lineOf(it); return { nome: l.order || l.name, meta: l.meta, prezzo: l.price, quantita: it.q }; }),
+              totale: cartTotal(),
+            }),
+          }).catch(err => console.error("Salvataggio ordine admin:", err));
 
           cart = [];
           saveCart();

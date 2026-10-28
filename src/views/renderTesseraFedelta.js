@@ -18,11 +18,21 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
     ? `<div class="t-premio">
          <iconify-icon icon="mdi:gift-outline" width="28"></iconify-icon>
          <div>
-           <strong>${premi} premio${premi > 1 ? 'i' : ''} disponibil${premi > 1 ? 'i' : ''}</strong>
+           <strong>${premi} premio${premi > 1 ? 'i' : ''} disponibil${premi > 1 ? 'i' : 'e'}</strong>
            <span>-€${valorePremio} sul tuo prossimo ordine, senza minimo d'acquisto. Mostra questa pagina in negozio.</span>
          </div>
        </div>`
-    : `<p class="t-hint">Ancora ${timbriPerPremio - pieni} ordine${timbriPerPremio - pieni === 1 ? '' : 'i'} da almeno 100€ e sblocchi un premio di €${valorePremio} senza minimo.</p>`;
+    : `<p class="t-hint">Ancora ${timbriPerPremio - pieni} timbr${timbriPerPremio - pieni === 1 ? 'o' : 'i'} e sblocchi un premio di €${valorePremio} senza minimo.</p>`;
+
+  const regole = `<div class="t-regole">
+       <div class="t-regole-title">Come funziona</div>
+       <ul>
+         <li>Ricevi <strong>1 timbro ogni 100€</strong> di ordine: un ordine da 300€ vale 3 timbri. Si arrotonda per difetto (450€ = 4 timbri) e gli ordini sotto i 100€ non danno timbri.</li>
+         <li>Con <strong>${timbriPerPremio} timbri</strong> sblocchi <strong>€${valorePremio} di sconto</strong> sul prossimo ordine, senza minimo d'acquisto.</li>
+         <li>Lo sconto si usa in un solo ordine: se l'ordine costa meno di €${valorePremio}, la differenza non viene rimborsata né si accumula.</li>
+         <li>Il premio non è convertibile in denaro.</li>
+       </ul>
+     </div>`;
 
   return `<!DOCTYPE html>
 <html lang="it">
@@ -55,6 +65,11 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
   .t-premio strong{display:block;font-size:16px;margin-bottom:3px}
   .t-premio span{font-size:12.5px;line-height:1.5;opacity:.95}
   .t-hint{margin-top:20px;font-size:13px;color:var(--muted);text-align:center;line-height:1.6}
+  .t-regole{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
+  .t-regole-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .t-regole ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .t-regole li{font-size:13px;line-height:1.55;padding-left:16px;position:relative}
+  .t-regole li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
   .t-footer{text-align:center;margin-top:22px}
   .t-footer a{display:inline-flex;align-items:center;gap:6px;color:var(--accent2);text-decoration:none;font-size:13px;font-weight:600}
 </style>
@@ -66,10 +81,11 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
       <div class="t-eyebrow">Tessera fedeltà</div>
       <div class="t-nombre">${nome}</div>
       <div class="t-dots">${dots}</div>
-      <div class="t-count">${pieni}/${timbriPerPremio} ordini verso il prossimo premio</div>
+      <div class="t-count">${pieni}/${timbriPerPremio} timbri verso il prossimo premio</div>
       <div class="t-codice">${escHtml(cliente.codice_tarjeta)}</div>
     </div>
     ${premioBlock}
+    ${regole}
     <div class="t-footer"><a href="https://wa.me/393928225406" target="_blank" rel="noopener"><iconify-icon icon="mdi:whatsapp" width="16"></iconify-icon> Scrivici su WhatsApp</a></div>
   </div>
 </body>
