@@ -22,6 +22,7 @@ const Impostazione        = require("./Impostazione");
 const ClienteFedelta      = require("./ClienteFedelta");
 const FedeltaMovimiento   = require("./FedeltaMovimiento");
 const CircuitoOrdine      = require("./CircuitoOrdine");
+const CircuitoMovimento   = require("./CircuitoMovimento");
 const nfc                 = require("../modules/nfc/models");
 
 module.exports = {
@@ -30,6 +31,6 @@ module.exports = {
   VarianteProdotto, ImmagineProdotto, Recensione,
   Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget, RichiestaKit, PaginaDemo, ContatoreApi,
   PuntiTransazione, CodicePromo, Impostazione,
-  ClienteFedelta, FedeltaMovimiento, CircuitoOrdine,
+  ClienteFedelta, FedeltaMovimiento, CircuitoOrdine, CircuitoMovimento,
   ...nfc
 };

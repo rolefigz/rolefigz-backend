@@ -269,6 +269,16 @@ async function adminTab(tab, el) {
     return;
   }
 
+  if (tab === 'circuiti_analytics') {
+    await adminTabCircuitiAnalytics(content);
+    return;
+  }
+
+  if (tab === 'circuiti_movimenti') {
+    await adminTabCircuitiMovimenti(content);
+    return;
+  }
+
   if (tab === 'promo') {
     await adminTabPromo(content);
     return;

@@ -1504,7 +1504,14 @@
               nombre: data.nombre, email: data.email, telefono: data.telefono || null,
               direccion: data.direccion, codigo_postal: data.codigo_postal, ciudad: data.ciudad, pais: data.pais,
               notas: data.notas || null,
-              articoli: cart.map(it => { const l = lineOf(it); return { nome: l.order || l.name, meta: l.meta, prezzo: l.price, quantita: it.q }; }),
+              articoli: cart.map(it => {
+                const l = lineOf(it);
+                return {
+                  tipo: it.p ? "prodotto" : "circuito", slug: it.p || it.c, taglia: it.p ? null : it.s,
+                  categoria: it.p ? PRODUCTS[it.p].tag : "Circuito",
+                  nome: it.p ? l.name : INFO[it.c].short, meta: l.meta, prezzo: l.price, quantita: it.q,
+                };
+              }),
               totale: cartTotal(),
             }),
           }).catch(err => console.error("Salvataggio ordine admin:", err));
