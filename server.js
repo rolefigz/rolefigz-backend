@@ -44,6 +44,11 @@ app.post("/api/pagos/webhook", express.raw({ type: "application/json" }), webhoo
 
 app.use(express.json({ limit: "10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Lo slug /f1 e' diventato /circuiti: redirect permanente per non perdere
+// l'indicizzazione e i link gia' in giro.
+app.get(/^\/f1(\/.*)?$/, (req, res) => res.redirect(301, "/circuiti" + (req.params[0] || "")));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(limitGeneral);
