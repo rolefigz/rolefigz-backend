@@ -21,4 +21,12 @@ const soloAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, soloAdmin };
+// Per le sole rotte della sezione "Circuiti 3D": admin pieno, oppure un
+// account con accesso limitato a quella sola sezione (rol "circuiti").
+const soloAdminOCircuiti = (req, res, next) => {
+  if (req.usuario.rol !== "admin" && req.usuario.rol !== "circuiti")
+    return res.status(403).json({ error: "Accesso riservato" });
+  next();
+};
+
+module.exports = { verifyToken, soloAdmin, soloAdminOCircuiti };
