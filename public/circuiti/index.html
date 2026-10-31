@@ -927,23 +927,21 @@
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 15000);
         try {
-          const res = await fetch(ORDER_ENDPOINT, {
+          // La richiesta arriva per email e Telegram dal nostro backend (non dipende da servizi esterni).
+          const res = await fetch(REQUEST_API, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
             body: JSON.stringify({
-              _subject: "Nueva solicitud · " + requestCategory.title,
-              _template: "table",
-              _replyto: data.email,
+              categoria: requestCategory.title,
+              nombre: data.nombre,
+              email: data.email,
+              messaggio: data.messaggio,
               _honey: data._honey || "",
-              Categoria: requestCategory.title,
-              Nombre: data.nombre,
-              Email: data.email,
-              Mensaje: data.messaggio,
             }),
             signal: controller.signal,
           });
           const json = await res.json().catch(() => ({}));
-          if (!res.ok || String(json.success) !== "true") throw new Error(json.message || "HTTP " + res.status);
+          if (!res.ok) throw new Error(json.error || "HTTP " + res.status);
           $("request-form").reset();
           $("request-form").hidden = true;
           $("request-done-text").textContent = "Grazie! Ti risponderemo a " + data.email + " il prima possibile.";
@@ -1383,11 +1381,13 @@
         countEl.classList.remove("bump"); void countEl.offsetWidth; countEl.classList.add("bump");
       });
 
-      // Orders are relayed to this inbox by FormSubmit, and also saved to the
-      // admin panel (POST /api/circuiti/ordini, below) so they show up in
-      // the "Circuiti 3D" section — best-effort, doesn't block the checkout.
+      // Orders and requests go to our backend, which saves orders in the admin
+      // "Circuiti 3D" section and notifies by email and Telegram. (They used to
+      // go through FormSubmit, which broke when it asked to re-activate the form.)
+      // ORDER_EMAIL is only for the mailto fallback.
       const ORDER_EMAIL = "rolefigz@gmail.com";
-      const ORDER_ENDPOINT = "https://formsubmit.co/ajax/" + ORDER_EMAIL;
+      const ORDER_API = "/api/circuiti/ordini";
+      const REQUEST_API = "/api/circuiti/richieste";
       const form = $("step-checkout");
 
       function showStep(id) {
@@ -1458,24 +1458,6 @@
         const now = new Date();
         const orderId = "RF-" + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
         const lines = orderLines();
-        const payload = {
-          _subject: "Nuevo pedido " + orderId + " · " + euro.format(cartTotal()),
-          _template: "table",
-          _replyto: data.email,
-          _honey: data._honey || "",
-          Pedido: orderId,
-          Maquetas: lines,
-          Unidades: String(cartUnits()),
-          Total: euro.format(cartTotal()),
-          Nombre: data.nombre,
-          Email: data.email,
-          Telefono: data.telefono || "—",
-          Direccion: data.direccion,
-          "Codigo postal": data.codigo_postal,
-          Ciudad: data.ciudad,
-          Pais: data.pais,
-          Notas: data.notas || "—",
-        };
 
         const submit = $("submit-order");
         submit.disabled = true;
@@ -1485,22 +1467,13 @@
         const timer = setTimeout(() => controller.abort(), 15000);
 
         try {
-          const res = await fetch(ORDER_ENDPOINT, {
+          // L'ordine si salva nel pannello admin e il backend avvisa per email e Telegram.
+          const res = await fetch(ORDER_API, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body: JSON.stringify(payload),
             signal: controller.signal,
-          });
-          const json = await res.json().catch(() => ({}));
-          if (!res.ok || String(json.success) !== "true") throw new Error(json.message || "HTTP " + res.status);
-
-          // Salva l'ordine anche nel pannello admin (best-effort: se fallisce
-          // non blocca l'utente, l'email sopra e' gia' partita).
-          fetch("/api/circuiti/ordini", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              numero: orderId,
+              numero: orderId, _honey: data._honey || "",
               nombre: data.nombre, email: data.email, telefono: data.telefono || null,
               direccion: data.direccion, codigo_postal: data.codigo_postal, ciudad: data.ciudad, pais: data.pais,
               notas: data.notas || null,
@@ -1514,7 +1487,9 @@
               }),
               totale: cartTotal(),
             }),
-          }).catch(err => console.error("Salvataggio ordine admin:", err));
+          });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || "HTTP " + res.status);
 
           cart = [];
           saveCart();

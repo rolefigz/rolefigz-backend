@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { CircuitoOrdine, CircuitoMovimento } = require("../models");
 const { sendMessage } = require("../utils/telegram");
+const { emailCircuitiAdmin } = require("../utils/mailer");
 const { CIRCUITI, TAGLIE, PRODOTTI, CANALI, normalizzaArticolo } = require("../utils/catalogoCircuiti");
 
 const STATI = ["pendiente", "confirmado", "enviado", "entregado", "cancelado"];
@@ -51,7 +52,8 @@ function validaArticoli(righe) {
 // ── POST /api/circuiti/ordini — dalla pagina pubblica /circuiti ───────────────
 const creaOrdine = async (req, res) => {
   try {
-    const { numero, nombre, email, telefono, direccion, codigo_postal, ciudad, pais, notas, articoli, totale } = req.body;
+    const { numero, nombre, email, telefono, direccion, codigo_postal, ciudad, pais, notas, articoli, totale, _honey } = req.body;
+    if (_honey) return res.json({ mensaje: "Ordine registrato", numero });   // bot: risposta finta, niente salvataggio
     if (!numero || !nombre || !email || !direccion) return res.status(400).json({ error: "Dati mancanti" });
     if (!Array.isArray(articoli) || !articoli.length) return res.status(400).json({ error: "Carrello vuoto" });
 
@@ -69,8 +71,31 @@ const creaOrdine = async (req, res) => {
 
     sendMessage(`<b>Nuovo ordine circuiti</b> · ${ordine.numero}\n${righe.map(a => `${a.quantita}× ${a.nome}${a.taglia ? ` (${a.taglia})` : ""} — ${euro(a.prezzo * a.quantita)}`).join("\n")}\nTotale: ${euro(ordine.totale)}\n${ordine.nombre} — ${ordine.email}${ordine.telefono ? " · " + ordine.telefono : ""}`)
       .catch(err => console.error("Telegram ordine circuiti:", err.message));
+    emailCircuitiAdmin(`🏁 Nuovo ordine circuiti ${ordine.numero} · ${euro(ordine.totale)}`, `ORDINE ${ordine.numero}`, {
+      Articoli: righe.map(a => `${a.quantita}× ${a.nome}${a.taglia ? ` (${a.taglia})` : ""} — ${euro(a.prezzo * a.quantita)}`).join("\n"),
+      Totale: euro(ordine.totale), Nome: ordine.nombre, Email: ordine.email, Telefono: ordine.telefono,
+      Indirizzo: [ordine.direccion, [ordine.codigo_postal, ordine.ciudad].filter(Boolean).join(" "), ordine.pais].filter(Boolean).join(", "),
+      Note: ordine.notas,
+    }).catch(err => console.error("Email ordine circuiti:", err.message));
 
     res.json({ mensaje: "Ordine registrato", numero: ordine.numero });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// ── POST /api/circuiti/richieste — richiesta su misura dalla pagina /circuiti ─
+const creaRichiesta = async (req, res) => {
+  try {
+    const categoria = testo(req.body.categoria, 120), nombre = testo(req.body.nombre), email = testo(req.body.email);
+    const messaggio = testo(req.body.messaggio, 4000);
+    if (req.body._honey) return res.json({ mensaje: "Richiesta inviata" });
+    if (!nombre || !/^\S+@\S+\.\S+$/.test(email) || !messaggio) return res.status(400).json({ error: "Dati mancanti" });
+
+    await emailCircuitiAdmin(`✉️ Richiesta circuiti · ${categoria || "—"}`, "RICHIESTA CIRCUITI", {
+      Categoria: categoria, Nome: nombre, Email: email, Messaggio: messaggio,
+    });
+    sendMessage(`<b>Richiesta circuiti</b> · ${categoria}\n${nombre} — ${email}\n${messaggio.slice(0, 500)}`)
+      .catch(err => console.error("Telegram richiesta circuiti:", err.message));
+    res.json({ mensaje: "Richiesta inviata" });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -282,4 +307,4 @@ const analyticsAdmin = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { creaOrdine, catalogo, elencoAdmin, creaManuale, aggiornaAdmin, eliminaAdmin, ripristinaAdmin, movimentiAdmin, analyticsAdmin };
+module.exports = { creaOrdine, creaRichiesta, catalogo, elencoAdmin, creaManuale, aggiornaAdmin, eliminaAdmin, ripristinaAdmin, movimentiAdmin, analyticsAdmin };

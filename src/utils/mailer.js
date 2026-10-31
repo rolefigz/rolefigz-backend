@@ -819,4 +819,15 @@ const emailKitAdmin = async (r) => {
     </div>`);
 };
 
-module.exports = { emailTicketOspiteRicevuto, emailKitCliente, emailKitAdmin, emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };
+// Avviso all'admin per la pagina /circuiti (ordini e richieste): righe { etichetta: valore }.
+const emailCircuitiAdmin = async (oggetto, titolo, righe) => {
+  const corpo = Object.entries(righe).filter(([, v]) => v)
+    .map(([k, v]) => `<p><strong>${escKit(k)}:</strong> ${escKit(v).replace(/\n/g, "<br/>")}</p>`).join("");
+  await invia(ADMIN, oggetto,
+    `<div style="font-family:monospace;background:#111;color:#f0ece4;padding:32px;border:1px solid #222">
+      <h2 style="color:#C17F3A;letter-spacing:3px;margin:0 0 24px">${escKit(titolo)}</h2>${corpo}
+      <p style="color:#888">Pannello admin → Circuiti 3D.</p>
+    </div>`);
+};
+
+module.exports = { emailCircuitiAdmin, emailTicketOspiteRicevuto, emailKitCliente, emailKitAdmin, emailConfirmacionPedido, emailRichiestaRicevuta, emailNuevoPedidoAdmin, emailNuovoTicketAdmin, emailRispostaTicket, notificaWhatsApp, emailVerificacion, emailSpedizione, emailGadget3D, emailGadget3DAdmin };

@@ -5,6 +5,7 @@ const c = require("../controllers/circuitiController");
 
 // Pubblico: checkout della pagina /circuiti
 router.post("/ordini", c.creaOrdine);
+router.post("/richieste", c.creaRichiesta);
 
 // Admin e account "circuiti": gestione ordini
 router.get   ("/admin/catalogo",    verifyToken, soloAdminOCircuiti, c.catalogo);
