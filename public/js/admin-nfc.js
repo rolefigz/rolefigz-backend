@@ -187,6 +187,7 @@ async function adminTabNfcAziendaDettaglio(id) {
           </div>
           <div class="form-row">
             <div class="field"><label>P.IVA</label><input id="daPiva" type="text" value="${azienda.piva || ''}"/></div>
+            <div class="field"><label>Email cliente (login)</label><input id="daOwnerEmail" type="email" value="${azienda.Utente?.email || ''}"/></div>
           </div>
           <div class="form-row">
             <div class="field"><label>Codice Fiscale</label><input id="daCf" type="text" value="${azienda.codice_fiscale || ''}"/></div>
@@ -540,6 +541,7 @@ async function nfcSalvaAzienda(id) {
     codice_fiscale: document.getElementById('daCf')?.value.trim(),
     codice_sdi:     document.getElementById('daSdi')?.value.trim(),
     pec:            document.getElementById('daPec')?.value.trim(),
+    owner_email:    document.getElementById('daOwnerEmail')?.value.trim(),
   };
   try {
     const r = await fetch(`${API_NFC}/aziende/${id}`, {

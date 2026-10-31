@@ -23,6 +23,7 @@ const validaCreaAzienda = [
 
 const validaAggiornaAzienda = [
   body("name").optional().trim().notEmpty().withMessage("Il nome non puo' essere vuoto"),
+  body("owner_email").optional({ checkFalsy: true }).isEmail().withMessage("Email cliente non valida").normalizeEmail(),
   valida,
 ];
 

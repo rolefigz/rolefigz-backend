@@ -102,7 +102,20 @@ const aggiornaAzienda = async (req, res) => {
     const azienda = await Company.findByPk(req.params.id);
     if (!azienda) return res.status(404).json({ error: "Azienda non trovata" });
 
-    const { name, sector, piva, codice_fiscale, codice_sdi, pec } = req.body;
+    const { name, sector, piva, codice_fiscale, codice_sdi, pec, owner_email } = req.body;
+
+    // L'email del cliente e' quella del suo account (login): si puo' creare
+    // l'azienda con un'email provvisoria e cambiarla quando arriva quella vera.
+    if (owner_email) {
+      const proprietario = await Utente.findByPk(azienda.owner_user_id);
+      if (!proprietario) throw new ErroreAzienda("Utente proprietario non trovato", 404);
+      if (proprietario.email !== owner_email) {
+        const occupata = await Utente.findOne({ where: { email: owner_email } });
+        if (occupata) throw new ErroreAzienda("Questa email e' gia' usata da un altro account", 400);
+        await proprietario.update({ email: owner_email });
+      }
+    }
+
     await azienda.update({
       ...(name !== undefined && { name }),
       ...(sector !== undefined && { sector }),
