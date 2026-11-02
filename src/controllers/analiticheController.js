@@ -2,15 +2,33 @@ const { Op, fn, col } = require("sequelize");
 const geoip = require("geoip-lite");
 const { Visita, Prodotto, Ordine, DettaglioOrdine } = require("../models");
 
+// Anonimizza l'IP prima di salvarlo (GDPR, ISO 27701): IPv4 senza l'ultimo
+// ottetto, IPv6 ridotto al prefisso /48.
+const anonimizzaIp = (ip) => {
+  if (ip.includes(":")) return ip.split(":").slice(0, 3).join(":") + "::";
+  const parti = ip.split(".");
+  return parti.length === 4 ? `${parti[0]}.${parti[1]}.${parti[2]}.0` : "0.0.0.0";
+};
+
+// Le visite grezze non servono oltre la finestra di retention (default 13 mesi).
+const purgaVisiteVecchie = async () => {
+  const giorni = parseInt(process.env.VISITE_RETENTION_DAYS || "395", 10);
+  const soglia = new Date();
+  soglia.setDate(soglia.getDate() - giorni);
+  const eliminate = await Visita.destroy({ where: { createdAt: { [Op.lt]: soglia } } });
+  if (eliminate) console.log(`[analytics] eliminate ${eliminate} visite oltre ${giorni} giorni`);
+  return eliminate;
+};
+
 // POST /api/analytics/track — registra visita (pubblico)
 const trackVisita = async (req, res) => {
   try {
     const { tipo = "home", producto_id } = req.body;
 
-    const rawIp = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.ip || "0.0.0.0";
-    // Anonimizza ultimo ottetto (GDPR)
-    const parti  = rawIp.split(".");
-    const ipAnon = parti.length === 4 ? `${parti[0]}.${parti[1]}.${parti[2]}.0` : rawIp;
+    // req.ip con "trust proxy" = IP reale dietro il proxy di Railway; il primo
+    // valore di x-forwarded-for invece lo può scrivere chiunque.
+    const rawIp  = (req.ip || "0.0.0.0").replace(/^::ffff:/, "");
+    const ipAnon = anonimizzaIp(rawIp);
 
     const geo    = geoip.lookup(rawIp);
     const pais   = geo?.country || null;
@@ -163,4 +181,4 @@ const getEstadosOrdenes = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { trackVisita, getResumen, getVisitasPorDia, getIngresosPorDia, getPaises, getProductosTop, getProductosVendidos, getEstadosOrdenes };
+module.exports = { purgaVisiteVecchie, trackVisita, getResumen, getVisitasPorDia, getIngresosPorDia, getPaises, getProductosTop, getProductosVendidos, getEstadosOrdenes };

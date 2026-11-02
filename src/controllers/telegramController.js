@@ -7,7 +7,9 @@ const { clienteDelTicket } = require("./ticketsOspiteController");
 const webhook = async (req, res) => {
   const secret   = req.headers["x-telegram-bot-api-secret-token"];
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (expected && secret !== expected) return res.status(403).end();
+  // Senza segreto configurato il webhook resta chiuso: altrimenti chiunque
+  // potrebbe fingersi Telegram e rispondere ai ticket a nome dell'admin.
+  if (!expected || secret !== expected) return res.status(403).end();
 
   res.json({ ok: true }); // rispondo subito a Telegram (richiede risposta rapida)
 

@@ -52,7 +52,7 @@ async function adminTab(tab, el) {
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border)">
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--accent)">#${o.id}</span>
-              <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700">${o.nombre_cliente}</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700">${escA(o.nombre_cliente)}</span>
               <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${new Date(o.createdAt).toLocaleDateString('it-IT')}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
@@ -64,9 +64,9 @@ async function adminTab(tab, el) {
             </div>
           </div>
           <div style="padding:12px 16px">
-            ${o.direccion ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px">📍 ${o.direccion}</div>` : ''}
+            ${o.direccion ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px">📍 ${escA(o.direccion)}</div>` : ''}
             ${prodotti}
-            ${o.notas ? `<div style="margin-top:6px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">📝 ${o.notas}</div>` : ''}
+            ${o.notas ? `<div style="margin-top:6px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">📝 ${escA(o.notas)}</div>` : ''}
             ${trackingBlock}
           </div>
         </div>`;
@@ -96,7 +96,7 @@ async function adminTab(tab, el) {
             <tbody>${altri.map(o => `
               <tr>
                 <td><span class="pill">#${o.id}</span></td>
-                <td>${o.nombre_cliente}</td>
+                <td>${escA(o.nombre_cliente)}</td>
                 <td class="price-cell">€${parseFloat(o.total).toFixed(2)}</td>
                 <td><span class="pill ${o.estado==='entregado'?'green':o.estado==='cancelado'?'orange':''}">${o.estado.toUpperCase()}</span></td>
                 <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${new Date(o.createdAt).toLocaleDateString('it-IT')}</td>
@@ -1297,6 +1297,10 @@ async function verificaNonLettiAdmin() {
   } catch {}
 }
 
+// Dati scritti dai clienti (checkout, ticket): sempre escapati prima di finire
+// in innerHTML, altrimenti un ordine con <script> ruberebbe il token admin.
+function escA(v) { return escapeAdminHtml(String(v ?? '')); }
+
 function escapeAdminHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1484,15 +1488,15 @@ async function adminApriSpedizione(ordineId) {
 
       <div style="padding:14px;border:1px solid var(--border);margin-bottom:20px;font-family:'DM Mono',monospace;font-size:10px">
         <div style="letter-spacing:2px;color:var(--muted);margin-bottom:6px">CLIENTE</div>
-        <div style="font-size:13px;font-weight:700">${o.nombre_cliente}</div>
-        <div style="color:var(--muted)">${o.email_cliente}${o.telefono ? ' · ' + o.telefono : ''}</div>
-        ${o.direccion ? `<div style="margin-top:6px;color:var(--muted)">📍 ${o.direccion}</div>` : ''}
-        ${o.notas ? `<div style="margin-top:4px;color:var(--muted)">📝 ${o.notas}</div>` : ''}
+        <div style="font-size:13px;font-weight:700">${escA(o.nombre_cliente)}</div>
+        <div style="color:var(--muted)">${escA(o.email_cliente)}${o.telefono ? ' · ' + escA(o.telefono) : ''}</div>
+        ${o.direccion ? `<div style="margin-top:6px;color:var(--muted)">📍 ${escA(o.direccion)}</div>` : ''}
+        ${o.notas ? `<div style="margin-top:4px;color:var(--muted)">📝 ${escA(o.notas)}</div>` : ''}
       </div>
 
       <div class="admin-form-title" style="font-size:17px">INDIRIZZO DESTINATARIO</div>
       <div class="form-row">
-        <div class="field" style="flex:2"><label>Nome destinatario *</label><input id="spNome" value="${o.nombre_cliente}"/></div>
+        <div class="field" style="flex:2"><label>Nome destinatario *</label><input id="spNome" value="${escA(o.nombre_cliente)}"/></div>
       </div>
       <div class="form-row">
         <div class="field" style="flex:3"><label>Via / Indirizzo *</label><input id="spVia" placeholder="Via Roma 1" value="${indirizzo.replace(/\d{5}|[A-Z]{2}$/g,'').trim().split(',')[0]?.trim() || ''}"/></div>

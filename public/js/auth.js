@@ -101,8 +101,8 @@ async function registrati() {
   if (pass !== pass2) {
     showMsg('registerMsg', 'Le password non coincidono', 'err'); return;
   }
-  if (pass.length < 6) {
-    showMsg('registerMsg', 'La password deve avere almeno 6 caratteri', 'err'); return;
+  if (pass.length < 8) {
+    showMsg('registerMsg', 'La password deve avere almeno 8 caratteri', 'err'); return;
   }
   btn.disabled = true; btn.textContent = '...';
   try {
@@ -195,7 +195,7 @@ async function reimpostaPassword() {
   const codice    = document.getElementById('resetCodigo').value.trim();
   const nuovaPass = document.getElementById('resetPass').value;
   if (!codice || codice.length !== 6) { showMsg('resetMsg', 'Inserisci il codice a 6 cifre', 'err'); return; }
-  if (!nuovaPass || nuovaPass.length < 6) { showMsg('resetMsg', 'La password deve avere almeno 6 caratteri', 'err'); return; }
+  if (!nuovaPass || nuovaPass.length < 8) { showMsg('resetMsg', 'La password deve avere almeno 8 caratteri', 'err'); return; }
   const btn = document.getElementById('resetBtn');
   btn.disabled = true; btn.textContent = '...';
   try {

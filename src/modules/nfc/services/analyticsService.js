@@ -5,7 +5,8 @@ const { otteniSaleOggi, hashVisitatore } = require("./analyticsSalt");
 const BOT_REGEX = /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegrambot|preview|monitor|headless/i;
 
 function estraiIp(req) {
-  return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.ip || "0.0.0.0";
+  // con "trust proxy" req.ip è già l'IP reale; x-forwarded-for[0] è falsificabile
+  return (req.ip || "0.0.0.0").replace(/^::ffff:/, "");
 }
 
 // Registra un evento (page_view/tag_scan/link_click) in modo GDPR-safe: mai

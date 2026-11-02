@@ -1,6 +1,6 @@
 const express = require("express");
 const router  = express.Router();
-const { register, verificarCodigo, login, getPerfil, updatePerfil, getMisOrdenes, recuperarPassword, resetPassword } = require("../controllers/authController");
+const { register, verificarCodigo, login, getPerfil, updatePerfil, getMisOrdenes, recuperarPassword, resetPassword, esportaDati, eliminaAccount } = require("../controllers/authController");
 const { validarLogin, validarRegistro } = require("../middleware/validazioni");
 const { verifyToken } = require("../middleware/auth");
 
@@ -12,5 +12,7 @@ router.put("/perfil",           verifyToken,     updatePerfil);
 router.get("/mis-ordenes",      verifyToken,     getMisOrdenes);
 router.post("/recuperar",                        recuperarPassword);
 router.post("/reset-password",                   resetPassword);
+router.get("/mis-datos",        verifyToken,     esportaDati);
+router.delete("/cuenta",        verifyToken,     eliminaAccount);
 
 module.exports = router;

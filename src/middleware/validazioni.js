@@ -21,7 +21,7 @@ const validarLogin = [
 const validarRegistro = [
   body("nombre").trim().notEmpty().withMessage("Il nome è obbligatorio"),
   body("email").isEmail().withMessage("Email non valida").normalizeEmail(),
-  body("password").isLength({ min: 6 }).withMessage("La password deve avere almeno 6 caratteri"),
+  body("password").isLength({ min: 8, max: 128 }).withMessage("La password deve avere almeno 8 caratteri"),
   valida
 ];
 

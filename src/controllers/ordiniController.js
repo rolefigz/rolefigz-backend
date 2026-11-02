@@ -13,7 +13,7 @@ const crearOrden = async (req, res) => {
     const tkn = authHeader && authHeader.split(" ")[1];
     if (tkn) {
       try {
-        const decoded = jwt.verify(tkn, process.env.JWT_SECRET);
+        const decoded = jwt.verify(tkn, process.env.JWT_SECRET, { algorithms: ["HS256"] });
         usuario_id = decoded.id;
       } catch {}
     }

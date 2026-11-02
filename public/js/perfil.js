@@ -1,3 +1,5 @@
+function escP(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 function pillStato(e) {
   return { pendiente: 'orange', confirmado: 'blue', enviado: 'blue', entregado: 'green', cancelado: 'red' }[e] || '';
 }
@@ -70,12 +72,12 @@ function renderOrdineProfilo(o) {
     ${o.direccion ? `
     <div class="ocv2-address">
       <div class="ocv2-address-title">Indirizzo di spedizione</div>
-      ${o.direccion.split(',').map(r => `<div class="ocv2-address-line">${r.trim()}</div>`).join('')}
+      ${o.direccion.split(',').map(r => `<div class="ocv2-address-line">${escP(r.trim())}</div>`).join('')}
     </div>` : ''}
     ${o.notas ? `
     <div class="ocv2-address" style="margin-top:14px">
       <div class="ocv2-address-title">Note</div>
-      <div class="ocv2-address-line" style="color:var(--muted)">${o.notas}</div>
+      <div class="ocv2-address-line" style="color:var(--muted)">${escP(o.notas)}</div>
     </div>` : ''}`;
 
   return `
@@ -126,12 +128,18 @@ async function tabProfilo(tab, el) {
       const u = await r.json();
       content.innerHTML = `
         <div class="perfil-section-title">I MIEI DATI</div>
-        <div class="field"><label>Nome completo</label><input type="text" id="editNombre" value="${u.nombre || ''}"/></div>
-        <div class="field"><label>Email</label><input type="email" value="${u.email}" disabled style="opacity:.5"/></div>
-        <div class="field"><label>Telefono</label><input type="tel" id="editTelefono" value="${u.telefono || ''}"/></div>
-        <div class="field"><label>Indirizzo di spedizione</label><textarea id="editDireccion">${u.direccion || ''}</textarea></div>
+        <div class="field"><label>Nome completo</label><input type="text" id="editNombre" value="${escP(u.nombre)}"/></div>
+        <div class="field"><label>Email</label><input type="email" value="${escP(u.email)}" disabled style="opacity:.5"/></div>
+        <div class="field"><label>Telefono</label><input type="tel" id="editTelefono" value="${escP(u.telefono)}"/></div>
+        <div class="field"><label>Indirizzo di spedizione</label><textarea id="editDireccion">${escP(u.direccion)}</textarea></div>
         <button class="btn-submit" onclick="salvaProfilo()">SALVA MODIFICHE</button>
-        <div id="perfilMsg"></div>`;
+        <div id="perfilMsg"></div>
+        <div class="perfil-section-title" style="margin-top:36px">PRIVACY E DATI</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Puoi scaricare una copia di tutti i tuoi dati o eliminare l'account. Gli ordini restano archiviati 10 anni per obbligo fiscale. <a href="/privacy.html" style="color:inherit">Informativa privacy</a></p>
+        <button class="btn-submit" style="background:transparent;color:inherit;border:1px solid var(--border)" onclick="scaricaMieiDati()">SCARICA I MIEI DATI</button>
+        <div class="field" style="margin-top:20px"><label>Password per confermare l'eliminazione</label><input type="password" id="pwdElimina" autocomplete="current-password"/></div>
+        <button class="btn-submit" style="background:transparent;color:var(--accent);border:1px solid var(--accent)" onclick="eliminaMioAccount()">ELIMINA ACCOUNT</button>
+        <div id="privacyMsg"></div>`;
     } catch { content.innerHTML = '<div class="msg err">Errore</div>'; }
   }
 
@@ -139,6 +147,42 @@ async function tabProfilo(tab, el) {
     content.innerHTML = '<div class="loading">CARICAMENTO</div>';
     await caricaBenchys();
     content.innerHTML = renderTabBenchys();
+  }
+}
+
+async function scaricaMieiDati() {
+  try {
+    const r = await fetch(`${API}/auth/mis-datos`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error((await r.json()).error || 'Errore');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'rolefigz-miei-dati.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    showMsg('privacyMsg', e.message, 'err');
+  }
+}
+
+async function eliminaMioAccount() {
+  const password = document.getElementById('pwdElimina').value;
+  if (!password) { showMsg('privacyMsg', 'Inserisci la password per confermare', 'err'); return; }
+  if (!confirm("Eliminare definitivamente l'account? L'operazione non si può annullare.")) return;
+  try {
+    const r = await fetch(`${API}/auth/cuenta`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    localStorage.removeItem('rfToken');
+    localStorage.removeItem('rfFoto');
+    alert('Account eliminato.');
+    location.href = '/';
+  } catch (e) {
+    showMsg('privacyMsg', e.message, 'err');
   }
 }
 

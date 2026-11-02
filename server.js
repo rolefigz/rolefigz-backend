@@ -3,7 +3,7 @@ const path            = require("path");
 const cors            = require("cors");
 const helmet          = require("helmet");
 const { sequelize } = require("./src/models");
-const { corsOptions, limitGeneral, limitAuth, limitAPI, limitNfcScan } = require("./src/middleware/sicurezza");
+const { corsOptions, helmetOptions, permissionsPolicy, nascondiErroriInterni, limitGeneral, limitAuth, limitAPI, limitNfcScan } = require("./src/middleware/sicurezza");
 const authRoutes        = require("./src/routers/authRoutes");
 const prodottiRoutes    = require("./src/routers/prodottiRoutes");
 const categorieRoutes   = require("./src/routers/categorieRoutes");
@@ -32,13 +32,38 @@ const { scansionaTag } = require("./src/modules/nfc/controllers/tagPublicControl
 const { vaiAlLink } = require("./src/modules/nfc/controllers/linkPublicController");
 const { mostraLanding: mostraLandingNfc } = require("./src/modules/nfc/controllers/landingController");
 const { eseguiJobGiornalieroAnalytics } = require("./src/modules/nfc/services/analyticsAggregationService");
+const { purgaVisiteVecchie } = require("./src/controllers/analiticheController");
 require("dotenv").config();
+
+// Senza JWT_SECRET (o con uno debole) chiunque potrebbe firmarsi un token da admin.
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET mancante: avvio bloccato");
+  process.exit(1);
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn("ATTENZIONE: JWT_SECRET troppo corto (consigliati almeno 32 caratteri casuali)");
+}
 
 const app = express();
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet(helmetOptions));
+app.use(permissionsPolicy);
 app.use(cors(corsOptions));
+app.use(nascondiErroriInterni);
+
+// Contatto per segnalare vulnerabilità (RFC 9116). express.static ignora le
+// cartelle che iniziano con il punto, quindi la rotta è esplicita.
+app.get("/.well-known/security.txt", (req, res) => {
+  res.type("text/plain").send(
+    "Contact: mailto:rolefigz@gmail.com\n" +
+    "Expires: 2027-11-01T00:00:00.000Z\n" +
+    "Preferred-Languages: it, es, en\n" +
+    "Canonical: https://www.rolefigz.com/.well-known/security.txt\n" +
+    "Policy: https://www.rolefigz.com/privacy.html\n"
+  );
+});
 
 // il webhook stripe deve stare prima del json parser, altrimenti non legge il body correttamente
 app.post("/api/pagos/webhook", express.raw({ type: "application/json" }), webhook);
@@ -130,7 +155,10 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error("Errore:", err.message);
-  res.status(err.status || 500).json({ error: err.message || "Errore interno del server" });
+  const status = err.status || err.statusCode || 500;
+  // Gli errori 4xx (JSON malformato, file troppo grande...) restano leggibili;
+  // i 5xx passano da nascondiErroriInterni.
+  res.status(status).json({ error: status < 500 ? err.message : (err.message || "Errore interno del server") });
 });
 
 // sync({alter:true}) ha causato un deadlock e degli ALTER TABLE falliti
@@ -171,10 +199,12 @@ app.listen(PORT, () => {
       // Job giornaliero di analytics (aggregazione + purga retention) nello
       // stesso processo: niente cron esterno, niente secondo processo che
       // tocca la BD in contemporanea (vedi incidente del 27/08).
-      eseguiJobGiornalieroAnalytics().catch(err => console.error("Errore job analytics NFC:", err.message));
-      setInterval(() => {
+      const jobGiornaliero = () => {
         eseguiJobGiornalieroAnalytics().catch(err => console.error("Errore job analytics NFC:", err.message));
-      }, 24 * 60 * 60 * 1000);
+        purgaVisiteVecchie().catch(err => console.error("Errore purga visite:", err.message));
+      };
+      jobGiornaliero();
+      setInterval(jobGiornaliero, 24 * 60 * 60 * 1000);
     })
     .catch(err => console.error("errore db sync:", err.message));
 });
