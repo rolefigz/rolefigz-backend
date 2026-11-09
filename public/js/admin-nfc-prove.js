@@ -213,6 +213,7 @@ async function provaNfcModifica(id) {
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
         <div>${p.logo_url ? `<img src="${escKit(p.logo_url)}" alt="" style="width:64px;height:64px;object-fit:contain;border:1px solid var(--border)">` : '<span style="color:var(--muted);font-size:11px">Nessun logo</span>'}</div>
         <div class="field" style="flex:1;min-width:220px"><label>${p.logo_url ? 'Cambia logo' : 'Aggiungi logo'} (PNG, JPG, WEBP, SVG)</label><input id="peLogo" type="file" accept=".png,.jpg,.jpeg,.webp,.svg"/></div>
+        <label style="display:flex;gap:6px;align-items:center;font-size:12px;padding-bottom:12px" title="Per i loghi PNG/WEBP già scontornati: niente riquadro bianco o nero dietro"><input type="checkbox" id="peLogoSenzaFondo"/> Senza riquadro (logo trasparente)</label>
         ${p.logo_url ? '<label style="display:flex;gap:6px;align-items:center;font-size:12px;padding-bottom:12px"><input type="checkbox" id="peTogliLogo"/> Togli il logo</label>' : ''}
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;font-size:12px">
@@ -521,6 +522,7 @@ async function provaNfcSalva(id) {
   if (voto?.checked) fd.append('nascondi_voto', 'true');
   const logo = document.getElementById('peLogo').files[0];
   if (logo) fd.append('logo', logo);
+  if (logo && document.getElementById('peLogoSenzaFondo')?.checked) fd.append('logo_senza_fondo', 'true');
   const btn = document.getElementById('peSalva'); btn.disabled = true; provaNfcStatoModifica('Salvo…');
   try {
     const r = await fetch(`${API}/kit/admin/prove/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });

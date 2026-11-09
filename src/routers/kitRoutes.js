@@ -577,7 +577,8 @@ router.put("/admin/prove/:id", verifyToken, soloAdmin, riceviLogoProva, async (r
     if (b.togli_logo === "true") campi.logo_url = null;
     if (req.file) {
       const { logoUrl, logoId } = await caricaLogoProva(req.file.buffer, campi.slug || p.slug);
-      campi.logo_url = await logoSuPiastrella(logoUrl, logoId);
+      // logo già scontornato (PNG/WEBP trasparente): si mostra così com'è, senza la «piastrella» dietro
+      campi.logo_url = b.logo_senza_fondo === "true" ? logoUrl : await logoSuPiastrella(logoUrl, logoId);
     }
     await aggiornaPaginaProva(p, campi);
     res.json({ ...p.toJSON(), attiva_db: p.attiva, attiva: p.attiva && new Date(p.scadenza) > new Date() });
