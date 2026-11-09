@@ -119,6 +119,14 @@
     .range-row input[type=range]{flex:1;accent-color:var(--accent)}
     .range-row .val{font-size:.8rem;color:var(--ink-dim);width:36px;text-align:right}
 
+    .loc-row{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+    .loc-row:last-child{border-bottom:0}
+    .loc-row img{width:72px;height:96px;object-fit:cover;border-radius:10px;background:rgba(0,0,0,.04);flex:none}
+    .loc-row .loc-info{flex:1;min-width:0}
+    .loc-row .loc-info strong{display:block;font-size:.95rem;margin-bottom:3px}
+    .loc-row .loc-info .note{margin-top:2px}
+    .switch-row{display:flex;align-items:center;gap:10px;font-size:.85rem;margin-bottom:14px;cursor:pointer}
+    .switch-row input{width:18px;height:18px;accent-color:var(--accent)}
     .note{font-size:.78rem;color:var(--ink-dim);margin-top:6px;line-height:1.5}
   </style>
 </head>
@@ -137,6 +145,7 @@
       <div class="menu-item active" onclick="nfcTab('home', this)">Home</div>
       <div class="menu-item" onclick="nfcTab('azienda', this)">La mia azienda</div>
       <div class="menu-item" onclick="nfcTab('pagina', this)">La mia pagina</div>
+      <div class="menu-item" onclick="nfcTab('locandine', this)">Locandine</div>
       <div class="menu-item" onclick="nfcTab('merch', this)">Merchandising</div>
       <div class="menu-item" onclick="nfcTab('ordini', this)">Ordini</div>
       <div class="menu-item" onclick="nfcTab('statistiche', this)">Statistiche</div>
@@ -148,6 +157,6 @@
 <script src="/vendor/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="/js/config.js"></script>
-<script src="/js/account-nfc.js?v=20261024a"></script>
+<script src="/js/account-nfc.js?v=20261108a"></script>
 </body>
 </html>

@@ -14,9 +14,12 @@ const AnalyticsDaily  = require("./AnalyticsDaily");
 const AuditLog        = require("./AuditLog");
 const Notification    = require("./Notification");
 const Lead             = require("./Lead");
+const Locandina        = require("./Locandina");
+const IscrizioneLocandina = require("./IscrizioneLocandina");
 
 module.exports = {
   Company, Template, Plan, CompanyPage, PageLink, Subscription, Payment,
   MerchProduct, MerchOrder, MerchOrderItem, Tag,
   AnalyticsEvent, AnalyticsDaily, AuditLog, Notification, Lead,
+  Locandina, IscrizioneLocandina,
 };

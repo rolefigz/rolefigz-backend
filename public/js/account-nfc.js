@@ -32,6 +32,7 @@ function nfcTab(tab, el) {
   if (tab === 'home') tabNfcHome(content);
   if (tab === 'azienda') tabNfcAzienda(content);
   if (tab === 'pagina') tabNfcPagina(content);
+  if (tab === 'locandine') tabNfcLocandine(content);
   if (tab === 'merch') tabNfcMerch(content);
   if (tab === 'ordini') tabNfcOrdini(content);
   if (tab === 'statistiche') tabNfcStatistiche(content);
@@ -666,4 +667,164 @@ async function tabNfcStatistiche(content, range = '7') {
       });
     }
   } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
+}
+
+// ═══════════════════════════ LOCANDINE ═══════════════════════════
+// Volantini/eventi che compaiono in un pop-up all'apertura della pagina pubblica,
+// con "Aggiungi al calendario" e, se attivato, il form per lasciare l'email.
+
+let locandineCache = [];
+
+function escLoc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// ISO → valore per <input type="datetime-local"> nell'ora locale del browser
+function isoALocale(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function localeAIso(v) { return v ? new Date(v).toISOString() : ''; }
+function dataBreve(iso) {
+  return iso ? new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+}
+
+function statoLocandina(l) {
+  const ora = Date.now();
+  if (!l.attiva) return ['Disattivata', 'var(--ink-dim)'];
+  if (l.mostra_dal && new Date(l.mostra_dal).getTime() > ora) return ['Programmata', 'var(--accent)'];
+  const fine = l.mostra_fino || l.fine_evento || (l.inizio_evento ? new Date(new Date(l.inizio_evento).getTime() + 864e5).toISOString() : null);
+  if (fine && new Date(fine).getTime() < ora) return ['Scaduta', 'var(--red)'];
+  return ['Visibile', 'var(--green)'];
+}
+
+async function tabNfcLocandine(content) {
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/locandine`, { headers: authHeaders() });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    locandineCache = d;
+
+    const righe = d.map(l => {
+      const [stato, colore] = statoLocandina(l);
+      return `<div class="loc-row">
+        ${l.immagine_url ? `<img src="${escLoc(l.immagine_url)}" alt="">` : '<img alt="">'}
+        <div class="loc-info">
+          <strong>${escLoc(l.titolo)}</strong>
+          <span class="pill" style="color:${colore}">${stato}</span>
+          ${l.inizio_evento ? `<p class="note">📅 ${dataBreve(l.inizio_evento)}${l.luogo ? ` · 📍 ${escLoc(l.luogo)}` : ''}</p>` : ''}
+          ${l.raccogli_email ? `<p class="note">✉️ ${l.iscritti} email raccolte</p>` : ''}
+          <div style="margin-top:8px">
+            <button class="action-btn" onclick="formLocandina(${l.id})">Modifica</button>
+            <button class="action-btn" onclick="toggleLocandina(${l.id})">${l.attiva ? 'Disattiva' : 'Attiva'}</button>
+            ${l.raccogli_email ? `<button class="action-btn" onclick="scaricaIscritti(${l.id})">Scarica email (CSV)</button>` : ''}
+            <button class="action-btn danger" onclick="eliminaLocandina(${l.id})">Elimina</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    content.innerHTML = `
+      <h2>Locandine</h2>
+      <p style="font-size:.85rem;margin-bottom:18px">Carica la locandina di un evento o di una promozione: appare in un pop-up quando i clienti aprono la tua pagina (NFC o QR), con il bottone per aggiungerla al calendario e, se vuoi, per lasciare la loro email. Se ne hai più di una visibile, si mostra la più recente.</p>
+      <button class="btn-submit" style="margin-bottom:18px" onclick="formLocandina()">+ Nuova locandina</button>
+      <div id="locForm"></div>
+      <div class="card">${righe || '<p style="font-size:.85rem">Non hai ancora nessuna locandina.</p>'}</div>`;
+  } catch (e) { content.innerHTML = `<div class="msg err">Errore: ${escLoc(e.message)}</div>`; }
+}
+
+function formLocandina(id) {
+  const l = id ? locandineCache.find(x => x.id === id) : {};
+  const box = document.getElementById('locForm');
+  box.innerHTML = `
+    <div class="card">
+      <h3>${id ? 'Modifica locandina' : 'Nuova locandina'}</h3>
+      <form id="formLoc" onsubmit="salvaLocandina(event, ${id || 'null'})">
+        <div class="field"><label>Immagine della locandina ${id ? '(lascia vuoto per tenere quella attuale)' : '*'}</label>
+          <input type="file" name="immagine" accept="image/jpeg,image/png,image/webp" ${id ? '' : 'required'}>
+          <p class="note">JPG, PNG o WEBP, massimo 5 MB. Va bene anche la foto del volantino in verticale.</p></div>
+        <div class="field"><label>Titolo *</label><input name="titolo" maxlength="120" required value="${escLoc(l.titolo)}" placeholder="Es. Serata di Natale con aperitivo"></div>
+        <div class="field"><label>Descrizione</label><textarea name="descrizione" maxlength="1000" placeholder="Cosa succede, cosa c'è in omaggio…">${escLoc(l.descrizione)}</textarea></div>
+        <div class="form-row">
+          <div class="field"><label>Inizio evento</label><input type="datetime-local" name="inizio_evento" value="${isoALocale(l.inizio_evento)}"></div>
+          <div class="field"><label>Fine evento</label><input type="datetime-local" name="fine_evento" value="${isoALocale(l.fine_evento)}"></div>
+        </div>
+        <p class="note" style="margin:-8px 0 14px">Con la data d'inizio compare il bottone «Aggiungi al calendario» (Google, Apple, Outlook).</p>
+        <div class="field"><label>Luogo</label><input name="luogo" maxlength="200" value="${escLoc(l.luogo)}" placeholder="Es. Via Roma 10, Piacenza"></div>
+        <div class="form-row">
+          <div class="field"><label>Mostra dal</label><input type="datetime-local" name="mostra_dal" value="${isoALocale(l.mostra_dal)}"></div>
+          <div class="field"><label>Mostra fino al</label><input type="datetime-local" name="mostra_fino" value="${isoALocale(l.mostra_fino)}"></div>
+        </div>
+        <p class="note" style="margin:-8px 0 14px">Vuoto = da subito e fino alla fine dell'evento.</p>
+        <label class="switch-row"><input type="checkbox" name="raccogli_email" ${l.raccogli_email ? 'checked' : ''} onchange="document.getElementById('locEmailBox').style.display=this.checked?'block':'none'"> Raccogli le email dei clienti</label>
+        <div id="locEmailBox" style="display:${l.raccogli_email ? 'block' : 'none'}">
+          <div class="field"><label>Testo sopra il form</label><input name="testo_email" maxlength="120" value="${escLoc(l.testo_email)}" placeholder="Lasciaci la tua email per non perdere le novità"></div>
+          <p class="note" style="margin:-8px 0 14px">Il cliente deve spuntare il consenso. Le email le scarichi da qui in CSV.</p>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Bottone extra: testo</label><input name="link_label" maxlength="60" value="${escLoc(l.link_label)}" placeholder="Es. Prenota il tavolo"></div>
+          <div class="field"><label>Bottone extra: link</label><input name="link_url" maxlength="500" value="${escLoc(l.link_url)}" placeholder="https://… o tel:…"></div>
+        </div>
+        <label class="switch-row"><input type="checkbox" name="attiva" ${l.attiva === false ? '' : 'checked'}> Attiva</label>
+        <button class="btn-submit" type="submit">Salva</button>
+        <button class="action-btn" type="button" onclick="document.getElementById('locForm').innerHTML=''">Annulla</button>
+        <div id="locMsg"></div>
+      </form>
+    </div>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function salvaLocandina(ev, id) {
+  ev.preventDefault();
+  const f = ev.target;
+  const fd = new FormData();
+  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url'].forEach(k => fd.append(k, f[k].value));
+  ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, localeAIso(f[k].value)));
+  fd.append('raccogli_email', f.raccogli_email.checked ? 'true' : 'false');
+  fd.append('attiva', f.attiva.checked ? 'true' : 'false');
+  if (f.immagine.files[0]) fd.append('immagine', f.immagine.files[0]);
+  const btn = f.querySelector('.btn-submit');
+  btn.disabled = true; btn.textContent = 'Salvataggio…';
+  try {
+    const r = await fetch(`${API_NFC_CLIENT}/locandine${id ? `/${id}` : ''}`, { method: id ? 'PUT' : 'POST', headers: authHeaders(), body: fd });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Errore nel salvataggio');
+    tabNfcLocandine(document.getElementById('nfcContent'));
+  } catch (e) {
+    showMsg('locMsg', e.message, 'err');
+    btn.disabled = false; btn.textContent = 'Salva';
+  }
+}
+
+async function toggleLocandina(id) {
+  const l = locandineCache.find(x => x.id === id);
+  if (!l) return;
+  const fd = new FormData();
+  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url'].forEach(k => fd.append(k, l[k] || ''));
+  ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, l[k] || ''));
+  fd.append('raccogli_email', l.raccogli_email ? 'true' : 'false');
+  fd.append('attiva', l.attiva ? 'false' : 'true');
+  const r = await fetch(`${API_NFC_CLIENT}/locandine/${id}`, { method: 'PUT', headers: authHeaders(), body: fd });
+  if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'Errore'); }
+  tabNfcLocandine(document.getElementById('nfcContent'));
+}
+
+async function eliminaLocandina(id) {
+  const l = locandineCache.find(x => x.id === id);
+  if (!confirm(`Eliminare «${l ? l.titolo : 'la locandina'}»?${l && l.iscritti ? ` Verranno eliminate anche le ${l.iscritti} email raccolte: scaricale prima.` : ''}`)) return;
+  const r = await fetch(`${API_NFC_CLIENT}/locandine/${id}`, { method: 'DELETE', headers: authHeaders() });
+  if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'Errore'); }
+  tabNfcLocandine(document.getElementById('nfcContent'));
+}
+
+async function scaricaIscritti(id) {
+  const r = await fetch(`${API_NFC_CLIENT}/locandine/${id}/iscritti.csv`, { headers: authHeaders() });
+  if (!r.ok) { alert('Errore nel download'); return; }
+  const blob = await r.blob();
+  const nome = (r.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/)?.[1] || `iscritti-${id}.csv`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }

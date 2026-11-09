@@ -27,6 +27,8 @@ const telegramRoutes     = require("./src/routers/telegramRoutes");
 const nfcAdminRoutes     = require("./src/modules/nfc/routers/adminRoutes");
 const nfcClientRoutes    = require("./src/modules/nfc/routers/clientRoutes");
 const nfcLeadRoutes      = require("./src/modules/nfc/routers/leadPublicRoutes");
+const nfcLocandineRoutes = require("./src/modules/nfc/routers/locandinaPublicRoutes");
+const { scaricaIcs: scaricaIcsLocandina } = require("./src/modules/nfc/controllers/locandinaPublicController");
 const { mostraPagina: mostraPaginaNfc } = require("./src/modules/nfc/controllers/publicPageController");
 const { scansionaTag } = require("./src/modules/nfc/controllers/tagPublicController");
 const { vaiAlLink } = require("./src/modules/nfc/controllers/linkPublicController");
@@ -101,6 +103,7 @@ app.use("/api/telegram", limitAPI,  telegramRoutes);
 app.use("/api/admin/nfc", limitAPI, nfcAdminRoutes);
 app.use("/api/nfc",       limitAPI, nfcClientRoutes);
 app.use("/api/nfc-leads", limitAPI, nfcLeadRoutes);
+app.use("/api/nfc-locandine", limitAPI, nfcLocandineRoutes);
 
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
 app.get("/blog",       serveApp);
@@ -138,6 +141,7 @@ app.get("/nfc", mostraLandingNfc);
 // Redirección de tags físicos (QR/NFC) y de clics en enlaces — siempre 302, nunca 301.
 app.get("/nfc/t/:code",       limitNfcScan, scansionaTag);
 app.get("/nfc/go/:linkId",    limitNfcScan, vaiAlLink);
+app.get("/nfc/locandina/:id/evento.ics", limitNfcScan, scaricaIcsLocandina);
 
 // La tarjeta de contacto personal (antes en /nfc) se movió aquí para liberar
 // /nfc/{slug} como motor de páginas de empresa del módulo NFC.

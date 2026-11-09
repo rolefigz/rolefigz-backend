@@ -1,4 +1,5 @@
 const { validaUrlSicuro } = require("../utils/urlSicuro");
+const { linkGoogleCalendar } = require("../services/locandinaService");
 
 function escapeHtml(valore) {
   return String(valore || "").replace(/[&<>"']/g, c => ({
@@ -45,6 +46,19 @@ const ALLERGENI = [
 
 const ICONA_ALLERGENI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21 19.5H3z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>';
 
+const ICONA_LOCANDINA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.8 6a8.5 8.5 0 0 1 0 12"/></svg>';
+
+// "Sabato 5 dicembre, 19:00" (ora di Roma); se l'evento finisce lo stesso giorno: "… 19:00 – 23:00"
+function dataEventoLeggibile(inizio, fine) {
+  if (!inizio) return "";
+  const tz = { timeZone: "Europe/Rome" };
+  const giorno = d => new Date(d).toLocaleDateString("it-IT", { ...tz, weekday: "long", day: "numeric", month: "long" });
+  const ora = d => new Date(d).toLocaleTimeString("it-IT", { ...tz, hour: "2-digit", minute: "2-digit" });
+  let testo = `${giorno(inizio)}, ${ora(inizio)}`;
+  if (fine) testo += giorno(fine) === giorno(inizio) ? ` – ${ora(fine)}` : ` – ${giorno(fine)}, ${ora(fine)}`;
+  return testo.charAt(0).toUpperCase() + testo.slice(1);
+}
+
 const DIMENSIONI_LOGO = { piccolo: { centro: 84, header: 48 }, medio: { centro: 120, header: 68 }, grande: { centro: 162, header: 92 } };
 
 // ID di un video di YouTube da qualsiasi link (youtu.be/ID, watch?v=ID, shorts/ID, embed/ID) o dall'ID stesso.
@@ -77,8 +91,9 @@ function hexARgba(hex, alphaPercento) {
 // opts.testoBanner: testo del banner di anteprima (le pagine di prova del kit campione hanno il loro)
 // opts.creditoFoto: attribuzione della foto di sfondo (foto di Google Maps nelle pagine di prova)
 // opts.linkDiretti: i link puntano direttamente all'URL (pagine di prova: i loro link non sono in page_links)
+// opts.locandina: Locandina visibile da mostrare nel pop-up all'apertura (o null)
 function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
-  const { anteprima = false, accessibile = true, linkDiretti = false, creditoFoto = "",
+  const { anteprima = false, accessibile = true, linkDiretti = false, creditoFoto = "", locandina = null,
           testoBanner = "ANTEPRIMA — QUESTA PAGINA NON E' ANCORA PUBBLICA" } = opts;
   const d = pagina?.design || {};
 
@@ -170,6 +185,74 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
     }).join("")}
   </ol>
 </dialog>` : "";
+
+  // ── Pop-up della locandina: si apre da solo dopo l'animazione (una volta al giorno
+  // per visitatore) e resta richiamabile dal bottone nella lista dei link ──
+  const loc = locandina;
+  const posBottoneLoc = (links.length + (allergeniPresenti.size ? 1 : 0)) * 70;
+  const bottoneLocandina = loc ? `
+    <button type="button" class="link link--btn link--loc" style="--d:${posBottoneLoc}ms" onclick="apriLocandina()">
+      <span class="link__icon">${ICONA_LOCANDINA}</span>
+      <span class="link__label">${escapeHtml(loc.titolo)}</span>
+      <span class="link__go">›</span>
+    </button>` : "";
+  let dialogoLocandina = "";
+  if (loc) {
+    const quando = dataEventoLeggibile(loc.inizio_evento, loc.fine_evento);
+    const google = linkGoogleCalendar(loc, azienda.name);
+    const linkExtra = (() => { try { return loc.link_url ? validaUrlSicuro(loc.link_url) : null; } catch { return null; } })();
+    const versione = new Date(loc.updatedAt || 0).getTime();
+    dialogoLocandina = `
+<dialog id="locandina" class="loc" aria-labelledby="locTitolo" onclick="if (event.target === this) this.close()">
+  <button type="button" class="loc__chiudi" aria-label="Chiudi" onclick="this.closest('dialog').close()">✕</button>
+  ${loc.immagine_url ? `<img class="loc__img" src="${escapeAttr(loc.immagine_url)}" alt="${escapeAttr(loc.titolo)}">` : ""}
+  <div class="loc__corpo">
+    <h2 id="locTitolo">${escapeHtml(loc.titolo)}</h2>
+    ${quando || loc.luogo ? `<p class="loc__meta">${quando ? `<span>📅 ${escapeHtml(quando)}</span>` : ""}${loc.luogo ? `<span>📍 ${escapeHtml(loc.luogo)}</span>` : ""}</p>` : ""}
+    ${loc.descrizione ? `<p class="loc__descr">${escapeHtml(loc.descrizione)}</p>` : ""}
+    ${google || linkExtra ? `<div class="loc__azioni">
+      ${google ? `<a class="loc__btn" href="${escapeAttr(google)}" target="_blank" rel="noopener">${ICONE_SVG.booking}<span>Google Calendar</span></a>
+      <a class="loc__btn" href="/nfc/locandina/${loc.id}/evento.ics">${ICONE_SVG.booking}<span>Apple / Outlook</span></a>` : ""}
+      ${linkExtra ? `<a class="loc__btn loc__btn--pieno" href="${escapeAttr(linkExtra)}"${linkExtra.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${escapeHtml(loc.link_label || "Scopri di più")}</span></a>` : ""}
+    </div>` : ""}
+    ${loc.raccogli_email ? `<form class="loc__form" id="locForm" novalidate>
+      <p class="loc__form-tit">${escapeHtml(loc.testo_email || "Lasciaci la tua email per non perdere le novità")}</p>
+      <input type="email" name="email" placeholder="La tua email" autocomplete="email" required maxlength="190">
+      <input type="text" name="nome" placeholder="Nome (facoltativo)" autocomplete="given-name" maxlength="80">
+      <input type="text" name="sito" class="loc__trappola" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="loc__consenso"><input type="checkbox" name="consenso" required>
+        <span>Acconsento a essere contattato/a via email da ${escapeHtml(azienda.name)} per eventi e promozioni. Posso cancellarmi quando voglio.</span></label>
+      <button type="submit" class="loc__btn loc__btn--pieno">Iscriviti</button>
+      <p class="loc__esito" id="locEsito" role="status"></p>
+    </form>` : ""}
+  </div>
+</dialog>
+<script>
+  function apriLocandina(){ var d=document.getElementById('locandina'); if(d && !d.open) d.showModal(); }
+  (function(){
+    var CHIAVE='rf-loc-${loc.id}-${versione}', anteprima=${anteprima ? "true" : "false"};
+    function giaVista(){ try { var t=+localStorage.getItem(CHIAVE); return t && (Date.now()-t) < 864e5; } catch(e){ return false; } }
+    setTimeout(function(){
+      if (anteprima || !giaVista()) { apriLocandina(); try { localStorage.setItem(CHIAVE, Date.now()); } catch(e){} }
+    }, 3900);
+    var f=document.getElementById('locForm'); if(!f) return;
+    f.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var esito=document.getElementById('locEsito'), btn=f.querySelector('button[type=submit]');
+      var email=f.email.value.trim();
+      if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)){ esito.textContent="Controlla l'email."; esito.className='loc__esito err'; return; }
+      if(!f.consenso.checked){ esito.textContent='Spunta il consenso per iscriverti.'; esito.className='loc__esito err'; return; }
+      if(anteprima){ esito.textContent="Anteprima: sulla pagina pubblica l'email verrebbe salvata."; esito.className='loc__esito ok'; return; }
+      btn.disabled=true;
+      fetch('/api/nfc-locandine/${loc.id}/iscrizione',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:email,nome:f.nome.value.trim(),consenso:true,sito:f.sito.value})})
+        .then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||'Errore'); }); })
+        .then(function(){ f.innerHTML='<p class="loc__grazie">✓ Fatto! Ti terremo aggiornato/a.</p>'; })
+        .catch(function(e){ esito.textContent=e.message; esito.className='loc__esito err'; btn.disabled=false; });
+    });
+  })();
+</script>`;
+  }
 
   // video di YouTube: parte da solo a ogni apertura, senza audio (i browser bloccano l'autoplay con il suono;
   // il visitatore lo attiva dal player) e in loop
@@ -273,6 +356,32 @@ body.content-in .link{opacity:1;transform:translateY(0)}
 .allergeni__tag{flex:none;margin-left:auto;padding:2px 8px;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent)}
 .link:hover .link__go{transform:translateX(3px)}
 
+.loc{position:relative;width:min(100% - 28px,var(--card-w));max-height:min(100% - 36px,860px);padding:0;color:var(--ink);background:var(--void);border:1px solid var(--line);overflow:auto;opacity:0;transform:translateY(18px) scale(.97);transition:opacity .45s cubic-bezier(.22,.61,.36,1),transform .45s cubic-bezier(.22,.61,.36,1),overlay .45s allow-discrete,display .45s allow-discrete}
+.loc[open]{opacity:1;transform:none}
+@starting-style{.loc[open]{opacity:0;transform:translateY(18px) scale(.97)}}
+.loc::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.loc__chiudi{position:sticky;top:10px;float:right;margin:10px 10px -46px 0;z-index:2;width:36px;height:36px;font-size:1rem;color:#fff;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);cursor:pointer}
+.loc__img{display:block;width:100%;height:auto;max-height:62vh;object-fit:contain;background:#000}
+.loc__corpo{padding:18px 18px 20px}
+.loc__corpo h2{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:600;line-height:1.25}
+.loc__meta{display:flex;flex-direction:column;gap:4px;margin:0 0 10px;font-size:.84rem;color:var(--ink)}
+.loc__descr{margin:0 0 14px;color:var(--ink-dim);font-size:.86rem;line-height:1.55;white-space:pre-line}
+.loc__azioni{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.loc__btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;font-family:'Space Grotesk',sans-serif;font-size:.86rem;font-weight:600;color:var(--ink);text-decoration:none;background:var(--btn-bg);border:1px solid var(--line);cursor:pointer}
+.loc__btn svg{width:18px;height:18px;color:var(--accent);flex:none}
+.loc__btn--pieno{color:#0A0A0A;background:var(--accent);border-color:var(--accent)}
+@media (hover:hover){.loc__btn:hover{border-color:var(--accent)}}
+.loc__form{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+.loc__form-tit{margin:0 0 2px;font-size:.88rem;font-weight:600}
+.loc__form input[type=email],.loc__form input[type=text]{width:100%;min-height:44px;padding:10px 12px;font:inherit;font-size:16px;color:var(--ink);background:var(--btn-bg);border:1px solid var(--line);outline:none}
+.loc__form input:focus{border-color:var(--accent)}
+.loc__trappola{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0}
+.loc__consenso{display:flex;gap:9px;align-items:flex-start;font-size:.74rem;line-height:1.45;color:var(--ink-dim);cursor:pointer}
+.loc__consenso input{margin-top:2px;accent-color:var(--accent);flex:none;width:16px;height:16px}
+.loc__form .loc__btn{flex:none;width:100%}
+.loc__esito{margin:0;font-size:.8rem;min-height:1em}
+.loc__esito.err{color:#ff8a7a}.loc__esito.ok{color:#7fd6a4}
+.loc__grazie{margin:6px 0 0;font-size:.95rem;font-weight:600;color:var(--accent)}
 .video{width:100%;max-width:var(--card-w);margin-top:24px;aspect-ratio:16/9;border:1px solid var(--line);background:#000;opacity:0;transition:opacity .9s ease .2s}
 .video--verticale{max-width:300px;aspect-ratio:9/16}
 .video iframe{width:100%;height:100%;border:0;display:block}
@@ -299,11 +408,12 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
     ${pagina?.hours ? `<p class="hours">🕒 ${escapeHtml(pagina.hours)}</p>` : ""}
   </section>
   ${blocVideo}
-  <nav class="links" aria-label="Link">${righeLink}${bloccoAllergeni}</nav>
+  <nav class="links" aria-label="Link">${righeLink}${bloccoAllergeni}${bottoneLocandina}</nav>
   ${blocMappa}
   <p class="foot">Powered by RoleFigz NFC${creditoFoto ? ` · ${escapeHtml(creditoFoto)}` : ""}</p>
 </main>
 ${dialogoAllergeni}
+${dialogoLocandina}
 
 <script>
   var body = document.body;

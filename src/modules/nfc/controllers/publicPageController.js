@@ -4,6 +4,7 @@ const { renderPaginaPubblica } = require("../views/renderPaginaPubblica");
 const { registraEvento } = require("../services/analyticsService");
 const pageCache = require("../utils/pageCache");
 const { trovaPaginaDemo, renderPaginaDemo } = require("../../../utils/paginaDemo");
+const { locandinaVisibile } = require("../services/locandinaService");
 
 const PAGINA_404 = path.join(__dirname, "..", "..", "..", "..", "public", "404.html");
 
@@ -61,7 +62,11 @@ async function mostraPagina(req, res) {
     ? await PageLink.findAll({ where: { company_id: azienda.id, is_visible: true }, order: [["position", "ASC"]] })
     : [];
 
-  const html = renderPaginaPubblica(azienda, pagina, links, { anteprima: false, accessibile });
+  const locandina = accessibile
+    ? await locandinaVisibile(azienda.id).catch(err => { console.error("Locandina NFC:", err.message); return null; })
+    : null;
+
+  const html = renderPaginaPubblica(azienda, pagina, links, { anteprima: false, accessibile, locandina });
   pageCache.set(slug, html);
   res.set("Content-Type", "text/html; charset=utf-8");
   res.send(html);

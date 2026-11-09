@@ -89,11 +89,12 @@ async function nascondi(companyId, slug) {
 }
 
 async function anteprimaHtml(azienda) {
-  const [pagina, links] = await Promise.all([
+  const [pagina, links, locandina] = await Promise.all([
     CompanyPage.findOne({ where: { company_id: azienda.id } }),
     PageLink.findAll({ where: { company_id: azienda.id, is_visible: true }, order: [["position", "ASC"]] }),
+    require("./locandinaService").locandinaVisibile(azienda.id).catch(() => null),
   ]);
-  return renderPaginaPubblica(azienda, pagina, links, { anteprima: true, accessibile: true });
+  return renderPaginaPubblica(azienda, pagina, links, { anteprima: true, accessibile: true, locandina });
 }
 
 async function caricaLogo(companyId, slug, url) {

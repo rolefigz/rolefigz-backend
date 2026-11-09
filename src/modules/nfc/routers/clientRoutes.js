@@ -8,6 +8,7 @@ const tagClient = require("../controllers/tagClientController");
 const merch = require("../controllers/merchClientController");
 const stats = require("../controllers/statsClientController");
 const aziendaClient = require("../controllers/aziendaClientController");
+const locandine = require("../controllers/locandinaClientController");
 const { validaPaginaContenuto, validaCreaOrdineMerch, validaAggiornaAziendaCliente } = require("../middleware/validazioniNfc");
 
 router.use(verifyToken, conAzienda);
@@ -26,6 +27,12 @@ router.get("/pagina/anteprima",  pagina.anteprimaPagina);
 router.post("/pagina/logo",      upload.single("logo"), pagina.caricaLogo);
 router.post("/pagina/sfondo",    upload.single("background"), pagina.caricaSfondo);
 router.delete("/pagina/sfondo",  pagina.rimuoviSfondo);
+
+router.get("/locandine",                 locandine.lista);
+router.post("/locandine",                upload.single("immagine"), locandine.crea);
+router.put("/locandine/:id",             upload.single("immagine"), locandine.aggiorna);
+router.delete("/locandine/:id",          locandine.elimina);
+router.get("/locandine/:id/iscritti.csv", locandine.iscrittiCsv);
 
 router.get("/tags",              tagClient.listaMieiTag);
 router.get("/tags/:id/qr.png",   tagClient.scaricaQrPng);
