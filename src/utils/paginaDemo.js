@@ -197,6 +197,7 @@ function pulisciDesign(d) {
   }
   if (["piccolo", "medio", "grande"].includes(d.logoSize)) out.logoSize = d.logoSize;
   if (["nessuno", "colore", "foto"].includes(d.backgroundType)) out.backgroundType = d.backgroundType;
+  if (["colore", "foto"].includes(d.loadingType)) out.loadingType = d.loadingType;
   for (const k of ["backgroundOpacity", "buttonOpacity"]) {
     const n = parseInt(d[k], 10);
     if (n >= 0 && n <= 100) out[k] = n;

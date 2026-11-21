@@ -130,6 +130,8 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   const coloreCaricamento = colorEsadecimaleValido(d.loadingColor) ? d.loadingColor : "#0A0A0A";
 
   const usaFoto = tipoSfondo === "foto" && pagina?.background_url;
+  // schermata di caricamento con la stessa foto dello sfondo (più scura), invece del colore liso
+  const caricamentoFoto = usaFoto && d.loadingType === "foto";
   const coloreFondoBase = tipoSfondo === "colore" ? coloreSfondo : "#0A0A0A";
   const chiaro = tipoSfondo === "colore" && esColoreChiaro(coloreFondoBase);
   const coloreInk = chiaro ? "#141412" : "#F4F1EA";
@@ -305,7 +307,7 @@ body.revealed .scene__photo{opacity:1;animation-play-state:running}
 @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07) translate(-1%,0%)}}
 ` : ""}
 
-.intro{position:fixed;inset:0;background:var(--loading-bg);z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity 1.4s cubic-bezier(.22,.61,.36,1)}
+.intro{position:fixed;inset:0;background:${caricamentoFoto ? `linear-gradient(rgba(10,10,10,.55),rgba(10,10,10,.78)),url('${escapeAttr(pagina.background_url)}') center/cover no-repeat,` : ""}var(--loading-bg);z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity 1.4s cubic-bezier(.22,.61,.36,1)}
 body.revealed .intro{opacity:0;pointer-events:none}
 
 .logo-wrap{position:fixed;top:50%;left:50%;width:${dimensioneLogo.centro}px;height:${dimensioneLogo.centro}px;transform:translate(-50%,-50%) scale(.86);opacity:0;z-index:21;transition:top 1.5s cubic-bezier(.22,.61,.36,1),width 1.5s cubic-bezier(.22,.61,.36,1),height 1.5s cubic-bezier(.22,.61,.36,1),transform 1.5s cubic-bezier(.22,.61,.36,1),opacity 1s ease}

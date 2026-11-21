@@ -275,6 +275,7 @@ function provaNfcHtmlPagina(p) {
           ${colore('ppColoreBottoni', 'Colore dei bottoni', d.buttonColor || '#F4F1EA')}
           ${colore('ppColoreCaricamento', 'Colore schermata di caricamento', d.loadingColor || '#0A0A0A')}
         </div>
+        <div class="field"><label><input type="checkbox" id="ppCaricamentoFoto" ${d.loadingType === 'foto' ? 'checked' : ''}/> Schermata di caricamento con la foto di sfondo</label></div>
         <div class="field"><label>Opacità dei bottoni</label>${op('ppOpBottoni', d.buttonOpacity ?? 6)}</div>
         <button class="action-btn" onclick="provaNfcAspettoAuto(${p.id})">RIPRISTINA ASPETTO AUTOMATICO</button>
       </div>
@@ -453,6 +454,7 @@ async function provaNfcSalvaPagina(id) {
       primaryColor: v('ppColore'), logoSize: v('ppLogoSize'), backgroundType: v('ppTipoSfondo'),
       backgroundColor: v('ppColoreSfondo'), backgroundOpacity: parseInt(v('ppOpFoto'), 10),
       buttonColor: v('ppColoreBottoni'), buttonOpacity: parseInt(v('ppOpBottoni'), 10), loadingColor: v('ppColoreCaricamento'),
+      loadingType: document.getElementById('ppCaricamentoFoto')?.checked ? 'foto' : 'colore',
       youtube: (v('ppYoutube') || '').trim(),
       allergeni: [...document.querySelectorAll('input[name="ppAllergene"]:checked')].map(c => Number(c.value)),
     },
