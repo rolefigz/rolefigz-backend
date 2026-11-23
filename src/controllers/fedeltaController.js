@@ -1,4 +1,4 @@
-const { ClienteFedelta, FedeltaMovimiento } = require("../models");
+const { ClienteFedelta, FedeltaMovimiento, Utente, Company } = require("../models");
 const { Op } = require("sequelize");
 const crypto = require("crypto");
 const path = require("path");
@@ -148,8 +148,13 @@ const mostraTessera = async (req, res) => {
     const cliente = await ClienteFedelta.findOne({ where: { codice_tarjeta: codice } });
     if (!cliente) return res.status(404).sendFile(PAGINA_404);
 
+    // se l'email della tessera è l'account di un'azienda NFC, la tessera mostra il bottone «Accedi»
+    let emailAccesso = null;
+    const utente = await Utente.findOne({ where: { email: cliente.email }, attributes: ["id", "email"] });
+    if (utente && await Company.findOne({ where: { owner_user_id: utente.id }, attributes: ["id"] })) emailAccesso = utente.email;
+
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.send(renderTesseraFedelta({ cliente, timbriPerPremio: TIMBRI_PER_PREMIO, valorePremio: VALORE_PREMIO }));
+    res.send(renderTesseraFedelta({ cliente, timbriPerPremio: TIMBRI_PER_PREMIO, valorePremio: VALORE_PREMIO, emailAccesso }));
   } catch (err) { res.status(500).send("Errore"); }
 };
 

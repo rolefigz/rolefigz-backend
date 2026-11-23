@@ -116,6 +116,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           .catch(() => apriAuth('login'));
       } else {
         apriAuth('login');
+        // email messa dal bottone «Accedi» della tessera fedeltà (mai nell'URL)
+        try {
+          const em = localStorage.getItem('rfLoginEmail');
+          if (em) { document.getElementById('loginEmail').value = em; localStorage.removeItem('rfLoginEmail'); document.getElementById('loginPass').focus(); }
+        } catch (e) {}
       }
     }
 

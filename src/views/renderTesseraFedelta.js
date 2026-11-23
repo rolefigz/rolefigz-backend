@@ -6,7 +6,18 @@ function escHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
+// emailAccesso: email dell'account del cliente, se ha una pagina NFC da gestire → bottone «Accedi»
+// (la password non si mostra mai: la pagina è pubblica, chiunque abbia la tessera la vede).
+function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio, emailAccesso = null }) {
+  const accessoBlock = emailAccesso
+    ? `<div class="t-accesso">
+         <div class="t-regole-title">La tua pagina NFC</div>
+         <p>Accedi per modificare la tua pagina NFC.</p>
+         <div class="t-email"><iconify-icon icon="mdi:email-outline" width="16"></iconify-icon> ${escHtml(emailAccesso)}</div>
+         <a class="t-btn" href="/?nfcLogin=1" onclick="try{localStorage.setItem('rfLoginEmail',${escHtml(JSON.stringify(emailAccesso))})}catch(e){}"><iconify-icon icon="mdi:login" width="18"></iconify-icon> Accedi</a>
+         <span class="t-nota">La password te l'abbiamo data noi. L'hai persa? Scrivici su WhatsApp.</span>
+       </div>`
+    : "";
   const nome = cliente.nombre ? escHtml(cliente.nombre) : "Ciao!";
   const pieni = cliente.timbri_attuali;
   const dots = Array.from({ length: timbriPerPremio }, (_, i) =>
@@ -71,6 +82,11 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
   .t-regole ul{list-style:none;display:flex;flex-direction:column;gap:8px}
   .t-regole li{font-size:13px;line-height:1.55;padding-left:16px;position:relative}
   .t-regole li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .t-accesso{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
+  .t-accesso p{font-size:13px;line-height:1.55;margin-bottom:10px}
+  .t-email{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;word-break:break-all;margin-bottom:12px}
+  .t-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;font-size:15px;border-radius:12px;padding:13px 16px}
+  .t-nota{display:block;font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;text-align:center}
   .t-footer{text-align:center;margin-top:22px}
   .t-footer a{display:inline-flex;align-items:center;gap:6px;color:var(--accent2);text-decoration:none;font-size:13px;font-weight:600}
 </style>
@@ -86,6 +102,7 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
       <div class="t-codice">${escHtml(cliente.codice_tarjeta)}</div>
     </div>
     ${premioBlock}
+    ${accessoBlock}
     ${regole}
     <div class="t-footer"><a href="https://wa.me/393928225406" target="_blank" rel="noopener"><iconify-icon icon="mdi:whatsapp" width="16"></iconify-icon> Scrivici su WhatsApp</a></div>
   </div>
