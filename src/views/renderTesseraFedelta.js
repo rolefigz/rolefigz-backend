@@ -29,6 +29,7 @@ function renderTesseraFedelta({ cliente, timbriPerPremio, valorePremio }) {
        <ul>
          <li>Ricevi <strong>1 timbro ogni 100€</strong> di ordine: un ordine da 300€ vale 3 timbri. Si arrotonda per difetto (450€ = 4 timbri) e gli ordini sotto i 100€ non danno timbri.</li>
          <li>Con <strong>${timbriPerPremio} timbri</strong> sblocchi <strong>€${valorePremio} di sconto</strong> sul prossimo ordine, senza minimo d'acquisto.</li>
+         <li>Ogni ordine sblocca <strong>al massimo un premio</strong>: i premi non si accumulano e i timbri in più di quell'ordine non contano (il conteggio riparte da 0).</li>
          <li>Lo sconto si usa in un solo ordine: se l'ordine costa meno di €${valorePremio}, la differenza non viene rimborsata né si accumula.</li>
          <li>Il premio non è convertibile in denaro.</li>
        </ul>

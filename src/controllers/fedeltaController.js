@@ -8,6 +8,7 @@ const PAGINA_404 = path.join(__dirname, "..", "..", "public", "404.html");
 
 const TIMBRI_PER_PREMIO = 4;
 const VALORE_PREMIO     = 100; // €, senza minimo d'ordine
+const PREFISSO_PREMIO   = `Premio di €${VALORE_PREMIO} sbloccato`;
 
 function generaCodiceTarjeta() {
   return "RF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
@@ -62,6 +63,15 @@ const aggiungiTimbro = async (req, res) => {
 
     const cliente = await trovaOCreaCliente(email, nombre, telefono);
 
+    // Max 1 premio per ordine (i premi non si accumulano): l'ordine si riconosce dalla nota del timbro.
+    // Se un timbro con la stessa nota ha già sbloccato un premio, i timbri in più di quell'ordine non contano.
+    const notaOrdine = String(nota || "").trim();
+    if (notaOrdine && await FedeltaMovimiento.findOne({
+      where: { cliente_fedelta_id: cliente.id, tipo: "premio_generato", nota: `${PREFISSO_PREMIO} — ${notaOrdine}` },
+    })) {
+      return res.status(400).json({ error: "Questo ordine ha già sbloccato un premio: max 1 premio per ordine, i timbri in più non contano." });
+    }
+
     let nuoviTimbri = cliente.timbri_attuali + 1;
     let nuoviPremi  = cliente.premi_disponibili;
     let premioSbloccato = false;
@@ -84,7 +94,7 @@ const aggiungiTimbro = async (req, res) => {
     if (premioSbloccato) {
       await FedeltaMovimiento.create({
         cliente_fedelta_id: cliente.id, tipo: "premio_generato",
-        nota: `Premio di €${VALORE_PREMIO} sbloccato`, admin_id: req.usuario.id,
+        nota: notaOrdine ? `${PREFISSO_PREMIO} — ${notaOrdine}` : PREFISSO_PREMIO, admin_id: req.usuario.id,
       });
     }
 
