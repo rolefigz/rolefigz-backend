@@ -8,6 +8,26 @@ function escapeHtml(valore) {
 }
 const escapeAttr = escapeHtml;
 
+// Descrizione della pagina: le righe che iniziano con «- », «• » o «* » diventano etichette (servizi);
+// il resto resta testo normale, rispettando gli a capo.
+function renderDescrizione(testo) {
+  const blocchi = [];
+  for (const riga of String(testo || "").split(/\r?\n/)) {
+    const m = riga.match(/^\s*[-•*·]\s+(.+)$/);
+    const ultimo = blocchi[blocchi.length - 1];
+    if (m) {
+      if (ultimo && ultimo.tipo === "tag") ultimo.voci.push(m[1].trim());
+      else blocchi.push({ tipo: "tag", voci: [m[1].trim()] });
+    } else if (ultimo && ultimo.tipo === "testo") ultimo.righe.push(riga);
+    else blocchi.push({ tipo: "testo", righe: [riga] });
+  }
+  return blocchi.map(b => {
+    if (b.tipo === "tag") return `<ul class="tags">${b.voci.map(v => `<li>${escapeHtml(v)}</li>`).join("")}</ul>`;
+    const t = b.righe.join("\n").trim();
+    return t ? `<p>${escapeHtml(t)}</p>` : "";
+  }).join("");
+}
+
 const ICONE_SVG = {
   whatsapp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.9c0 4.7-3.9 8.6-8.6 8.6-1.5 0-3-.4-4.2-1.1L3 20.5l1.2-4.5a8.5 8.5 0 0 1-1.3-4.5c0-4.7 3.9-8.6 8.6-8.6s8.6 3.8 8.6 8.4z"/><path d="M8.5 8.3c.2-.5.4-.5.6-.5h.5c.2 0 .4 0 .6.4l.7 1.7c.1.2 0 .5-.1.6l-.5.6c-.1.2-.1.3 0 .5.4.7 1.6 1.9 2.8 2.4.2.1.4.1.5-.1l.5-.6c.2-.2.4-.2.6-.1l1.6.9c.2.1.3.3.3.5-.1.9-1 1.6-1.9 1.6-2.7 0-6.1-2.9-6.6-6.6-.1-.5.2-1 .4-1.3z"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z"/></svg>',
@@ -326,7 +346,12 @@ body.revealed .logo-wrap{top:60px;width:${dimensioneLogo.header}px;height:${dime
 body.content-in .identity{opacity:1;transform:translateY(0)}
 .identity h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.5rem;letter-spacing:.01em;margin:0 0 6px}
 .identity .sub{margin:0;color:var(--ink-dim);font-size:.92rem;letter-spacing:.02em}
-.identity .descr{margin:14px 0 0;color:var(--ink-dim);font-size:.86rem;line-height:1.55;white-space:pre-line}
+.identity .descr{margin:14px 0 0;color:var(--ink-dim);font-size:.86rem;line-height:1.55}
+.identity .descr p{margin:0 0 12px;white-space:pre-line}
+.identity .descr p:last-child{margin-bottom:0}
+.identity .tags{list-style:none;margin:16px 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.identity .tags:last-child{margin-bottom:0}
+.identity .tags li{padding:7px 12px;font-size:.78rem;line-height:1.2;letter-spacing:.01em;color:var(--ink);background:var(--btn-bg);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .identity .hours{margin:10px 0 0;font-size:.78rem;color:var(--ink-dim);letter-spacing:.02em}
 
 .links{width:100%;max-width:var(--card-w);margin-top:30px;display:flex;flex-direction:column;gap:12px}
@@ -406,7 +431,7 @@ ${usaFoto ? '<div class="scene" aria-hidden="true"><div class="scene__photo"></d
   <section class="identity">
     <h1>${nome}</h1>
     ${azienda.sector ? `<p class="sub">${escapeHtml(azienda.sector)}</p>` : ""}
-    ${pagina?.description ? `<p class="descr">${escapeHtml(pagina.description)}</p>` : ""}
+    ${pagina?.description ? `<div class="descr">${renderDescrizione(pagina.description)}</div>` : ""}
     ${pagina?.hours ? `<p class="hours">🕒 ${escapeHtml(pagina.hours)}</p>` : ""}
   </section>
   ${blocVideo}
