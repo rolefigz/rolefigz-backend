@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <meta name="theme-color" content="#141412"/>
+  <title>RoleFigz App</title>
+  <link rel="manifest" href="/app/manifest.webmanifest"/>
+  <link rel="icon" href="/app/icon-192.png"/>
+  <link rel="apple-touch-icon" href="/app/icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"/>
+  <link rel="stylesheet" href="/app/app.css?v=20261123a"/>
+</head>
+<body>
+  <header class="barra">
+    <div class="marca"><span class="punto"></span>ROLEFIGZ <b>APP</b></div>
+    <div class="estado-red" id="estadoRed" hidden>Sin conexión</div>
+  </header>
+
+  <main id="vista"></main>
+
+  <nav class="tabs" id="tabs" hidden>
+    <button data-tab="visitas" class="on"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Visitas</button>
+    <button data-tab="nfc"><svg viewBox="0 0 24 24"><path d="M6 18a8.5 8.5 0 0 1 0-12M9.5 15a4 4 0 0 1 0-6M18 6a8.5 8.5 0 0 1 0 12M14.5 9a4 4 0 0 1 0 6"/></svg>NFC</button>
+    <button data-tab="etiquetas"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>Etiquetas</button>
+  </nav>
+
+  <div id="aviso" class="aviso" hidden></div>
+
+  <script>window.API = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? `${location.origin}/api` : '/api';</script>
+  <script type="module" src="/vendor/model-viewer.min.js"></script>
+  <script src="/js/kit-video.js?v=20261123a"></script>
+  <script src="/app/comun.js?v=20261123a"></script>
+  <script src="/app/visitas.js?v=20261123a"></script>
+  <script src="/app/nfc.js?v=20261123a"></script>
+  <script src="/app/p21.js?v=20261123a"></script>
+  <script src="/app/etiquetas.js?v=20261123a"></script>
+  <script src="/app/main.js?v=20261123a"></script>
+</body>
+</html>

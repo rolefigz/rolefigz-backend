@@ -24,6 +24,7 @@ const FedeltaMovimiento   = require("./FedeltaMovimiento");
 const CircuitoOrdine      = require("./CircuitoOrdine");
 const CircuitoMovimento   = require("./CircuitoMovimento");
 const nfc                 = require("../modules/nfc/models");
+const { LottoNfc, ScansioneNfc } = require("./AppNfc");
 
 module.exports = {
   sequelize,
@@ -32,5 +33,6 @@ module.exports = {
   Articolo, Visita, Ticket, Messaggio, OpzioneSpedizione, RichiestaGadget, RichiestaKit, PaginaDemo, ContatoreApi,
   PuntiTransazione, CodicePromo, Impostazione,
   ClienteFedelta, FedeltaMovimiento, CircuitoOrdine, CircuitoMovimento,
+  LottoNfc, ScansioneNfc,
   ...nfc
 };

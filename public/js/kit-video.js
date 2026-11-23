@@ -36,13 +36,18 @@ const KitVideo = (() => {
     const g = ctx.createRadialGradient(w / 2, testa + lato * .4, 0, w / 2, testa + lato * .4, lato * .75);
     g.addColorStop(0, '#f7f5f0'); g.addColorStop(1, '#ddd8ce');
     ctx.fillStyle = g; ctx.fillRect(0, testa, w, lato);
-    // dal canvas 3D si prende il quadrato centrale della zona visibile
-    const c = canvas3d(mv);
+    // dal canvas 3D si prende il quadrato centrale della zona visibile (nel video offline arriva già il canvas
+    // quadrato di three.js e si usa tutto)
+    const offline = mv instanceof HTMLCanvasElement;
+    const c = offline ? mv : canvas3d(mv);
     if (c && alfa > 0) {
-      const dpr = c.width / (c.clientWidth || c.width);
-      const sw = Math.min(c.width, mv.clientWidth * dpr), sh = Math.min(c.height, mv.clientHeight * dpr), q = Math.min(sw, sh);
       ctx.globalAlpha = alfa;
-      ctx.drawImage(c, (sw - q) / 2, (sh - q) / 2, q, q, 0, testa, lato, lato);
+      if (offline) ctx.drawImage(c, 0, testa, lato, lato);
+      else {
+        const dpr = c.width / (c.clientWidth || c.width);
+        const sw = Math.min(c.width, mv.clientWidth * dpr), sh = Math.min(c.height, mv.clientHeight * dpr), q = Math.min(sw, sh);
+        ctx.drawImage(c, (sw - q) / 2, (sh - q) / 2, q, q, 0, testa, lato, lato);
+      }
       ctx.globalAlpha = 1;
     }
     // testata
@@ -174,5 +179,178 @@ const KitVideo = (() => {
     return new File(dati, `kit-${slug(azienda) || 'rolefigz'}.${est}`, { type: tipo.split(';')[0] });
   }
 
-  return { crea, formato };
+  // ── Video offline (WebCodecs) ─────────────────────────────────────────────────────────────────────────────
+  // Stesso video di crea(), ma ogni fotogramma si disegna con three.js in modo sincrono e si codifica in H.264
+  // con un timestamp fisso (1/30 s): non dipende dal tempo reale né da requestAnimationFrame, quindi va più
+  // veloce del tempo reale e funziona anche con la finestra coperta o la scheda in secondo piano.
+  const CODEC = ['avc1.640028', 'avc1.4d0028', 'avc1.42E028', 'avc1.640032'];
+  let codecScelto;
+  async function codecOffline() {
+    if (codecScelto !== undefined) return codecScelto;
+    codecScelto = null;
+    if (!window.VideoEncoder || !window.VideoFrame) return null;
+    for (const codec of CODEC) {
+      const cfg = { codec, width: V.w, height: V.h, bitrate: 3000000, framerate: V.fps, avc: { format: 'avc' } };
+      try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) { codecScelto = cfg; break; } } catch {}
+    }
+    return codecScelto;
+  }
+
+  let moduli;
+  function caricaModuli() {
+    moduli = moduli || Promise.all([
+      import('/vendor/three/three.module.min.js'),
+      import('/vendor/three/addons/loaders/GLTFLoader.js'),
+      import('/vendor/three/addons/environments/RoomEnvironment.js'),
+      import('/vendor/mp4-muxer/mp4-muxer.js'),
+    ]).then(([THREE, { GLTFLoader }, { RoomEnvironment }, { Muxer, ArrayBufferTarget }]) =>
+      ({ THREE, GLTFLoader, RoomEnvironment, Muxer, ArrayBufferTarget }));
+    return moduli;
+  }
+
+  // ombra morbida sotto il pezzo, come quella del visore (shadow-softness alta)
+  function texturaOmbra(THREE) {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d'), r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    r.addColorStop(0, 'rgba(0,0,0,0.55)'); r.addColorStop(0.55, 'rgba(0,0,0,0.22)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 256, 256);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  // scena three.js che imita il <model-viewer> del pannello (ambiente «neutral», esposizione 1.05, ACES)
+  async function preparaScena(m) {
+    const { THREE, RoomEnvironment } = m;
+    const tela3d = document.createElement('canvas'); tela3d.width = tela3d.height = V.w;
+    const renderer = new THREE.WebGLRenderer({ canvas: tela3d, antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(1); renderer.setSize(V.w, V.w, false);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    const scena = new THREE.Scene();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 1000);
+    const ombra = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ map: texturaOmbra(THREE), transparent: true, depthWrite: false, toneMapped: false }));
+    ombra.rotation.x = -Math.PI / 2;
+    scena.add(ombra);
+    return { renderer, scena, camera, ombra, tela3d };
+  }
+
+  // carica il GLB, lo mette al centro della scena e calcola la distanza della camera per inquadrarlo tutto
+  async function caricaPezzo(m, s, pezzo, vecchio) {
+    const { THREE, GLTFLoader } = m;
+    if (vecchio) {
+      s.scena.remove(vecchio);
+      vecchio.traverse(o => { o.geometry?.dispose(); [].concat(o.material || []).forEach(mt => { Object.values(mt).forEach(v => v?.isTexture && v.dispose()); mt.dispose(); }); });
+    }
+    let gltf;
+    try { gltf = await new GLTFLoader().loadAsync(pezzo.glb); }
+    catch (e) { throw new Error(`Il 3D di «${pezzo.nome}» non si è caricato (${e.message || e}).`); }
+    const modello = gltf.scene;
+    if (pezzo.ribalta) { modello.rotation.z = Math.PI; modello.updateMatrixWorld(true); }   // per mostrare la faccia di sotto (logo della tarjeta)
+    const box = new THREE.Box3().setFromObject(modello);
+    const centro = box.getCenter(new THREE.Vector3()), sfera = box.getBoundingSphere(new THREE.Sphere());
+    modello.position.sub(centro);   // centro del pezzo nell'origine, come fa il visore
+    s.scena.add(modello);
+    const lato = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 1.25;
+    s.ombra.scale.set(lato, lato, 1);
+    s.ombra.position.set(0, box.min.y - centro.y + 0.0005 * sfera.radius, 0);
+    s.distanza = sfera.radius / Math.sin(THREE.MathUtils.degToRad(s.camera.fov / 2)) * 1.02;
+    s.camera.near = s.distanza / 100; s.camera.far = s.distanza * 10; s.camera.updateProjectionMatrix();
+    return modello;
+  }
+
+  // posizione della camera come camera-orbit="theta phi auto" di model-viewer (theta attorno a Y da +Z, phi da +Y)
+  function orbita(s, thetaDeg, phiDeg) {
+    const th = thetaDeg * Math.PI / 180, ph = phiDeg * Math.PI / 180, d = s.distanza;
+    s.camera.position.set(d * Math.sin(ph) * Math.sin(th), d * Math.cos(ph), d * Math.sin(ph) * Math.cos(th));
+    s.camera.lookAt(0, 0, 0);
+    s.renderer.render(s.scena, s.camera);
+  }
+
+  // il codificatore lavora in parallelo: se la coda si allunga si aspetta che si svuoti (senza timer, che nelle
+  // schede in secondo piano vengono rallentati)
+  async function respira(enc) {
+    while (enc.encodeQueueSize > 8) await new Promise(r => enc.addEventListener('dequeue', r, { once: true }));
+  }
+
+  async function creaOffline({ pezzi, azienda, onStato = () => {}, titolo = 'IL KIT DI', url = 'rolefigz.com/kit' }) {
+    T = { titolo, url };
+    const cfg = await codecOffline();
+    if (!cfg) throw new Error('Questo browser non può creare il video offline: usa Chrome aggiornato.');
+    azienda = (azienda || 'La tua azienda').toUpperCase();
+    onStato('Preparo il video…');
+    const [m] = await Promise.all([caricaModuli()].concat(
+      [`900 66px ${BARLOW}`, `700 40px ${BARLOW}`, `500 22px ${MONO}`, `400 20px ${MONO}`, `900 92px ${BARLOW}`]
+        .map(f => document.fonts.load(f).catch(() => null))));
+    const s = await preparaScena(m);
+    const tela = document.createElement('canvas'); tela.width = V.w; tela.height = V.h;
+    const ctx = tela.getContext('2d');
+    const muxer = new m.Muxer({ target: new m.ArrayBufferTarget(), fastStart: 'in-memory',
+                                video: { codec: 'avc', width: V.w, height: V.h, frameRate: V.fps } });
+    let errore = null;
+    const enc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: e => { errore = e; } });
+    enc.configure(cfg);
+    const passo = 1000 / V.fps, durataUs = Math.round(1e6 / V.fps);
+    let n = 0, modello = null;
+    try {
+      for (let i = 0; i < pezzi.length; i++) {
+        onStato(`Creo il video… ${i + 1} / ${pezzi.length}`);
+        modello = await caricaPezzo(m, s, pezzi[i], modello);
+        const finale = i === pezzi.length - 1, durata = V.giroMs + (finale ? V.finaleMs : 0);
+        for (let ms = 0; ms <= durata; ms += passo) {
+          if (errore) throw errore;
+          const t = Math.min(ms / V.giroMs, 1), morbido = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const extra = t >= 1 ? (ms - V.giroMs) / 40 : 0;
+          orbita(s, -30 + 360 * morbido + extra, 62);
+          const chiusura = finale ? Math.max(0, Math.min((ms - V.giroMs) / 500, 1)) : 0;
+          disegna(ctx, s.tela3d, pezzi[i], azienda, Math.min(ms / V.dissolvenzaMs, 1), chiusura);
+          const frame = new VideoFrame(tela, { timestamp: n * durataUs, duration: durataUs });
+          enc.encode(frame, { keyFrame: n % (V.fps * 2) === 0 });
+          frame.close(); n++;
+          await respira(enc);
+        }
+      }
+      await enc.flush();
+      if (errore) throw errore;
+      muxer.finalize();
+    } finally {
+      if (enc.state !== 'closed') enc.close();
+      s.renderer.dispose(); s.renderer.forceContextLoss();
+    }
+    const buf = muxer.target.buffer;
+    if (!buf || !buf.byteLength) throw new Error('Il video è vuoto.');
+    return new File([buf], `kit-${slug(azienda) || 'rolefigz'}.mp4`, { type: 'video/mp4' });
+  }
+
+  // Foto fisse dei pezzi (stessa grafica del video, pezzo visto di tre quarti): una JPEG 1080×1350 per pezzo.
+  // Come il video offline, non dipende da requestAnimationFrame. Restituisce [{ nome, file }].
+  async function fotoOffline({ pezzi, azienda, titolo = 'IL KIT DI', url = 'rolefigz.com/kit', theta = -30, phi = 62, onStato = () => {} }) {
+    T = { titolo, url };
+    azienda = (azienda || 'La tua azienda').toUpperCase();
+    const [m] = await Promise.all([caricaModuli()].concat(
+      [`900 66px ${BARLOW}`, `700 40px ${BARLOW}`, `500 22px ${MONO}`, `400 20px ${MONO}`]
+        .map(f => document.fonts.load(f).catch(() => null))));
+    const s = await preparaScena(m);
+    const tela = document.createElement('canvas'); tela.width = V.w; tela.height = V.h;
+    const ctx = tela.getContext('2d');
+    const foto = [];
+    let modello = null;
+    try {
+      for (let i = 0; i < pezzi.length; i++) {
+        onStato(`Foto ${i + 1} / ${pezzi.length}`);
+        modello = await caricaPezzo(m, s, pezzi[i], modello);
+        orbita(s, pezzi[i].theta ?? theta, pezzi[i].phi ?? phi);   // un pezzo può chiedere un'altra vista (es. il retro)
+        disegna(ctx, s.tela3d, pezzi[i], azienda, 1, 0);
+        const blob = await new Promise(r => tela.toBlob(r, 'image/jpeg', 0.92));
+        foto.push({ nome: pezzi[i].nome, file: new File([blob], `${slug(azienda)}-${String(i + 1).padStart(2, '0')}-${slug(pezzi[i].nome)}.jpg`, { type: 'image/jpeg' }) });
+      }
+    } finally { s.renderer.dispose(); s.renderer.forceContextLoss(); }
+    return foto;
+  }
+
+  return { crea, creaOffline, fotoOffline, codecOffline, formato };
 })();

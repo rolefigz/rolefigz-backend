@@ -24,6 +24,7 @@ const promoRoutes           = require("./src/routers/promoRoutes");
 const impostazioniRoutes    = require("./src/routers/impostazioniRoutes");
 const sitemapRoutes         = require("./src/routers/sitemapRoutes");
 const telegramRoutes     = require("./src/routers/telegramRoutes");
+const appRoutes          = require("./src/routers/appRoutes");
 const nfcAdminRoutes     = require("./src/modules/nfc/routers/adminRoutes");
 const nfcClientRoutes    = require("./src/modules/nfc/routers/clientRoutes");
 const nfcLeadRoutes      = require("./src/modules/nfc/routers/leadPublicRoutes");
@@ -100,6 +101,7 @@ app.use("/api/promo",          limitAPI,  promoRoutes);
 app.use("/api/impostazioni",   limitAPI,  impostazioniRoutes);
 app.use("/",                              sitemapRoutes);
 app.use("/api/telegram", limitAPI,  telegramRoutes);
+app.use("/api/app",      limitAPI,  appRoutes);   // app personale /app (lotti NFC, QR etichette)
 app.use("/api/admin/nfc", limitAPI, nfcAdminRoutes);
 app.use("/api/nfc",       limitAPI, nfcClientRoutes);
 app.use("/api/nfc-leads", limitAPI, nfcLeadRoutes);
