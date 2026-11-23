@@ -46,8 +46,15 @@ const App = (() => {
   let dbp;
   function db() {
     dbp = dbp || new Promise((ok, ko) => {
-      const rq = indexedDB.open('rolefigz-app', 1);
-      rq.onupgradeneeded = () => { rq.result.createObjectStore('visitas', { keyPath: 'id' }); };
+      const rq = indexedDB.open('rolefigz-app', 2);
+      rq.onupgradeneeded = () => {
+        const d = rq.result, hay = n => d.objectStoreNames.contains(n);
+        if (!hay('visitas')) d.createObjectStore('visitas', { keyPath: 'id' });
+        // etiquetas: mis plantillas, historial de impresiones y fuentes propias (.ttf/.otf)
+        if (!hay('plantillas')) d.createObjectStore('plantillas', { keyPath: 'nombre' });
+        if (!hay('historial')) d.createObjectStore('historial', { keyPath: 'id' });
+        if (!hay('fuentes')) d.createObjectStore('fuentes', { keyPath: 'familia' });
+      };
       rq.onsuccess = () => ok(rq.result);
       rq.onerror = () => ko(rq.error);
     });
