@@ -326,7 +326,7 @@ body.revealed .logo-wrap{top:60px;width:${dimensioneLogo.header}px;height:${dime
 body.content-in .identity{opacity:1;transform:translateY(0)}
 .identity h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.5rem;letter-spacing:.01em;margin:0 0 6px}
 .identity .sub{margin:0;color:var(--ink-dim);font-size:.92rem;letter-spacing:.02em}
-.identity .descr{margin:14px 0 0;color:var(--ink-dim);font-size:.86rem;line-height:1.55}
+.identity .descr{margin:14px 0 0;color:var(--ink-dim);font-size:.86rem;line-height:1.55;white-space:pre-line}
 .identity .hours{margin:10px 0 0;font-size:.78rem;color:var(--ink-dim);letter-spacing:.02em}
 
 .links{width:100%;max-width:var(--card-w);margin-top:30px;display:flex;flex-direction:column;gap:12px}
