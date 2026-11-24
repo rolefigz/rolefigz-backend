@@ -75,9 +75,7 @@ async function callClaude({ content, schema, maxTokens = 8000 }) {
 const BORING = /dentist|medic|commercialist|banca|riunione interna|call interna|1:1|one to one|pranzo|palestra|personale|ferie|privato/i;
 const WORTH = /fiera|evento|inaugura|consegna|collaudo|visita|premio|nuov[oa]|lancio|anniversario|corso|workshop|webinar|open day|assunzion|benvenut|cliente|progetto|certificaz|traguardo|ospit/i;
 
-export async function analyzeEvents(events, company) {
-  if (!events.length) return [];
-  if (!aiEnabled()) {
+function analyzeEventsDemo(events) {
     return events.map((e) => {
       const txt = `${e.title} ${e.description || ""}`;
       const worth = !BORING.test(txt) && WORTH.test(txt);
@@ -88,11 +86,17 @@ export async function analyzeEvents(events, company) {
         reason: worth ? "Evento visibile all'esterno (demo)" : "Sembra un impegno interno o privato (demo)",
       };
     });
-  }
+}
+
+export async function analyzeEvents(events, company) {
+  if (!events.length) return [];
+  if (!aiEnabled()) return analyzeEventsDemo(events);
   const list = events
     .map((e) => `- id=${e.id} | ${new Date(e.date).toLocaleString("it-IT")} | ${e.title}${e.location ? ` @ ${e.location}` : ""}${e.description ? ` | ${e.description.slice(0, 300)}` : ""}`)
     .join("\n");
-  const out = await callClaude({
+  let out;
+  try {
+  out = await callClaude({
     schema: AnalysisSchema,
     content: `${companyContext(company)}
 
@@ -101,6 +105,11 @@ Impegni privati, amministrativi o riunioni interne di routine NON vanno racconta
 
 ${list}`,
   });
+  } catch (err) {
+    // Se Claude non risponde (chiave sbagliata, credito finito...) la demo continua
+    console.error("Claude non disponibile, uso la modalità demo:", err.message);
+    return analyzeEventsDemo(events);
+  }
   return out.results;
 }
 
@@ -157,5 +166,10 @@ Scrivi tre versioni diverse dello stesso contenuto:
 - Facebook: colloquiale, vicino alla comunità locale, 300-700 caratteri, 1-3 hashtag.
 Poi dai i suggerimenti su foto/video, tag, struttura e orario.`,
   });
-  return callClaude({ content, schema: PostsSchema, maxTokens: 12000 });
+  try {
+    return await callClaude({ content, schema: PostsSchema, maxTokens: 12000 });
+  } catch (err) {
+    console.error("Claude non disponibile, uso la modalità demo:", err.message);
+    return demoPosts({ event, notes, company });
+  }
 }
