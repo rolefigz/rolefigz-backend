@@ -10,11 +10,12 @@
   <script>
     (function() {
       const token = localStorage.getItem('rfToken');
-      if (!token) { window.location.href = '/index.html'; return; }
+      // senza sessione → login NFC (dopo l'accesso si torna qui)
+      if (!token) { window.location.href = '/?nfcLogin=1'; return; }
       try {
         const p = JSON.parse(atob(token.split('.')[1]));
-        if (p.exp * 1000 < Date.now()) { window.location.href = '/index.html'; }
-      } catch(e) { window.location.href = '/index.html'; }
+        if (p.exp * 1000 < Date.now()) { window.location.href = '/?nfcLogin=1'; }
+      } catch(e) { window.location.href = '/?nfcLogin=1'; }
     })();
   </script>
   <style>

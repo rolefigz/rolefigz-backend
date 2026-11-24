@@ -167,7 +167,8 @@
     // Ingresso: scelta privati / aziende, all'inizio della visita e solo sulla home
     (function () {
       try {
-        var deep = /\/(producto|blog|checkout)(\/|$)/.test(location.pathname);
+        var deep = /\/(producto|blog|checkout)(\/|$)/.test(location.pathname) ||
+                   /[?&]nfcLogin=1/.test(location.search); // login NFC: il modale deve restare visibile
         var scelto = null;
         try { scelto = sessionStorage.getItem('rf_percorso'); } catch (e) {}
         if (!deep && !location.hash && !scelto) document.documentElement.classList.add('gate-open');
