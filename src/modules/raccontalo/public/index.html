@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Raccontalo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">R</span>
+      <div>
+        <h1>Raccontalo</h1>
+        <p id="company-line">L'assistente che racconta la tua azienda</p>
+      </div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <nav class="actions">
+      <button class="ghost" data-open="dlg-company">Profilo azienda</button>
+      <button class="ghost" data-open="dlg-import">Collega agenda</button>
+      <button class="ghost" data-open="dlg-event">+ Evento</button>
+      <button id="btn-analyze">Cerca occasioni</button>
+    </nav>
+  </header>
+
+  <section id="reminders" class="reminders" hidden></section>
+
+  <main class="board">
+    <section class="col">
+      <header><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
+      <p class="hint">Cosa c'è in agenda da raccontare</p>
+      <div id="col-occ" class="cards"></div>
+      <details class="discarded">
+        <summary>Non da raccontare <span id="n-disc"></span></summary>
+        <div id="col-disc" class="cards"></div>
+      </details>
+    </section>
+    <section class="col">
+      <header><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
+      <p class="hint">Post pronti: controlla, correggi, pubblica</p>
+      <div id="col-draft" class="cards"></div>
+    </section>
+    <section class="col">
+      <header><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
+      <p class="hint">Cosa è uscito e come sta andando</p>
+      <div id="col-pub" class="cards"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <button class="link" id="btn-reset">Ricarica dati demo</button>
+  </footer>
+
+  <!-- Raccogli informazioni -->
+  <dialog id="dlg-collect">
+    <form method="dialog" class="dlg">
+      <h3 id="collect-title"></h3>
+      <p class="muted" id="collect-angle"></p>
+      <label>Raccontami com'è andata</label>
+      <div class="voice">
+        <button type="button" id="btn-mic" class="mic">🎙️ Tieni premuto e parla</button>
+        <span class="muted" id="mic-status"></span>
+      </div>
+      <textarea id="collect-notes" rows="5" placeholder="Es. Siamo arrivati in fiera alle 8, allo stand è passato il cliente di Cremona che ha visto il nuovo 5 assi..."></textarea>
+      <label>Foto (fino a 6)</label>
+      <input type="file" id="collect-photos" accept="image/*" multiple />
+      <div class="thumbs" id="collect-thumbs"></div>
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-generate">Scrivi i post</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Importa calendario -->
+  <dialog id="dlg-import">
+    <form method="dialog" class="dlg">
+      <h3>Collega l'agenda</h3>
+      <p class="muted">Google Calendar: Impostazioni → il tuo calendario → <b>Indirizzo segreto in formato iCal</b>. Outlook: Calendario → Condividi → Pubblica (link ICS).</p>
+      <label>Link del calendario (.ics)</label>
+      <input id="import-url" type="url" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" />
+      <label>Oppure carica un file .ics</label>
+      <input id="import-file" type="file" accept=".ics,text/calendar" />
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-import">Importa</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Nuovo evento -->
+  <dialog id="dlg-event">
+    <form method="dialog" class="dlg">
+      <h3>Aggiungi un evento</h3>
+      <label>Cosa</label><input id="ev-title" placeholder="Es. Consegna impianto a Cremona" />
+      <label>Quando</label><input id="ev-date" type="datetime-local" />
+      <label>Dettagli (facoltativo)</label><textarea id="ev-desc" rows="3"></textarea>
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-add-event">Aggiungi</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Profilo azienda -->
+  <dialog id="dlg-company">
+    <form method="dialog" class="dlg">
+      <h3>Profilo azienda</h3>
+      <p class="muted">Serve all'assistente per scrivere con la vostra voce.</p>
+      <label>Nome</label><input id="co-name" />
+      <label>Settore</label><input id="co-sector" />
+      <label>Città</label><input id="co-city" />
+      <label>Tono di voce</label><input id="co-tone" placeholder="Es. diretto, familiare, tecnico" />
+      <label>Chi siamo</label><textarea id="co-about" rows="3"></textarea>
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-save-company">Salva</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

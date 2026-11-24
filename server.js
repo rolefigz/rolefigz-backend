@@ -107,6 +107,14 @@ app.use("/api/nfc",       limitAPI, nfcClientRoutes);
 app.use("/api/nfc-leads", limitAPI, nfcLeadRoutes);
 app.use("/api/nfc-locandine", limitAPI, nfcLocandineRoutes);
 
+// Raccontalo (AI LAB Value Group): assistente social di prova su /prova-linkedin.
+// È un modulo ESM: si carica con import() e si aggancia a un router già montato.
+const raccontaloRouter = express.Router();
+app.use("/prova-linkedin", limitAPI, raccontaloRouter);
+import("./src/modules/raccontalo/src/router.js")
+  .then((m) => raccontaloRouter.use(m.createRouter()))
+  .catch((err) => console.error("Raccontalo non caricato:", err.message));
+
 const serveApp = (req, res) => res.sendFile(path.join(__dirname, "public", "index.html"));
 app.get("/blog",       serveApp);
 app.get("/blog/:slug", serveApp);

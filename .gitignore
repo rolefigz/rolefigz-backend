@@ -2,3 +2,6 @@ node_modules/
 uploads/
 .env
 scripts/prova-funko/
+
+# Raccontalo (prova AI LAB): dati locali
+src/modules/raccontalo/data/
