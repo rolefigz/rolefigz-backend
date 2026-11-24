@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Raccontalo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="top">
     <div class="brand">
-      <span class="logo">R</span>
+      <span class="logo" aria-hidden="true"></span>
       <div>
-        <h1>Raccontalo</h1>
+        <h1>raccontalo</h1>
         <p id="company-line">L'assistente che racconta la tua azienda</p>
       </div>
     </div>
@@ -30,7 +30,7 @@
 
   <main class="board">
     <section class="col">
-      <header><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
+      <header><span class="num">01</span><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
       <p class="hint">Cosa c'è in agenda da raccontare</p>
       <div id="col-occ" class="cards"></div>
       <details class="discarded">
@@ -39,12 +39,12 @@
       </details>
     </section>
     <section class="col">
-      <header><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
+      <header><span class="num">02</span><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
       <p class="hint">Post pronti: controlla, correggi, pubblica</p>
       <div id="col-draft" class="cards"></div>
     </section>
     <section class="col">
-      <header><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
+      <header><span class="num">03</span><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
       <p class="hint">Cosa è uscito e come sta andando</p>
       <div id="col-pub" class="cards"></div>
     </section>
@@ -61,7 +61,7 @@
       <p class="muted" id="collect-angle"></p>
       <label>Raccontami com'è andata</label>
       <div class="voice">
-        <button type="button" id="btn-mic" class="mic">🎙️ Tieni premuto e parla</button>
+        <button type="button" id="btn-mic" class="mic">Registra</button>
         <span class="muted" id="mic-status"></span>
       </div>
       <textarea id="collect-notes" rows="5" placeholder="Es. Siamo arrivati in fiera alle 8, allo stand è passato il cliente di Cremona che ha visto il nuovo 5 assi..."></textarea>

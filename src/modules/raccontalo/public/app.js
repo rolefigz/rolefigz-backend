@@ -43,8 +43,8 @@ function render() {
   $("#company-line").textContent = company?.name ? `${company.name} · ${company.city || ""}` : "L'assistente che racconta la tua azienda";
 
   $("#chips").innerHTML =
-    `<span class="chip ${config.ai ? "on" : ""}">${config.ai ? "AI: Claude" : "AI: modalità demo"}</span>` +
-    Object.keys(PLAT).map((p) => `<span class="chip ${config.social[p] ? "on" : ""}">${PLAT[p]} ${config.social[p] ? "collegato" : "manuale"}</span>`).join("");
+    `<span class="chip ${config.ai ? "on" : ""}"><i></i>${config.ai ? "AI attiva" : "AI in demo"}</span>` +
+    Object.keys(PLAT).map((p) => `<span class="chip ${config.social[p] ? "on" : ""}"><i></i>${PLAT[p]}</span>`).join("");
 
   const occ = events.filter((e) => e.status === "occasione" || e.status === "new");
   const disc = events.filter((e) => e.status === "scartato");
@@ -69,7 +69,7 @@ function render() {
   box.innerHTML = soon
     .map((e) => {
       const past = Date.parse(e.date) < now;
-      return `<div class="reminder">🔔 <span>${past ? "È appena successo" : "Sta per succedere"}: <b>${esc(e.title)}</b> (${fmt(e.date)}). ${past ? "Lo raccontiamo?" : "Fai qualche foto!"}</span>
+      return `<div class="reminder"><span class="r-label">${past ? "Appena successo" : "In arrivo"}</span><span class="r-text"><b>${esc(e.title)}</b><span class="r-when">${fmt(e.date)} · ${past ? "lo raccontiamo?" : "ricordati qualche foto"}</span></span>
         <button class="small" data-collect="${e.id}">Raccontalo</button></div>`;
     })
     .join("");
@@ -127,7 +127,7 @@ function draftCard(p) {
     <div class="publish-row">
       ${Object.keys(PLAT).map((k) => `<label><input type="checkbox" data-plat="${k}" checked> ${PLAT[k]}</label>`).join("")}
       <button class="small" data-publish style="margin-left:auto">Approva e pubblica</button>
-      <button class="small ghost" data-delete title="Scarta">✕</button>
+      <button class="small ghost" data-delete title="Scarta">Scarta</button>
     </div>
   </article>`;
 }
@@ -308,10 +308,10 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = $("#btn-mic");
 if (!SR) {
   mic.disabled = true;
-  mic.textContent = "🎙️ Vocale non disponibile in questo browser";
+  mic.textContent = "Dettatura non disponibile in questo browser";
 } else {
   let rec = null;
-  mic.textContent = "🎙️ Parla";
+  mic.textContent = "Registra";
   mic.onclick = () => {
     if (rec) return rec.stop();
     rec = new SR();
@@ -323,11 +323,11 @@ if (!SR) {
       const said = [...ev.results].map((r) => r[0].transcript).join(" ");
       $("#collect-notes").value = (base ? base + " " : "") + said;
     };
-    rec.onend = () => { rec = null; mic.classList.remove("rec"); mic.textContent = "🎙️ Parla"; $("#mic-status").textContent = ""; };
+    rec.onend = () => { rec = null; mic.classList.remove("rec"); mic.textContent = "Registra"; $("#mic-status").textContent = ""; };
     rec.onerror = (ev) => { $("#mic-status").textContent = "Microfono: " + ev.error; };
     rec.start();
     mic.classList.add("rec");
-    mic.textContent = "⏹ Fine";
+    mic.textContent = "Ferma";
     $("#mic-status").textContent = "Ti ascolto…";
   };
 }
