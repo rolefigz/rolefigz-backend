@@ -770,6 +770,7 @@ async function tabNfcLocandine(content) {
           <span class="pill" style="color:${colore}">${stato}</span>
           ${l.inizio_evento ? `<p class="note">📅 ${dataBreve(l.inizio_evento)}${l.luogo ? ` · 📍 ${escLoc(l.luogo)}` : ''}</p>` : ''}
           ${l.raccogli_email ? `<p class="note">✉️ ${l.iscritti} email raccolte</p>` : ''}
+          <p class="note">Si apre: ${{ sempre: 'sempre, a ogni apertura', una_volta: 'una sola volta per cliente' }[l.frequenza] || 'una volta al giorno per cliente'}</p>
           <div style="margin-top:8px">
             <button class="action-btn" onclick="formLocandina(${l.id})">Modifica</button>
             <button class="action-btn" onclick="toggleLocandina(${l.id})">${l.attiva ? 'Disattiva' : 'Attiva'}</button>
@@ -812,6 +813,12 @@ function formLocandina(id) {
           <div class="field"><label>Mostra fino al</label><input type="datetime-local" name="mostra_fino" value="${isoALocale(l.mostra_fino)}"></div>
         </div>
         <p class="note" style="margin:-8px 0 14px">Vuoto = da subito e fino alla fine dell'evento.</p>
+        <div class="field"><label>Quando si apre da sola</label>
+          <div class="loc-freq" role="radiogroup">
+            ${[['sempre', 'Sempre', 'a ogni apertura della pagina'], ['giorno', 'Una volta al giorno', 'per ogni cliente'], ['una_volta', 'Una sola volta', 'la vede solo la prima volta']].map(([v, t, s]) => `
+            <label class="loc-freq__opt"><input type="radio" name="frequenza" value="${v}" ${(l.frequenza || 'giorno') === v ? 'checked' : ''}><span><strong>${t}</strong><small>${s}</small></span></label>`).join('')}
+          </div>
+          <p class="note">Anche quando non si apre da sola, il cliente la ritrova sempre nel bottone della pagina. Se modifichi la locandina, la rivedono tutti.</p></div>
         <label class="switch-row"><input type="checkbox" name="raccogli_email" ${l.raccogli_email ? 'checked' : ''} onchange="document.getElementById('locEmailBox').style.display=this.checked?'block':'none'"> Raccogli le email dei clienti</label>
         <div id="locEmailBox" style="display:${l.raccogli_email ? 'block' : 'none'}">
           <div class="field"><label>Testo sopra il form</label><input name="testo_email" maxlength="120" value="${escLoc(l.testo_email)}" placeholder="Lasciaci la tua email per non perdere le novità"></div>
@@ -838,6 +845,7 @@ async function salvaLocandina(ev, id) {
   ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, localeAIso(f[k].value)));
   fd.append('raccogli_email', f.raccogli_email.checked ? 'true' : 'false');
   fd.append('attiva', f.attiva.checked ? 'true' : 'false');
+  fd.append('frequenza', (f.querySelector('input[name="frequenza"]:checked') || {}).value || 'giorno');
   if (f.immagine.files[0]) fd.append('immagine', f.immagine.files[0]);
   const btn = f.querySelector('.btn-submit');
   btn.disabled = true; btn.textContent = 'Salvataggio…';
@@ -860,6 +868,7 @@ async function toggleLocandina(id) {
   ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, l[k] || ''));
   fd.append('raccogli_email', l.raccogli_email ? 'true' : 'false');
   fd.append('attiva', l.attiva ? 'false' : 'true');
+  fd.append('frequenza', l.frequenza || 'giorno');
   const r = await fetch(`${API_NFC_CLIENT}/locandine/${id}`, { method: 'PUT', headers: authHeaders(), body: fd });
   if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'Errore'); }
   tabNfcLocandine(document.getElementById('nfcContent'));

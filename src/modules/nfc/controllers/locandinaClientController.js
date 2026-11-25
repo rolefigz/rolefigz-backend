@@ -31,6 +31,7 @@ function leggiCampi(body) {
     link_label:     testo(body.link_label, 60),
     link_url:       null,
     attiva:         body.attiva === undefined ? true : booleano(body.attiva),
+    frequenza:      Locandina.FREQUENZE.includes(body.frequenza) ? body.frequenza : "giorno",
   };
   const errore = (msg) => { const e = new Error(msg); e.status = 400; return e; };
   if (!campi.titolo) throw errore("Il titolo e' obbligatorio");

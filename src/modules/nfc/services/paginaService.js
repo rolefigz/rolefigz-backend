@@ -30,7 +30,8 @@ async function salvaContenuto(companyId, slug, { description, hours, seo_title, 
     ...(hours !== undefined && { hours }),
     ...(seo_title !== undefined && { seo_title }),
     ...(seo_description !== undefined && { seo_description }),
-    ...(design !== undefined && { design }),
+    // si fonde con quello salvato: le chiavi che il modulo non manda (es. loadingType) non si perdono
+    ...(design !== undefined && { design: design && typeof design === "object" ? { ...(pagina.design || {}), ...design } : design }),
     ...(mappaValidata !== undefined && { map_embed_url: mappaValidata }),
   });
 

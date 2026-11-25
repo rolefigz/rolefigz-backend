@@ -22,6 +22,9 @@ const Locandina = sequelize.define("Locandina", {
   link_url:       { type: DataTypes.STRING(500) },
   link_label:     { type: DataTypes.STRING(60) },
   attiva:         { type: DataTypes.BOOLEAN, defaultValue: true },
+  // ogni quanto si apre da solo il pop-up per lo stesso visitatore: "giorno" (una volta al giorno),
+  // "sempre" (a ogni apertura della pagina) o "una_volta" (solo la prima volta)
+  frequenza:      { type: DataTypes.STRING(12), allowNull: false, defaultValue: "giorno" },
 }, {
   tableName: "nfc_locandine",
   indexes: [{ fields: ["company_id", "attiva"] }],
@@ -29,5 +32,16 @@ const Locandina = sequelize.define("Locandina", {
 
 Locandina.belongsTo(Company, { foreignKey: "company_id" });
 Company.hasMany(Locandina,   { foreignKey: "company_id" });
+
+// frequenza e' arrivata dopo la creazione della tabella (sync non altera le tabelle esistenti):
+// si aggiunge solo se manca.
+Locandina.FREQUENZE = ["giorno", "sempre", "una_volta"];
+Locandina.assicuraColonne = async function () {
+  const qi = sequelize.getQueryInterface();
+  const colonne = await qi.describeTable("nfc_locandine");
+  if (!colonne.frequenza) {
+    await qi.addColumn("nfc_locandine", "frequenza", { type: DataTypes.STRING(12), allowNull: false, defaultValue: "giorno" });
+  }
+};
 
 module.exports = Locandina;

@@ -145,6 +145,10 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   const opacitaFoto = Math.max(0, Math.min(100, Number.isNaN(backgroundOpacityNum) ? 70 : backgroundOpacityNum)) / 100;
   const grigioFoto = Math.round(70 * opacitaFoto);
   const luminFoto = (1 - 0.58 * opacitaFoto).toFixed(2);
+  // velo scuro sopra la foto: segue lo stesso cursore (prima era fisso e copriva l'effetto).
+  // A 70 (valore di sempre) resta com'era; a 0 sparisce, a 100 è più scuro.
+  const kVelo = opacitaFoto / 0.7;
+  const velo = a => Math.min(1, a * kVelo).toFixed(2);
   const coloreBottoni = colorEsadecimaleValido(d.buttonColor) ? d.buttonColor : "#F4F1EA";
   const opacitaBottoni = d.buttonOpacity !== undefined ? d.buttonOpacity : 5;
   const coloreCaricamento = colorEsadecimaleValido(d.loadingColor) ? d.loadingColor : "#0A0A0A";
@@ -208,8 +212,9 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   </ol>
 </dialog>` : "";
 
-  // ── Pop-up della locandina: si apre da solo dopo l'animazione (una volta al giorno
-  // per visitatore) e resta richiamabile dal bottone nella lista dei link ──
+  // ── Pop-up della locandina: si apre da solo dopo l'animazione (secondo loc.frequenza:
+  // una volta al giorno, sempre o solo la prima volta per visitatore) e resta richiamabile
+  // dal bottone nella lista dei link ──
   const loc = locandina;
   const posBottoneLoc = (links.length + (allergeniPresenti.size ? 1 : 0)) * 70;
   const bottoneLocandina = loc ? `
@@ -252,8 +257,11 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
 <script>
   function apriLocandina(){ var d=document.getElementById('locandina'); if(d && !d.open) d.showModal(); }
   (function(){
-    var CHIAVE='rf-loc-${loc.id}-${versione}', anteprima=${anteprima ? "true" : "false"};
-    function giaVista(){ try { var t=+localStorage.getItem(CHIAVE); return t && (Date.now()-t) < 864e5; } catch(e){ return false; } }
+    var CHIAVE='rf-loc-${loc.id}-${versione}', anteprima=${anteprima ? "true" : "false"}, FREQ='${["sempre", "una_volta"].includes(loc.frequenza) ? loc.frequenza : "giorno"}';
+    function giaVista(){
+      if (FREQ === 'sempre') return false;
+      try { var t=+localStorage.getItem(CHIAVE); return !!t && (FREQ === 'una_volta' || (Date.now()-t) < 864e5); } catch(e){ return false; }
+    }
     setTimeout(function(){
       if (anteprima || !giaVista()) { apriLocandina(); try { localStorage.setItem(CHIAVE, Date.now()); } catch(e){} }
     }, 3900);
@@ -322,7 +330,7 @@ html,body{margin:0;padding:0;min-height:100%;background:var(--void);color:var(--
 ${usaFoto ? `
 .scene{position:fixed;inset:0;overflow:hidden;z-index:0}
 .scene__photo{position:absolute;inset:-3%;width:106%;height:106%;background-image:url('${escapeAttr(pagina.background_url)}');background-size:cover;background-position:center;filter:grayscale(${grigioFoto}%) brightness(${luminFoto}) contrast(1.05);opacity:0;transform:scale(1);animation:kenburns 18s ease-in-out infinite alternate;animation-play-state:paused;transition:opacity 1.6s cubic-bezier(.22,.61,.36,1)}
-.scene__tint{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%, rgba(10,10,10,0) 0%, rgba(10,10,10,.55) 60%, rgba(10,10,10,.92) 100%), rgba(12,12,12,.35)}
+.scene__tint{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%, rgba(10,10,10,0) 0%, rgba(10,10,10,${velo(.55)}) 60%, rgba(10,10,10,${velo(.92)}) 100%), rgba(12,12,12,${velo(.35)})}
 body.revealed .scene__photo{opacity:1;animation-play-state:running}
 @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07) translate(-1%,0%)}}
 ` : ""}

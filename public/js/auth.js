@@ -242,6 +242,8 @@ function impostaSessione() {
   setTxt('ddNome',  utente.nombre || '');
   setTxt('ddEmail', utente.email  || '');
 
+  aggiornaAccessoNfc();
+
   setSd('authDot', 'ok');
   setTxt('authStatus', `${utente.rol === 'admin' ? 'ADMIN' : 'CLIENTE'}: ${utente.nombre}`);
   const el = document.getElementById('perfilAvatar');
@@ -272,6 +274,18 @@ function chiudiDropdownProfilo() {
 }
 document.addEventListener('click', chiudiDropdownProfilo);
 
+// Scorciatoia alla piattaforma NFC (menu laterale, avatar, profilo): solo se l'utente ha un'azienda NFC
+async function aggiornaAccessoNfc() {
+  const ids = ['nfcPanelBtn', 'ddNfcBtn', 'perfilNfcTab'];
+  const mostra = v => ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; });
+  mostra(false);
+  if (!token || !utente || utente.rol === 'admin' || utente.rol === 'circuiti') return;
+  try {
+    const r = await fetch(`${API}/nfc/azienda`, { headers: { Authorization: `Bearer ${token}` } });
+    if (r.ok && token) mostra(true);
+  } catch (e) {}
+}
+
 function disconnetti() {
   token = null;
   utente = null;
@@ -279,6 +293,7 @@ function disconnetti() {
   localStorage.removeItem('rfFoto');
   const wrap = document.getElementById('avatarWrap');
   if (wrap) wrap.style.display = 'none';
+  ['nfcPanelBtn', 'ddNfcBtn', 'perfilNfcTab'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   chiudiDropdownProfilo();
   if (window.location.pathname.includes('admin')) {
     window.location.href = '/index.html';
