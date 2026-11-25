@@ -38,8 +38,10 @@ function costruisciUrlLink(type, valoreGrezzo) {
     return validaUrlSicuro(`tel:${pulito}`);
   }
   if (type === "email") {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valore)) throw new ErroreAzienda("Email non valida", 400);
-    return validaUrlSicuro(`mailto:${valore}`);
+    // Il pannello rimanda l'URL salvato («mailto:x@y.it»): senza toglierlo diventa «mailto:mailto:…»
+    const indirizzo = valore.replace(/^(mailto:)+/i, "").trim();
+    if (!/^[^\s@:]+@[^\s@]+\.[^\s@]+$/.test(indirizzo)) throw new ErroreAzienda("Email non valida", 400);
+    return validaUrlSicuro(`mailto:${indirizzo}`);
   }
   return validaUrlSicuro(valore);
 }

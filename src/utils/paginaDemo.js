@@ -217,10 +217,8 @@ function pulisciLinks(links) {
     if (!TIPI_LINK.includes(l.type)) throw Object.assign(new Error(`Tipo di bottone non valido: ${l.type}`), { status: 400 });
     const label = String(l.label || "").trim().slice(0, 60);
     if (!label) throw Object.assign(new Error("Ogni bottone deve avere un'etichetta."), { status: 400 });
-    // i bottoni automatici hanno già «mailto:»: costruisciUrlLink lo rimetterebbe
-    const valore = l.type === "email" ? String(l.url || "").replace(/^mailto:/i, "") : l.url;
     let url;
-    try { url = costruisciUrlLink(l.type, valore); } catch (err) {
+    try { url = costruisciUrlLink(l.type, l.url); } catch (err) {
       throw Object.assign(new Error(`«${label}»: ${err.message}`), { status: 400 });
     }
     return { type: l.type, label, url, is_visible: l.is_visible !== false };
