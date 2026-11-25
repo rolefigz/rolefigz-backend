@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Raccontalo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <meta name="theme-color" content="#111111" />
 </head>
 <body>
   <header class="top">
@@ -19,36 +22,116 @@
     </div>
     <div class="chips" id="chips"></div>
     <nav class="actions">
-      <button class="ghost" data-open="dlg-company">Profilo azienda</button>
+      <button class="ghost" data-open="dlg-company">Profilo e brand</button>
       <button class="ghost" data-open="dlg-import">Collega agenda</button>
       <button class="ghost" data-open="dlg-event">+ Evento</button>
+      <button class="ghost" data-open="dlg-theme">Proponi un tema</button>
+      <button class="ghost" id="btn-push" title="Promemoria sul telefono">Notifiche</button>
       <button id="btn-analyze">Cerca occasioni</button>
     </nav>
   </header>
 
-  <section id="reminders" class="reminders" hidden></section>
+  <nav class="views" id="views">
+    <button class="view-tab active" data-view="board">Bacheca</button>
+    <button class="view-tab" data-view="cal">Calendario</button>
+    <button class="view-tab" data-view="listen">Ascolto</button>
+    <button class="view-tab" data-view="strategy">Strategia <span class="tag">fase 2</span></button>
+  </nav>
 
-  <main class="board">
-    <section class="col">
-      <header><span class="num">01</span><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
-      <p class="hint">Cosa c'è in agenda da raccontare</p>
-      <div id="col-occ" class="cards"></div>
-      <details class="discarded">
-        <summary>Non da raccontare <span id="n-disc"></span></summary>
-        <div id="col-disc" class="cards"></div>
-      </details>
-    </section>
-    <section class="col">
-      <header><span class="num">02</span><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
-      <p class="hint">Post pronti: controlla, correggi, pubblica</p>
-      <div id="col-draft" class="cards"></div>
-    </section>
-    <section class="col">
-      <header><span class="num">03</span><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
-      <p class="hint">Cosa è uscito e come sta andando</p>
-      <div id="col-pub" class="cards"></div>
-    </section>
-  </main>
+  <!-- Bacheca -->
+  <div id="view-board" class="view">
+    <section id="reminders" class="reminders" hidden></section>
+
+    <main class="board">
+      <section class="col">
+        <header><span class="num">01</span><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
+        <p class="hint">Cosa c'è in agenda da raccontare</p>
+        <div id="col-occ" class="cards"></div>
+        <details class="discarded">
+          <summary>Non da raccontare <span id="n-disc"></span></summary>
+          <div id="col-disc" class="cards"></div>
+        </details>
+      </section>
+      <section class="col">
+        <header><span class="num">02</span><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
+        <p class="hint">Post pronti: controlla, correggi, pubblica o programma</p>
+        <div id="col-draft" class="cards"></div>
+      </section>
+      <section class="col">
+        <header><span class="num">03</span><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
+        <p class="hint">Cosa esce e come sta andando</p>
+        <div id="sched-wrap" hidden>
+          <div class="sub-h">In programma</div>
+          <div id="col-sched" class="cards"></div>
+          <div class="sub-h">Usciti</div>
+        </div>
+        <div id="col-pub" class="cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Calendario -->
+  <div id="view-cal" class="view" hidden>
+    <div class="cal-head">
+      <button class="ghost small" id="cal-prev" aria-label="Mese precedente">‹</button>
+      <h2 id="cal-title"></h2>
+      <button class="ghost small" id="cal-next" aria-label="Mese successivo">›</button>
+      <button class="ghost small" id="cal-today">Oggi</button>
+      <div class="legend"><span><i class="lg occ"></i>Occasione</span><span><i class="lg sched"></i>Programmato</span><span><i class="lg pub"></i>Pubblicato</span></div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <!-- Ascolto -->
+  <div id="view-listen" class="view" hidden>
+    <div class="two">
+      <section class="panel">
+        <h2>Profili da seguire</h2>
+        <p class="hint">Clienti, fiere, associazioni, persone influenti del settore: commentare i loro post fa conoscere l'azienda.</p>
+        <div id="watch-list" class="watch-list"></div>
+        <div class="watch-add">
+          <input id="w-name" placeholder="Nome (es. Confapi Piacenza)" />
+          <select id="w-platform"><option>LinkedIn</option><option>Instagram</option><option>Facebook</option></select>
+          <input id="w-url" placeholder="Link al profilo (facoltativo)" />
+          <button class="small" id="btn-watch-add">Aggiungi</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Proponi un commento</h2>
+        <p class="hint">Incolla un post di un profilo che segui, o un commento ricevuto: l'assistente propone tre risposte.</p>
+        <div class="seg" id="reply-kind">
+          <button class="seg-b active" data-kind="commento">Commento a un post</button>
+          <button class="seg-b" data-kind="risposta">Risposta a un commento</button>
+        </div>
+        <label>Di chi</label>
+        <select id="reply-author"></select>
+        <label>Testo</label>
+        <textarea id="reply-text" rows="6" placeholder="Incolla qui il testo del post o del commento"></textarea>
+        <menu class="end"><button id="btn-replies">Proponi risposte</button></menu>
+        <div id="reply-out" class="reply-out"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Strategia -->
+  <div id="view-strategy" class="view" hidden>
+    <div class="two strat">
+      <section class="panel">
+        <h2>Strategia editoriale</h2>
+        <p class="hint">Fase 2: dagli obiettivi a un piano di post per le prossime settimane, con i filoni da seguire.</p>
+        <label>Obiettivi</label>
+        <textarea id="st-goals" rows="3" placeholder="Es. trovare nuovi clienti nell'agricoltura e attirare giovani operatori"></textarea>
+        <label>A chi parliamo</label>
+        <input id="st-audience" placeholder="Es. uffici acquisti, studenti degli ITIS della zona" />
+        <div class="grid2">
+          <div><label>Post a settimana</label><select id="st-per"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
+          <div><label>Settimane</label><select id="st-weeks"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+        </div>
+        <menu class="end"><button id="btn-strategy">Crea la strategia</button></menu>
+      </section>
+      <section class="panel" id="strategy-out"></section>
+    </div>
+  </div>
 
   <footer class="foot">
     <button class="link" id="btn-reset">Ricarica dati demo</button>
@@ -105,20 +188,74 @@
     </form>
   </dialog>
 
-  <!-- Profilo azienda -->
+  <!-- Proponi un tema -->
+  <dialog id="dlg-theme">
+    <form method="dialog" class="dlg">
+      <h3>Proponi un tema</h3>
+      <p class="muted">Non serve un evento: scrivi di cosa vuoi parlare e l'assistente propone le idee di post, che finiscono tra le occasioni.</p>
+      <label>Tema</label><input id="th-theme" placeholder="Es. sicurezza in officina, sostenibilità, i nostri 40 anni" />
+      <div class="grid2">
+        <div><label>Quante idee</label><select id="th-count"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+        <div><label>Per quando (facoltativo)</label><input id="th-date" type="date" /></div>
+      </div>
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-theme">Proponi idee</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Profilo azienda e brand -->
   <dialog id="dlg-company">
     <form method="dialog" class="dlg">
-      <h3>Profilo azienda</h3>
-      <p class="muted">Serve all'assistente per scrivere con la vostra voce.</p>
+      <h3>Profilo e brand</h3>
+      <p class="muted">Serve all'assistente per scrivere con la vostra voce e creare immagini riconoscibili.</p>
       <label>Nome</label><input id="co-name" />
       <label>Settore</label><input id="co-sector" />
       <label>Città</label><input id="co-city" />
       <label>Tono di voce</label><input id="co-tone" placeholder="Es. diretto, familiare, tecnico" />
       <label>Chi siamo</label><textarea id="co-about" rows="3"></textarea>
+      <h4 class="dlg-sec">Brand identity</h4>
+      <label>Logo (PNG trasparente consigliato)</label>
+      <div class="logo-row"><div class="logo-prev" id="co-logo-prev"></div><input type="file" id="co-logo" accept="image/*" /><button type="button" class="link small" id="co-logo-del">Togli</button></div>
+      <label>Palette: principale, accento, chiaro</label>
+      <div class="colors"><input type="color" id="co-c0" /><input type="color" id="co-c1" /><input type="color" id="co-c2" /><span class="muted mono" id="co-c-hex"></span></div>
+      <label>Valori e parole chiave</label><input id="co-values" placeholder="Es. precisione, famiglia, territorio" />
+      <label>Da evitare</label><input id="co-avoid" placeholder="Es. inglesismi, toni troppo formali" />
       <menu>
         <button value="cancel" class="ghost">Annulla</button>
         <button type="button" id="btn-save-company">Salva</button>
       </menu>
+    </form>
+  </dialog>
+
+  <!-- Crea immagine -->
+  <dialog id="dlg-image" class="wide">
+    <form method="dialog" class="dlg img-dlg">
+      <div class="img-prev"><canvas id="img-canvas" width="1080" height="1080"></canvas></div>
+      <div class="img-ctrl">
+        <h3>Immagine del post</h3>
+        <p class="muted" id="img-concept"></p>
+        <label>Modello</label>
+        <div class="seg" id="img-layout">
+          <button type="button" class="seg-b" data-layout="foto">Foto + fascia</button>
+          <button type="button" class="seg-b" data-layout="testo">Solo testo</button>
+          <button type="button" class="seg-b" data-layout="citazione">Citazione</button>
+        </div>
+        <label>Formato</label>
+        <div class="seg" id="img-format">
+          <button type="button" class="seg-b active" data-format="1:1">Quadrato 1:1</button>
+          <button type="button" class="seg-b" data-format="4:5">Verticale 4:5</button>
+        </div>
+        <label>Titolo</label><input id="img-headline" maxlength="60" />
+        <label>Sottotitolo</label><input id="img-subline" maxlength="80" />
+        <label>Foto di base</label><div class="thumbs pick" id="img-photos"></div>
+        <p class="muted small-note">Logo e colori arrivano da “Profilo e brand”.</p>
+        <menu>
+          <button value="cancel" class="ghost">Annulla</button>
+          <button type="button" id="btn-img-save">Usa nel post</button>
+        </menu>
+      </div>
     </form>
   </dialog>
 

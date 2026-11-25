@@ -11,12 +11,20 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const empty = () => ({ company: null, events: [], posts: [] });
+const empty = () => ({
+  company: null,
+  events: [],
+  posts: [],
+  watch: [], // profili influenti da seguire (Ascolto)
+  strategy: null, // piano editoriale (fase 2)
+  push: { vapid: null, subs: [], sent: {} }, // notifiche sul telefono
+});
 
 let db = empty();
 if (fs.existsSync(DB_FILE)) {
   try {
-    db = { ...empty(), ...JSON.parse(fs.readFileSync(DB_FILE, "utf8")) };
+    const saved = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    db = { ...empty(), ...saved, push: { ...empty().push, ...saved.push } };
   } catch (err) {
     console.error("db.json illeggibile, riparto da zero:", err.message);
   }
@@ -33,7 +41,10 @@ export function save() {
 }
 
 export function reset() {
+  // Le iscrizioni alle notifiche restano: sono del telefono, non dei dati demo
+  const push = db.push;
   db = empty();
+  db.push = { ...push, sent: {} };
   save();
 }
 

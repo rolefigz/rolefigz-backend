@@ -114,3 +114,17 @@ export async function fetchMetrics(platform, pub) {
   }
   return null; // LinkedIn: le statistiche delle pagine richiedono permessi extra
 }
+
+/** Commenti ricevuti da un post pubblicato in automatico (Facebook e Instagram). */
+export async function fetchComments(platform, pub) {
+  if (!pub?.id || pub.mode !== "automatica") return [];
+  if (platform === "facebook") {
+    const j = await graph(`${pub.id}/comments`, { fields: "from,message,created_time", limit: "25" }, "GET");
+    return (j.data || []).map((c) => ({ id: c.id, platform, author: c.from?.name || "", text: c.message || "", at: c.created_time }));
+  }
+  if (platform === "instagram") {
+    const j = await graph(`${pub.id}/comments`, { fields: "username,text,timestamp", limit: "25" }, "GET");
+    return (j.data || []).map((c) => ({ id: c.id, platform, author: c.username || "", text: c.text || "", at: c.timestamp }));
+  }
+  return [];
+}
