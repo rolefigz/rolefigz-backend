@@ -1,7 +1,9 @@
 const express = require("express");
 const router  = express.Router();
 const { verifyToken, soloAdmin } = require("../middleware/auth");
-const { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio } = require("../controllers/fedeltaController");
+const { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio, miaTessera } = require("../controllers/fedeltaController");
+
+router.get  ("/mia",                   verifyToken, miaTessera);
 
 router.get  ("/admin",                 verifyToken, soloAdmin, elencoAdmin);
 router.get  ("/admin/:id",             verifyToken, soloAdmin, dettaglioAdmin);

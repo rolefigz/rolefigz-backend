@@ -36,6 +36,61 @@ function nfcTab(tab, el) {
   if (tab === 'merch') tabNfcMerch(content);
   if (tab === 'ordini') tabNfcOrdini(content);
   if (tab === 'statistiche') tabNfcStatistiche(content);
+  if (tab === 'fedelta') tabNfcFedelta(content);
+}
+
+// ═══════════════════════════ TESSERA FEDELTÀ ═══════════════════════════
+
+const FEDELTA_TIPO_LABEL = {
+  timbro: 'Timbro ricevuto', timbro_annullato: 'Timbro tolto',
+  premio_generato: 'Premio sbloccato', premio_riscattato: 'Premio usato',
+};
+
+async function tabNfcFedelta(content) {
+  content.innerHTML = '<div class="loading">Caricamento…</div>';
+  try {
+    const r = await fetch(`${API}/fedelta/mia`, { headers: authHeaders() });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    const c = d.cliente;
+    const n = d.config.timbri_per_premio, valore = d.config.valore_premio;
+    if (!c) {
+      content.innerHTML = `
+        <h2>Tessera fedeltà</h2>
+        <div class="empty-state"><h3>Non hai ancora una tessera</h3>
+          <p>Ricevi 1 timbro ogni 100 € di ordine. Con ${n} timbri sblocchi ${valore} € di sconto sul prossimo ordine.</p></div>`;
+      return;
+    }
+    const pieni = Math.min(c.timbri_attuali, n);
+    const dots = Array.from({ length: n }, (_, i) => i < pieni
+      ? `<span style="width:46px;height:46px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700">✓</span>`
+      : `<span style="width:46px;height:46px;border-radius:50%;border:2px dashed var(--line);display:inline-block"></span>`).join('');
+    const mancano = n - pieni;
+    const premio = c.premi_disponibili > 0
+      ? `<div class="msg ok" style="font-size:.9rem"><strong>${c.premi_disponibili} premio${c.premi_disponibili > 1 ? 'i' : ''} disponibil${c.premi_disponibili > 1 ? 'i' : 'e'}</strong> — ${valore} € di sconto sul prossimo ordine, senza minimo.</div>`
+      : `<p style="margin-top:12px">Ancora <strong>${mancano} timbr${mancano === 1 ? 'o' : 'i'}</strong> e sblocchi un premio di ${valore} € senza minimo.</p>`;
+    const storico = (d.movimenti || []).map(m => `
+      <tr><td>${new Date(m.createdAt).toLocaleDateString('it-IT')}</td>
+          <td>${FEDELTA_TIPO_LABEL[m.tipo] || m.tipo}</td>
+          <td style="color:var(--ink-dim)">${escYt(m.nota || '')}</td></tr>`).join('');
+
+    content.innerHTML = `
+      <h2>Tessera fedeltà</h2>
+      <p style="font-size:.85rem;margin-bottom:20px">Codice <strong>${escYt(c.codice_tarjeta)}</strong> —
+        <a href="/fedelta/${encodeURIComponent(c.codice_tarjeta)}" target="_blank">apri la tessera</a></p>
+      <div class="card">
+        <h3>${pieni}/${n} timbri verso il prossimo premio</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">${dots}</div>
+        ${premio}
+      </div>
+      <div class="stats-row">
+        <div class="stat"><div class="num">${c.timbri_totali}</div><div class="lbl">TIMBRI TOTALI</div></div>
+        <div class="stat"><div class="num">${c.premi_disponibili}</div><div class="lbl">PREMI DISPONIBILI</div></div>
+        <div class="stat"><div class="num">${c.premi_riscattati}</div><div class="lbl">PREMI USATI</div></div>
+      </div>
+      ${storico ? `<div class="card"><h3>Storico</h3><table><thead><tr><th>Data</th><th>Movimento</th><th>Nota</th></tr></thead><tbody>${storico}</tbody></table></div>` : ''}
+      <p class="note">1 timbro ogni 100 € di ordine (arrotondato per difetto). Con ${n} timbri sblocchi ${valore} € di sconto sul prossimo ordine. Ogni ordine sblocca al massimo un premio: i premi non si accumulano e i timbri in più di quell'ordine non contano. Il premio non è convertibile in denaro.</p>`;
+  } catch(e) { content.innerHTML = `<div class="msg err">Errore: ${e.message}</div>`; }
 }
 
 document.addEventListener('DOMContentLoaded', () => nfcTab('home', document.querySelector('.menu-item')));

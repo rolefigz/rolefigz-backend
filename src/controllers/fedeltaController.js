@@ -141,6 +141,28 @@ const riscattaPremio = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
+// ── GET /api/fedelta/mia — tessera del cliente loggato (pannello account-nfc) ─
+const miaTessera = async (req, res) => {
+  try {
+    const config = { timbri_per_premio: TIMBRI_PER_PREMIO, valore_premio: VALORE_PREMIO };
+    const utente = await Utente.findByPk(req.usuario.id, { attributes: ["id", "email"] });
+    if (!utente || !utente.email) return res.json({ cliente: null, movimenti: [], config });
+    const cliente = await ClienteFedelta.findOne({
+      where: { email: String(utente.email).trim().toLowerCase() },
+      attributes: ["id", "codice_tarjeta", "nombre", "timbri_attuali", "timbri_totali", "premi_disponibili", "premi_riscattati"],
+    });
+    if (!cliente) return res.json({ cliente: null, movimenti: [], config });
+    const movimenti = await FedeltaMovimiento.findAll({
+      where: { cliente_fedelta_id: cliente.id },
+      attributes: ["tipo", "nota", "createdAt"],
+      order: [["createdAt", "DESC"]],
+      limit: 30,
+    });
+    const { id: _id, ...dati } = cliente.toJSON();
+    res.json({ cliente: dati, movimenti, config });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
 // ── GET /fedelta/:codice — pagina pubblica della tessera (letta dal QR/NFC) ──
 const mostraTessera = async (req, res) => {
   try {
@@ -158,4 +180,4 @@ const mostraTessera = async (req, res) => {
   } catch (err) { res.status(500).send("Errore"); }
 };
 
-module.exports = { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio, mostraTessera, TIMBRI_PER_PREMIO, VALORE_PREMIO };
+module.exports = { elencoAdmin, dettaglioAdmin, aggiungiTimbro, annullaTimbro, riscattaPremio, mostraTessera, miaTessera, TIMBRI_PER_PREMIO, VALORE_PREMIO };
