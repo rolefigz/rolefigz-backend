@@ -744,6 +744,11 @@ function dataBreve(iso) {
   return iso ? new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 }
 
+function fasciaLeggibile(l) {
+  if (!l.ora_dal && !l.ora_al) return 'Tutto il giorno';
+  return `Dalle ${l.ora_dal || '00:00'} alle ${l.ora_al || '24:00'}`;
+}
+
 function statoLocandina(l) {
   const ora = Date.now();
   if (!l.attiva) return ['Disattivata', 'var(--ink-dim)'];
@@ -770,6 +775,7 @@ async function tabNfcLocandine(content) {
           <span class="pill" style="color:${colore}">${stato}</span>
           ${l.inizio_evento ? `<p class="note">📅 ${dataBreve(l.inizio_evento)}${l.luogo ? ` · 📍 ${escLoc(l.luogo)}` : ''}</p>` : ''}
           ${l.raccogli_email ? `<p class="note">✉️ ${l.iscritti} email raccolte</p>` : ''}
+          <p class="note">🕒 ${fasciaLeggibile(l)}</p>
           <p class="note">Si apre: ${{ sempre: 'sempre, a ogni apertura', una_volta: 'una sola volta per cliente' }[l.frequenza] || 'una volta al giorno per cliente'}</p>
           <div style="margin-top:8px">
             <button class="action-btn" onclick="formLocandina(${l.id})">Modifica</button>
@@ -783,7 +789,7 @@ async function tabNfcLocandine(content) {
 
     content.innerHTML = `
       <h2>Locandine</h2>
-      <p style="font-size:.85rem;margin-bottom:18px">Carica la locandina di un evento o di una promozione: appare in un pop-up quando i clienti aprono la tua pagina (NFC o QR), con il bottone per aggiungerla al calendario e, se vuoi, per lasciare la loro email. Se ne hai più di una visibile, si mostra la più recente.</p>
+      <p style="font-size:.85rem;margin-bottom:18px">Carica la locandina di un evento o di una promozione: appare in un pop-up quando i clienti aprono la tua pagina (NFC o QR), con il bottone per aggiungerla al calendario e, se vuoi, per lasciare la loro email. Puoi averne più di una: ognuna ha il suo bottone nella pagina e nel pop-up si passa dall'una all'altra. Per ognuna scegli in che fascia oraria compare (es. il pranzo dalle 12:00 alle 15:00, l'aperitivo dalle 18:00 alle 21:00).</p>
       <button class="btn-submit" style="margin-bottom:18px" onclick="formLocandina()">+ Nuova locandina</button>
       <div id="locForm"></div>
       <div class="card">${righe || '<p style="font-size:.85rem">Non hai ancora nessuna locandina.</p>'}</div>`;
@@ -813,6 +819,11 @@ function formLocandina(id) {
           <div class="field"><label>Mostra fino al</label><input type="datetime-local" name="mostra_fino" value="${isoALocale(l.mostra_fino)}"></div>
         </div>
         <p class="note" style="margin:-8px 0 14px">Vuoto = da subito e fino alla fine dell'evento.</p>
+        <div class="form-row">
+          <div class="field"><label>Ogni giorno dalle ore</label><input type="time" name="ora_dal" value="${escLoc(l.ora_dal)}"></div>
+          <div class="field"><label>alle ore</label><input type="time" name="ora_al" value="${escLoc(l.ora_al)}"></div>
+        </div>
+        <p class="note" style="margin:-8px 0 14px">Vuoto = tutto il giorno. Fuori da questa fascia la locandina e il suo bottone non si vedono. Se l'ora di fine è prima di quella d'inizio, passa la mezzanotte (es. dalle 22:00 alle 02:00).</p>
         <div class="field"><label>Quando si apre da sola</label>
           <div class="loc-freq" role="radiogroup">
             ${[['sempre', 'Sempre', 'a ogni apertura della pagina'], ['giorno', 'Una volta al giorno', 'per ogni cliente'], ['una_volta', 'Una sola volta', 'la vede solo la prima volta']].map(([v, t, s]) => `
@@ -841,7 +852,7 @@ async function salvaLocandina(ev, id) {
   ev.preventDefault();
   const f = ev.target;
   const fd = new FormData();
-  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url'].forEach(k => fd.append(k, f[k].value));
+  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url', 'ora_dal', 'ora_al'].forEach(k => fd.append(k, f[k].value));
   ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, localeAIso(f[k].value)));
   fd.append('raccogli_email', f.raccogli_email.checked ? 'true' : 'false');
   fd.append('attiva', f.attiva.checked ? 'true' : 'false');
@@ -864,7 +875,7 @@ async function toggleLocandina(id) {
   const l = locandineCache.find(x => x.id === id);
   if (!l) return;
   const fd = new FormData();
-  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url'].forEach(k => fd.append(k, l[k] || ''));
+  ['titolo', 'descrizione', 'luogo', 'testo_email', 'link_label', 'link_url', 'ora_dal', 'ora_al'].forEach(k => fd.append(k, l[k] || ''));
   ['inizio_evento', 'fine_evento', 'mostra_dal', 'mostra_fino'].forEach(k => fd.append(k, l[k] || ''));
   fd.append('raccogli_email', l.raccogli_email ? 'true' : 'false');
   fd.append('attiva', l.attiva ? 'false' : 'true');

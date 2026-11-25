@@ -14,15 +14,17 @@ function eVisibile(l, adesso = new Date()) {
   return true;
 }
 
-// La pagina pubblica mostra una sola locandina: la piu' recente tra quelle visibili.
-async function locandinaVisibile(companyId) {
+// Tutte le locandine visibili per data, dalla piu' recente. La fascia oraria (ora_dal/ora_al)
+// la applica il browser con l'ora di Roma: la pagina resta in cache per qualche minuto.
+const MAX_LOCANDINE = 10;
+async function locandineVisibili(companyId) {
   const candidate = await Locandina.findAll({
     where: { company_id: companyId, attiva: true },
     order: [["updatedAt", "DESC"]],
-    limit: 20,
+    limit: 30,
   });
   const adesso = new Date();
-  return candidate.find(l => eVisibile(l, adesso)) || null;
+  return candidate.filter(l => eVisibile(l, adesso)).slice(0, MAX_LOCANDINE);
 }
 
 function fineEvento(l) {
@@ -86,4 +88,4 @@ function fileIcs(l, nomeAzienda, urlPagina) {
   return righe.map(piegaRiga).join("\r\n") + "\r\n";
 }
 
-module.exports = { eVisibile, locandinaVisibile, linkGoogleCalendar, fileIcs };
+module.exports = { eVisibile, locandineVisibili, linkGoogleCalendar, fileIcs };

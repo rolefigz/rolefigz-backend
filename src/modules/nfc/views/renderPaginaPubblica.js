@@ -111,9 +111,9 @@ function hexARgba(hex, alphaPercento) {
 // opts.testoBanner: testo del banner di anteprima (le pagine di prova del kit campione hanno il loro)
 // opts.creditoFoto: attribuzione della foto di sfondo (foto di Google Maps nelle pagine di prova)
 // opts.linkDiretti: i link puntano direttamente all'URL (pagine di prova: i loro link non sono in page_links)
-// opts.locandina: Locandina visibile da mostrare nel pop-up all'apertura (o null)
+// opts.locandine: locandine visibili per data, dalla piu' recente (la fascia oraria la applica il browser)
 function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
-  const { anteprima = false, accessibile = true, linkDiretti = false, creditoFoto = "", locandina = null,
+  const { anteprima = false, accessibile = true, linkDiretti = false, creditoFoto = "", locandine = [],
           testoBanner = "ANTEPRIMA — QUESTA PAGINA NON E' ANCORA PUBBLICA" } = opts;
   const d = pagina?.design || {};
 
@@ -212,29 +212,35 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
   </ol>
 </dialog>` : "";
 
-  // ── Pop-up della locandina: si apre da solo dopo l'animazione (secondo loc.frequenza:
-  // una volta al giorno, sempre o solo la prima volta per visitatore) e resta richiamabile
-  // dal bottone nella lista dei link ──
-  const loc = locandina;
+  // ── Pop-up delle locandine: tutte quelle visibili per data, ognuna col suo bottone nella lista
+  // dei link. Il browser applica la fascia oraria (ora di Roma) e apre da sola la prima che il
+  // visitatore non ha ancora visto (secondo la sua frequenza); dentro il pop-up ‹ › passa alle altre ──
+  const oraSicura = v => (/^\d{2}:\d{2}$/.test(v || "") ? v : "");
+  const locs = (Array.isArray(locandine) ? locandine : []).filter(Boolean);
   const posBottoneLoc = (links.length + (allergeniPresenti.size ? 1 : 0)) * 70;
-  const bottoneLocandina = loc ? `
-    <button type="button" class="link link--btn link--loc" style="--d:${posBottoneLoc}ms" onclick="apriLocandina()">
+  const bottoneLocandina = locs.map((loc, i) => {
+    const conFascia = oraSicura(loc.ora_dal) || oraSicura(loc.ora_al);
+    return `
+    <button type="button" class="link link--btn link--loc" style="--d:${posBottoneLoc + i * 70}ms" data-apri-loc="${loc.id}"${conFascia ? " hidden" : ""} onclick="apriLocandina(${loc.id})">
       <span class="link__icon">${ICONA_LOCANDINA}</span>
       <span class="link__label">${escapeHtml(loc.titolo)}</span>
       <span class="link__go">›</span>
-    </button>` : "";
+    </button>`;
+  }).join("");
   let dialogoLocandina = "";
-  if (loc) {
-    const quando = dataEventoLeggibile(loc.inizio_evento, loc.fine_evento);
-    const google = linkGoogleCalendar(loc, azienda.name);
-    const linkExtra = (() => { try { return loc.link_url ? validaUrlSicuro(loc.link_url) : null; } catch { return null; } })();
-    const versione = new Date(loc.updatedAt || 0).getTime();
-    dialogoLocandina = `
-<dialog id="locandina" class="loc" aria-labelledby="locTitolo" onclick="if (event.target === this) this.close()">
+  if (locs.length) {
+    const dialoghi = locs.map(loc => {
+      const quando = dataEventoLeggibile(loc.inizio_evento, loc.fine_evento);
+      const google = linkGoogleCalendar(loc, azienda.name);
+      const linkExtra = (() => { try { return loc.link_url ? validaUrlSicuro(loc.link_url) : null; } catch { return null; } })();
+      const versione = new Date(loc.updatedAt || 0).getTime();
+      const freq = ["sempre", "una_volta"].includes(loc.frequenza) ? loc.frequenza : "giorno";
+      return `
+<dialog id="loc-${loc.id}" class="loc" aria-labelledby="locTit-${loc.id}" data-id="${loc.id}" data-freq="${freq}" data-chiave="rf-loc-${loc.id}-${versione}" data-dal="${oraSicura(loc.ora_dal)}" data-al="${oraSicura(loc.ora_al)}" onclick="if (event.target === this) this.close()">
   <button type="button" class="loc__chiudi" aria-label="Chiudi" onclick="this.closest('dialog').close()">✕</button>
-  ${loc.immagine_url ? `<img class="loc__img" src="${escapeAttr(loc.immagine_url)}" alt="${escapeAttr(loc.titolo)}">` : ""}
+  ${loc.immagine_url ? `<img class="loc__img" src="${escapeAttr(loc.immagine_url)}" alt="${escapeAttr(loc.titolo)}" loading="lazy">` : ""}
   <div class="loc__corpo">
-    <h2 id="locTitolo">${escapeHtml(loc.titolo)}</h2>
+    <h2 id="locTit-${loc.id}">${escapeHtml(loc.titolo)}</h2>
     ${quando || loc.luogo ? `<p class="loc__meta">${quando ? `<span>📅 ${escapeHtml(quando)}</span>` : ""}${loc.luogo ? `<span>📍 ${escapeHtml(loc.luogo)}</span>` : ""}</p>` : ""}
     ${loc.descrizione ? `<p class="loc__descr">${escapeHtml(loc.descrizione)}</p>` : ""}
     ${google || linkExtra ? `<div class="loc__azioni">
@@ -242,7 +248,7 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
       <a class="loc__btn" href="/nfc/locandina/${loc.id}/evento.ics">${ICONE_SVG.booking}<span>Apple / Outlook</span></a>` : ""}
       ${linkExtra ? `<a class="loc__btn loc__btn--pieno" href="${escapeAttr(linkExtra)}"${linkExtra.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${escapeHtml(loc.link_label || "Scopri di più")}</span></a>` : ""}
     </div>` : ""}
-    ${loc.raccogli_email ? `<form class="loc__form" id="locForm" novalidate>
+    ${loc.raccogli_email ? `<form class="loc__form" data-id="${loc.id}" novalidate>
       <p class="loc__form-tit">${escapeHtml(loc.testo_email || "Lasciaci la tua email per non perdere le novità")}</p>
       <input type="email" name="email" placeholder="La tua email" autocomplete="email" required maxlength="190">
       <input type="text" name="nome" placeholder="Nome (facoltativo)" autocomplete="given-name" maxlength="80">
@@ -250,35 +256,89 @@ function renderPaginaPubblica(azienda, pagina, links, opts = {}) {
       <label class="loc__consenso"><input type="checkbox" name="consenso" required>
         <span>Acconsento a essere contattato/a via email da ${escapeHtml(azienda.name)} per eventi e promozioni. Posso cancellarmi quando voglio.</span></label>
       <button type="submit" class="loc__btn loc__btn--pieno">Iscriviti</button>
-      <p class="loc__esito" id="locEsito" role="status"></p>
+      <p class="loc__esito" role="status"></p>
     </form>` : ""}
+    <div class="loc__nav" hidden>
+      <button type="button" class="loc__freccia" data-passo="-1" aria-label="Locandina precedente">‹</button>
+      <span class="loc__conta"></span>
+      <button type="button" class="loc__freccia" data-passo="1" aria-label="Locandina successiva">›</button>
+    </div>
   </div>
-</dialog>
+</dialog>`;
+    }).join("");
+    dialogoLocandina = `${dialoghi}
 <script>
-  function apriLocandina(){ var d=document.getElementById('locandina'); if(d && !d.open) d.showModal(); }
+  var apriLocandina = function(){};
   (function(){
-    var CHIAVE='rf-loc-${loc.id}-${versione}', anteprima=${anteprima ? "true" : "false"}, FREQ='${["sempre", "una_volta"].includes(loc.frequenza) ? loc.frequenza : "giorno"}';
-    function giaVista(){
-      if (FREQ === 'sempre') return false;
-      try { var t=+localStorage.getItem(CHIAVE); return !!t && (FREQ === 'una_volta' || (Date.now()-t) < 864e5); } catch(e){ return false; }
+    var anteprima=${anteprima ? "true" : "false"};
+    var tutte=[].slice.call(document.querySelectorAll('dialog.loc')), attive=tutte;
+    function oraRoma(){
+      try {
+        var h='', m='';
+        new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
+          .formatToParts(new Date()).forEach(function(p){ if(p.type==='hour') h=p.value; if(p.type==='minute') m=p.value; });
+        return ('0'+h).slice(-2)+':'+m;
+      } catch(e){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
     }
+    // fascia vuota = tutto il giorno; se finisce prima di iniziare passa la mezzanotte (22:00 → 02:00)
+    function inFascia(d, ora){
+      var dal=d.dataset.dal, al=d.dataset.al;
+      if(!dal && !al) return true;
+      dal=dal||'00:00'; al=al||'24:00';
+      return dal<al ? (ora>=dal && ora<al) : (ora>=dal || ora<al);
+    }
+    function aggiorna(){
+      var ora=oraRoma();
+      attive=tutte.filter(function(d){ return inFascia(d, ora); });
+      tutte.forEach(function(d){
+        var i=attive.indexOf(d), b=document.querySelector('[data-apri-loc="'+d.dataset.id+'"]');
+        if(b) b.hidden = i<0;
+        var nav=d.querySelector('.loc__nav');
+        nav.hidden = i<0 || attive.length<2;
+        if(i>=0) nav.querySelector('.loc__conta').textContent=(i+1)+' / '+attive.length;
+      });
+    }
+    function giaVista(d){
+      if (anteprima || d.dataset.freq === 'sempre') return false;
+      try { var t=+localStorage.getItem(d.dataset.chiave); return !!t && (d.dataset.freq === 'una_volta' || (Date.now()-t) < 864e5); } catch(e){ return false; }
+    }
+    function mostra(d){
+      if(!d || d.open) return;
+      tutte.forEach(function(x){ if(x.open) x.close(); });
+      d.showModal();
+      try { localStorage.setItem(d.dataset.chiave, Date.now()); } catch(e){}
+    }
+    apriLocandina = function(id){ mostra(document.getElementById('loc-'+id)); };
+    tutte.forEach(function(d){
+      [].forEach.call(d.querySelectorAll('.loc__freccia'), function(b){
+        b.addEventListener('click', function(){
+          var i=attive.indexOf(d); if(i<0) return;
+          mostra(attive[(i + (+b.dataset.passo) + attive.length) % attive.length]);
+        });
+      });
+    });
+    aggiorna();
+    setInterval(aggiorna, 60000);
     setTimeout(function(){
-      if (anteprima || !giaVista()) { apriLocandina(); try { localStorage.setItem(CHIAVE, Date.now()); } catch(e){} }
+      aggiorna();
+      var prima=attive.filter(function(d){ return !giaVista(d); })[0];
+      if(prima) mostra(prima);
     }, 3900);
-    var f=document.getElementById('locForm'); if(!f) return;
-    f.addEventListener('submit', function(ev){
-      ev.preventDefault();
-      var esito=document.getElementById('locEsito'), btn=f.querySelector('button[type=submit]');
-      var email=f.email.value.trim();
-      if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)){ esito.textContent="Controlla l'email."; esito.className='loc__esito err'; return; }
-      if(!f.consenso.checked){ esito.textContent='Spunta il consenso per iscriverti.'; esito.className='loc__esito err'; return; }
-      if(anteprima){ esito.textContent="Anteprima: sulla pagina pubblica l'email verrebbe salvata."; esito.className='loc__esito ok'; return; }
-      btn.disabled=true;
-      fetch('/api/nfc-locandine/${loc.id}/iscrizione',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({email:email,nome:f.nome.value.trim(),consenso:true,sito:f.sito.value})})
-        .then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||'Errore'); }); })
-        .then(function(){ f.innerHTML='<p class="loc__grazie">✓ Fatto! Ti terremo aggiornato/a.</p>'; })
-        .catch(function(e){ esito.textContent=e.message; esito.className='loc__esito err'; btn.disabled=false; });
+    [].forEach.call(document.querySelectorAll('.loc__form'), function(f){
+      f.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        var esito=f.querySelector('.loc__esito'), btn=f.querySelector('button[type=submit]');
+        var email=f.email.value.trim();
+        if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)){ esito.textContent="Controlla l'email."; esito.className='loc__esito err'; return; }
+        if(!f.consenso.checked){ esito.textContent='Spunta il consenso per iscriverti.'; esito.className='loc__esito err'; return; }
+        if(anteprima){ esito.textContent="Anteprima: sulla pagina pubblica l'email verrebbe salvata."; esito.className='loc__esito ok'; return; }
+        btn.disabled=true;
+        fetch('/api/nfc-locandine/'+f.dataset.id+'/iscrizione',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({email:email,nome:f.nome.value.trim(),consenso:true,sito:f.sito.value})})
+          .then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||'Errore'); }); })
+          .then(function(){ f.innerHTML='<p class="loc__grazie">✓ Fatto! Ti terremo aggiornato/a.</p>'; })
+          .catch(function(e){ esito.textContent=e.message; esito.className='loc__esito err'; btn.disabled=false; });
+      });
     });
   })();
 </script>`;
@@ -416,6 +476,11 @@ body.content-in .link{opacity:1;transform:translateY(0)}
 .loc__form .loc__btn{flex:none;width:100%}
 .loc__esito{margin:0;font-size:.8rem;min-height:1em}
 .loc__esito.err{color:#ff8a7a}.loc__esito.ok{color:#7fd6a4}
+.loc__nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.loc__nav[hidden],.link[hidden]{display:none}
+.loc__freccia{width:44px;height:44px;font-size:1.4rem;line-height:1;color:var(--ink);background:var(--btn-bg);border:1px solid var(--line);cursor:pointer}
+@media (hover:hover){.loc__freccia:hover{border-color:var(--accent)}}
+.loc__conta{font-size:.82rem;color:var(--ink-dim);font-variant-numeric:tabular-nums}
 .loc__grazie{margin:6px 0 0;font-size:.95rem;font-weight:600;color:var(--accent)}
 .video{width:100%;max-width:var(--card-w);margin-top:24px;aspect-ratio:16/9;border:1px solid var(--line);background:#000;opacity:0;transition:opacity .9s ease .2s}
 .video--verticale{max-width:300px;aspect-ratio:9/16}

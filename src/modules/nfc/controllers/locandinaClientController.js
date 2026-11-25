@@ -17,6 +17,15 @@ function data(v, campo) {
   return d;
 }
 
+// "HH:MM" (24 ore) o null
+function ora(v, campo) {
+  const t = String(v ?? "").trim();
+  if (!t) return null;
+  const m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m || +m[1] > 23 || +m[2] > 59) { const e = new Error(`Orario non valido: ${campo}`); e.status = 400; throw e; }
+  return `${m[1].padStart(2, "0")}:${m[2]}`;
+}
+
 function leggiCampi(body) {
   const campi = {
     titolo:         testo(body.titolo, 120),
@@ -32,12 +41,15 @@ function leggiCampi(body) {
     link_url:       null,
     attiva:         body.attiva === undefined ? true : booleano(body.attiva),
     frequenza:      Locandina.FREQUENZE.includes(body.frequenza) ? body.frequenza : "giorno",
+    ora_dal:        ora(body.ora_dal, "dalle ore"),
+    ora_al:         ora(body.ora_al, "alle ore"),
   };
   const errore = (msg) => { const e = new Error(msg); e.status = 400; return e; };
   if (!campi.titolo) throw errore("Il titolo e' obbligatorio");
   if (campi.fine_evento && !campi.inizio_evento) throw errore("Indica anche l'inizio dell'evento");
   if (campi.fine_evento && campi.fine_evento < campi.inizio_evento) throw errore("La fine dell'evento e' prima dell'inizio");
   if (campi.mostra_fino && campi.mostra_dal && campi.mostra_fino < campi.mostra_dal) throw errore("Il periodo di visualizzazione non e' valido");
+  if (campi.ora_dal && campi.ora_dal === campi.ora_al) throw errore("L'orario d'inizio e di fine coincidono");
   const url = testo(body.link_url, 500);
   if (url) {
     try { campi.link_url = validaUrlSicuro(url); } catch { throw errore("Link non valido"); }
