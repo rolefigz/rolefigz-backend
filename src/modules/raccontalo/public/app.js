@@ -49,7 +49,7 @@ function render() {
 
   $("#chips").innerHTML =
     `<span class="chip ${config.ai ? "on" : ""}"><i></i>${config.ai ? "AI attiva" : "AI in demo"}</span>` +
-    Object.keys(PLAT).map((p) => `<span class="chip ${config.social[p] ? "on" : ""}"><i></i>${PLAT[p]}</span>`).join("") +
+    Object.keys(PLAT).map((p) => `<span class="chip ${config.social[p] || socialLink(p) ? "on" : ""}"><i></i>${PLAT[p]}</span>`).join("") +
     `<span class="chip ${config.devices ? "on" : ""}"><i></i>${config.devices ? `Notifiche (${config.devices})` : "Notifiche"}</span>`;
 
   const open = events.filter((e) => e.status === "occasione" || e.status === "new");
@@ -62,19 +62,23 @@ function render() {
   const sched = posts.filter((p) => p.status === "programmato").sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
   const pubs = posts.filter((p) => p.status === "pubblicato");
 
-  $("#n-occ").textContent = occ.length || "";
+  $("#n-occ").textContent = $("#bs-occ").textContent = occ.length || "";
   $("#n-disc").textContent = disc.length ? `(${disc.length})` : "";
-  $("#n-draft").textContent = drafts.length || "";
-  $("#n-pub").textContent = pubs.length + sched.length || "";
+  $("#n-draft").textContent = $("#bs-draft").textContent = drafts.length || "";
+  $("#n-pub").textContent = $("#bs-pub").textContent = pubs.length + sched.length || "";
+  const badge = $("#nav-badge");
+  badge.hidden = !drafts.length;
+  badge.textContent = drafts.length;
+  showCol(boardCol);
 
   $("#col-occ").innerHTML =
-    (occ.length ? occ.map(eventCard).join("") : `<div class="empty">Nessuna occasione. Collega l'agenda, proponi un tema o premi “Cerca occasioni”.</div>`) +
-    (later ? `<button class="link small later" data-goto="cal">+ ${later} più avanti: vedi il calendario</button>` : "");
+    (occ.length ? occ.map(eventCard).join("") : `<div class="empty"><p>Niente da raccontare per ora.</p><button class="small" data-open="sheet-new">Trova qualcosa da raccontare</button></div>`) +
+    (later ? `<button class="link small later" data-goto="cal">Altre ${later} più avanti: vedi il calendario</button>` : "");
   $("#col-disc").innerHTML = disc.map(discCard).join("");
-  $("#col-draft").innerHTML = drafts.length ? drafts.map(draftCard).join("") : `<div class="empty">Scegli un'occasione e lascia un vocale: i post arrivano qui.</div>`;
+  $("#col-draft").innerHTML = drafts.length ? drafts.map(draftCard).join("") : `<div class="empty"><p>Nessun post da controllare.</p></div>`;
   $("#sched-wrap").hidden = !sched.length;
   $("#col-sched").innerHTML = sched.map(schedCard).join("");
-  $("#col-pub").innerHTML = pubs.length ? pubs.map(pubCard).join("") : `<div class="empty">Ancora niente di pubblicato.</div>`;
+  $("#col-pub").innerHTML = pubs.length ? pubs.map(pubCard).join("") : `<div class="empty"><p>Ancora niente di pubblicato.</p></div>`;
 
   // Promemoria: occasioni tra ieri e i prossimi 2 giorni
   const now = Date.now();
@@ -84,14 +88,15 @@ function render() {
   box.innerHTML = soon
     .map((e) => {
       const past = Date.parse(e.date) < now;
-      return `<div class="reminder"><span class="r-label">${past ? "Appena successo" : "In arrivo"}</span><span class="r-text"><b>${esc(e.title)}</b><span class="r-when">${fmt(e.date)} · ${past ? "lo raccontiamo?" : "ricordati qualche foto"}</span></span>
+      const day = new Date(e.date).toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
+      return `<div class="reminder"><span class="r-text"><b>${esc(e.title)}</b><span class="r-when">${past ? "Appena successo" : "In arrivo"}, ${day}</span></span>
         <button class="small" data-collect="${e.id}">Raccontalo</button></div>`;
     })
     .join("");
 
   renderCalendar();
   renderListen();
-  renderStrategy();
+  renderSocial();
 }
 
 const SOURCE = { tema: "dal tema", strategia: "dalla strategia" };
@@ -100,7 +105,7 @@ function eventCard(e) {
   const pending = e.status === "new";
   return `<article class="card">
     <h4>${esc(e.title)}</h4>
-    <div class="when">${fmt(e.date)}${e.location ? " · " + esc(e.location) : ""} · <span class="tag ${SOURCE[e.source] ? "src" : ""}">${esc(SOURCE[e.source] || e.source)}</span></div>
+    <div class="when">${fmt(e.date)}${e.location ? " · " + esc(e.location) : ""}${SOURCE[e.source] ? ` <span class="tag src">${SOURCE[e.source]}</span>` : ""}</div>
     ${e.angle ? `<p class="angle">${esc(e.angle)}</p>` : pending ? `<p class="angle muted">Da analizzare: premi “Cerca occasioni”.</p>` : ""}
     <div class="row">
       <button class="small" data-collect="${e.id}">Raccontalo</button>
@@ -132,7 +137,6 @@ function draftCard(p) {
     ${thumbs(p)}
     <div class="img-cta">
       <button class="small ghost" data-image>${hasGen ? "Modifica immagine" : "Crea immagine"}</button>
-      ${p.image?.concept ? `<span class="muted">${esc(p.image.concept)}</span>` : ""}
     </div>
     <div class="tabs">${Object.keys(PLAT).map((k) => `<button class="tab ${k === tab ? "active" : ""}" data-tab="${k}" data-p="${k}">${PLAT[k]}</button>`).join("")}</div>
     <div class="variant">
@@ -140,26 +144,27 @@ function draftCard(p) {
       <input data-field="hashtags" value="${esc((v.hashtags || []).map((h) => "#" + h.replace(/^#/, "")).join(" "))}" placeholder="#hashtag" style="margin-top:.4rem">
       <div class="meta-line"><span>${v.text.length} caratteri</span><button class="link small" data-copy>Copia testo</button></div>
     </div>
-    <details class="tips"><summary>Consigli dell'assistente</summary>
-      ${t.media?.length ? `<b>Foto e video</b><ul>${t.media.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
-      ${t.tags?.length ? `<b>Chi taggare</b><ul>${t.tags.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
-      ${t.structure ? `<b>Struttura:</b> ${esc(t.structure)}<br>` : ""}
-      ${t.time ? `<b>Quando:</b> ${esc(t.time)}` : ""}
+    <div class="where">
+      <div class="plat-pills">${Object.keys(PLAT).map((k) => `<label class="pill"><input type="checkbox" data-plat="${k}" checked><span><i class="dot" style="background:${COLORS[k]}"></i>${PLAT[k]}</span></label>`).join("")}</div>
+    </div>
+    <div class="main-actions">
+      <button data-publish>Pubblica ora</button>
+      <button class="ghost" data-schedule>Programma…</button>
+    </div>
+    <details class="more"><summary>Altre opzioni</summary>
+      <label>Chiedi una modifica</label>
+      <div class="row">
+        <input data-instruction placeholder="Es. più corto, cita il cliente, meno emoji…" style="flex:1;min-width:160px">
+        <button class="small ghost" data-regen>Riscrivi</button>
+      </div>
+      ${t.media?.length || t.tags?.length || t.structure || t.time ? `<div class="tips">
+        ${t.media?.length ? `<b>Foto e video</b><ul>${t.media.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${t.tags?.length ? `<b>Chi taggare</b><ul>${t.tags.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${t.structure ? `<b>Struttura:</b> ${esc(t.structure)}<br>` : ""}
+        ${t.time ? `<b>Quando:</b> ${esc(t.time)}` : ""}
+      </div>` : ""}
+      <button class="link danger" data-delete>Scarta questi post</button>
     </details>
-    <div class="row">
-      <input data-instruction placeholder="Es. più corto, cita il cliente, meno emoji…" style="flex:1;min-width:160px">
-      <button class="small ghost" data-regen>Riscrivi</button>
-    </div>
-    <div class="publish-row">
-      ${Object.keys(PLAT).map((k) => `<label><input type="checkbox" data-plat="${k}" checked> ${PLAT[k]}</label>`).join("")}
-      <button class="small" data-publish style="margin-left:auto">Approva e pubblica</button>
-    </div>
-    <div class="schedule-row">
-      <span class="muted">oppure programma per</span>
-      <input type="datetime-local" data-when value="${localInput(defaultSlot())}">
-      <button class="small ghost" data-schedule>Programma</button>
-      <button class="small ghost" data-delete title="Scarta" style="margin-left:auto">Scarta</button>
-    </div>
   </article>`;
 }
 
@@ -177,9 +182,10 @@ function schedCard(p) {
     <div class="when">Esce ${fmt(p.scheduledAt)}</div>
     ${thumbs(p)}
     <div class="plats">${(p.scheduledPlatforms || []).map((k) => `<span><i class="dot" style="background:${COLORS[k]}"></i>${PLAT[k]}</span>`).join("")}</div>
-    <div class="row" style="margin-top:.6rem">
-      <button class="small" data-publish-now>Pubblica ora</button>
-      <button class="small ghost" data-unschedule>Annulla programmazione</button>
+    <div class="row" style="margin-top:.7rem">
+      <button class="small ghost" data-move="${p.id}">Cambia data</button>
+      <button class="small ghost" data-publish-now>Pubblica ora</button>
+      <button class="link small" data-unschedule>Annulla</button>
     </div>
   </article>`;
 }
@@ -188,9 +194,14 @@ function pubCard(p) {
   const rows = Object.entries(p.published)
     .map(([k, pub]) => {
       const m = p.metrics?.[k];
-      const numbers = m && !m.errore ? Object.entries(m).filter(([x]) => x !== "at").map(([x, n]) => `${n} ${x}`).join(" · ") : m?.errore ? `⚠️ ${esc(m.errore)}` : pub.mode === "manuale" ? "pubblicato a mano" : "";
-      return `<div class="pub"><span class="dot" style="background:${COLORS[k]}"></span><b>${PLAT[k]}</b>
-        ${pub.url ? `<a href="${esc(pub.url)}" target="_blank" rel="noopener">apri</a>` : ""}<span class="muted">${numbers}</span></div>`;
+      const numbers = m && !m.errore ? Object.entries(m).filter(([x]) => x !== "at").map(([x, n]) => `${n} ${x}`).join(" · ") : m?.errore ? `⚠️ ${esc(m.errore)}` : "";
+      // Pubblicato a mano: un tocco copia il testo e apre il profilo dove incollarlo
+      const action = pub.url
+        ? `<a class="pub-act" href="${esc(pub.url)}" target="_blank" rel="noopener">Apri il post</a>`
+        : pub.mode === "manuale"
+          ? `<button class="small ghost pub-act" data-copyopen="${k}">${socialLink(k) ? "Copia e apri" : "Copia testo"}</button>`
+          : "";
+      return `<div class="pub"><span class="dot" style="background:${COLORS[k]}"></span><b>${PLAT[k]}</b>${numbers ? `<span class="muted">${numbers}</span>` : ""}${action}</div>`;
     })
     .join("");
   const auto = Object.values(p.published).some((x) => x.mode === "automatica");
@@ -216,6 +227,19 @@ function showView(v) {
   window.scrollTo({ top: 0 });
 }
 
+// Sul telefono la bacheca mostra una colonna alla volta
+let boardCol = "occ";
+function showCol(c) {
+  boardCol = c;
+  $("#board").dataset.show = c;
+  for (const b of $$("#board-switch .bs")) {
+    b.classList.toggle("active", b.dataset.col === c);
+    b.setAttribute("aria-selected", b.dataset.col === c);
+  }
+}
+const mobileQuery = matchMedia("(max-width: 700px)");
+mobileQuery.addEventListener("change", () => renderCalendar());
+
 // Calendario mensile: occasioni, post programmati e pubblicati
 let calMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 function renderCalendar() {
@@ -232,21 +256,127 @@ function renderCalendar() {
     add(e.date, `<button class="ci occ" data-collect="${e.id}" title="${esc(e.title)}">${esc(e.title)}</button>`);
   }
   for (const p of state.posts) {
-    if (p.status === "programmato") add(p.scheduledAt, `<button class="ci sched" data-goto="board" title="${esc(p.title)}">${new Date(p.scheduledAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })} ${esc(p.title)}</button>`);
+    if (p.status === "programmato") add(p.scheduledAt, `<button class="ci sched" draggable="true" data-move="${p.id}" title="${esc(p.title)} · trascina per spostarlo">${new Date(p.scheduledAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })} ${esc(p.title)}</button>`);
     if (p.status === "pubblicato") add(Object.values(p.published)[0]?.at || p.createdAt, `<button class="ci pub" data-goto="board" title="${esc(p.title)}">${esc(p.title)}</button>`);
     if (p.status === "da_approvare") add(p.date, `<button class="ci draft" data-goto="board" title="${esc(p.title)}">✎ ${esc(p.title)}</button>`);
   }
   const today = key(new Date());
+  const gridEl = $("#cal-grid");
+  if (mobileQuery.matches) {
+    // Telefono: elenco dei giorni con qualcosa, più oggi
+    let out = "";
+    const days = new Date(y, m + 1, 0).getDate();
+    for (let dd = 1; dd <= days; dd++) {
+      const d = new Date(y, m, dd);
+      const k = key(d);
+      if (!items[k] && k !== today) continue;
+      out += `<div class="ag-day ${k === today ? "today" : ""}"><div class="ag-date"><b>${dd}</b><span>${d.toLocaleDateString("it-IT", { weekday: "short" })}</span></div>
+        <div class="ag-items">${items[k] ? items[k].join("") : `<span class="muted">Oggi niente in calendario</span>`}</div></div>`;
+    }
+    gridEl.classList.add("agenda");
+    gridEl.innerHTML = out || `<div class="empty"><p>Niente in calendario questo mese.</p></div>`;
+    return;
+  }
+  gridEl.classList.remove("agenda");
   let html = ["lun", "mar", "mer", "gio", "ven", "sab", "dom"].map((d) => `<div class="cal-dow">${d}</div>`).join("");
   const cells = Math.ceil((((first.getDay() + 6) % 7) + new Date(y, m + 1, 0).getDate()) / 7) * 7;
   for (let i = 0; i < cells; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     const k = key(d);
-    html += `<div class="cal-day ${d.getMonth() !== m ? "out" : ""} ${k === today ? "today" : ""}"><span class="cal-n">${d.getDate()}</span>${(items[k] || []).join("")}</div>`;
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const past = d < new Date(new Date().toDateString());
+    html += `<div class="cal-day ${d.getMonth() !== m ? "out" : ""} ${k === today ? "today" : ""} ${past ? "past" : ""}" data-date="${iso}"><span class="cal-n">${d.getDate()}</span>${(items[k] || []).join("")}</div>`;
   }
   $("#cal-grid").innerHTML = html;
 }
+
+// Spostare un post programmato: trascinandolo su un altro giorno (stessa ora) o, dal telefono, con un tocco
+async function reschedule(postId, when) {
+  const p = state.posts.find((x) => x.id === postId);
+  if (!p) return;
+  if (when.getTime() < Date.now()) return toast("Quel momento è già passato: scegli un giorno nel futuro");
+  await api(`api/posts/${postId}/schedule`, { at: when.toISOString(), platforms: p.scheduledPlatforms });
+  await load();
+  toast(`Spostato a ${fmt(when)}`);
+}
+const grid = $("#cal-grid");
+let dragId = null;
+grid.addEventListener("dragstart", (e) => {
+  const b = e.target.closest("[data-move]");
+  if (!b) return;
+  dragId = b.dataset.move;
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", dragId);
+  b.classList.add("dragging");
+});
+grid.addEventListener("dragend", (e) => {
+  e.target.closest?.("[data-move]")?.classList.remove("dragging");
+  $$(".cal-day.drop", grid).forEach((d) => d.classList.remove("drop"));
+  dragId = null;
+});
+grid.addEventListener("dragover", (e) => {
+  const day = e.target.closest(".cal-day");
+  if (!dragId || !day) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  if (!day.classList.contains("drop")) {
+    $$(".cal-day.drop", grid).forEach((d) => d.classList.remove("drop"));
+    day.classList.add("drop");
+  }
+});
+grid.addEventListener("drop", (e) => {
+  const day = e.target.closest(".cal-day");
+  const id = dragId || e.dataTransfer.getData("text/plain");
+  if (!day || !id) return;
+  e.preventDefault();
+  day.classList.remove("drop");
+  const p = state.posts.find((x) => x.id === id);
+  const old = new Date(p.scheduledAt);
+  const [yy, mm, dd] = day.dataset.date.split("-").map(Number);
+  const when = new Date(yy, mm - 1, dd, old.getHours(), old.getMinutes());
+  if (when.getTime() === old.getTime()) return;
+  reschedule(id, when).catch((err) => toast(err.message, 5000));
+});
+// Una sola finestra per programmare un post nuovo o spostarne uno già programmato
+let moveId = null;
+let moveMode = "move";
+function openMove(id, mode = "move", platforms) {
+  const p = state.posts.find((x) => x.id === id);
+  moveId = id;
+  moveMode = mode;
+  const sched = mode === "schedule";
+  $("#move-h").textContent = sched ? "Quando deve uscire?" : "Sposta il post";
+  $("#move-title").textContent = sched ? p.title : `${p.title}: ora esce ${fmt(p.scheduledAt)}`;
+  $("#move-when").value = localInput(sched ? defaultSlot() : p.scheduledAt);
+  $("#move-when").min = localInput(new Date());
+  $("#move-plats-wrap").hidden = !sched;
+  if (sched) {
+    $("#move-plats").innerHTML = Object.keys(PLAT)
+      .map((k) => `<label class="pill"><input type="checkbox" data-mplat="${k}" ${!platforms || platforms.includes(k) ? "checked" : ""}><span><i class="dot" style="background:${COLORS[k]}"></i>${PLAT[k]}</span></label>`)
+      .join("");
+  }
+  $("#btn-move").textContent = sched ? "Programma" : "Sposta";
+  $("#dlg-move").showModal();
+}
+$("#btn-move").onclick = (e) =>
+  busy(e.currentTarget, moveMode === "schedule" ? "Programmo…" : "Sposto…", async () => {
+    const v = $("#move-when").value;
+    if (!v) throw new Error("Scegli giorno e ora");
+    const when = new Date(v);
+    if (moveMode === "schedule") {
+      const platforms = $$("[data-mplat]:checked").map((x) => x.dataset.mplat);
+      if (!platforms.length) throw new Error("Scegli almeno un social");
+      await api(`api/posts/${moveId}/schedule`, { at: when.toISOString(), platforms });
+      $("#dlg-move").close();
+      boardCol = "pub";
+      await load();
+      toast(`Programmato: esce ${fmt(when)}`);
+    } else {
+      $("#dlg-move").close();
+      await reschedule(moveId, when);
+    }
+  });
 $("#cal-prev").onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCalendar(); };
 $("#cal-next").onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCalendar(); };
 $("#cal-today").onclick = () => { calMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderCalendar(); };
@@ -288,39 +418,48 @@ $("#btn-replies").onclick = (e) =>
     $("#reply-out").innerHTML = replies.map((r) => `<div class="reply"><span class="tag">${esc(r.tone)}</span><p>${esc(r.text)}</p><button class="link small" data-copy-text="${esc(r.text)}">Copia</button></div>`).join("");
   });
 
-// Strategia
-function renderStrategy() {
-  const s = state.strategy;
-  const out = $("#strategy-out");
-  if (!s) {
-    out.innerHTML = `<div class="empty tall">Scrivi gli obiettivi e premi “Crea la strategia”: arrivano i filoni, il ritmo e un piano di post da mettere in calendario.</div>`;
-    return;
-  }
-  if (s.goals && !$("#st-goals").value) $("#st-goals").value = s.goals;
-  if (s.audience && !$("#st-audience").value) $("#st-audience").value = s.audience;
-  const day = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
-  out.innerHTML = `
-    <div class="st-head"><h2>La vostra strategia</h2>${s.demo ? `<span class="tag demo">demo</span>` : ""}</div>
-    <p class="st-sum">${esc(s.summary)}</p>
-    <p class="muted">${esc(s.cadence)}</p>
-    <div class="pillars">${s.pillars.map((p) => `<div class="pillar"><div class="p-top"><b>${esc(p.name)}</b><span class="mono">${Math.round(p.share)}%</span></div>
-      <div class="bar"><i style="width:${Math.max(4, Math.min(100, p.share))}%"></i></div><span class="muted">${esc(p.description)}</span></div>`).join("")}</div>
-    <div class="sub-h">Piano dei post</div>
-    <table class="plan"><tbody>${s.plan.map((it) => `<tr><td class="mono">${esc(day(it.date))}</td><td><b>${esc(it.title)}</b><br><span class="muted">${esc(it.angle)}</span></td><td><span class="tag">${esc(it.pillar)}</span></td><td>${esc(it.platform)}</td></tr>`).join("")}</tbody></table>
-    <menu class="end"><button id="btn-apply" ${s.applied ? "class='ghost'" : ""}>${s.applied ? "Già in calendario · aggiungi di nuovo" : "Metti il piano in calendario"}</button></menu>`;
-  $("#btn-apply").onclick = (e) =>
-    busy(e.currentTarget, "Aggiungo…", async () => {
-      const r = await api("api/strategy/apply", {});
-      await load();
-      toast(r.added ? `${r.added} idee aggiunte alle occasioni e al calendario` : "Erano già tutte in calendario");
-    });
-}
-$("#btn-strategy").onclick = (e) =>
-  busy(e.currentTarget, "Preparo la strategia…", async () => {
-    await api("api/strategy", { goals: $("#st-goals").value, audience: $("#st-audience").value, perWeek: $("#st-per").value, weeks: $("#st-weeks").value });
-    await load();
-  });
+// Strategia: per ora "prossimamente" (il motore resta nel server)
+function renderStrategy() {}
 
+// ---------- profili social ----------
+const SOC_HINT = {
+  linkedin: "linkedin.com/company/…",
+  instagram: "instagram.com/…",
+  facebook: "facebook.com/…",
+};
+const socialLink = (k) => state.company?.social?.[k] || "";
+function normUrl(v) {
+  v = v.trim();
+  if (!v) return "";
+  if (v.startsWith("@")) v = v.slice(1);
+  return /^https?:\/\//i.test(v) ? v : "https://" + v;
+}
+function renderSocial() {
+  const list = $("#soc-list");
+  if (!list) return;
+  list.innerHTML = Object.keys(PLAT).map((k) => {
+    const url = socialLink(k);
+    const auto = state.config.social?.[k];
+    const status = auto ? "Pubblica in automatico" : url ? "Collegato" : "Non collegato";
+    return `<div class="soc ${url || auto ? "on" : ""}">
+      <span class="soc-ico" style="background:${COLORS[k]}">${PLAT[k][0]}</span>
+      <div class="soc-main"><b>${PLAT[k]}</b><span class="soc-st">${status}</span></div>
+      ${url
+        ? `<a class="small-a" href="${esc(url)}" target="_blank" rel="noopener">Apri</a><button type="button" class="small ghost" data-unlink="${k}">Scollega</button>`
+        : `<button type="button" class="small" data-link="${k}">Collega</button>`}
+      <div class="soc-form" id="soc-form-${k}" hidden>
+        <input id="soc-${k}" type="url" inputmode="url" placeholder="${SOC_HINT[k]}" />
+        <button type="button" class="small" data-savelink="${k}">Salva</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function saveSocial(k, url) {
+  const social = { ...(state.company?.social || {}), [k]: url };
+  await api("api/company", { social }, "PUT");
+  await load();
+  renderSocial();
+}
 // ---------- azioni sulle card ----------
 document.addEventListener("click", async (ev) => {
   const b = ev.target.closest("button");
@@ -330,8 +469,39 @@ document.addEventListener("click", async (ev) => {
 
   if (b.dataset.view) return showView(b.dataset.view);
   if (b.dataset.goto) return showView(b.dataset.goto);
-  if (b.dataset.open) return $("#" + b.dataset.open).showModal(), b.dataset.open === "dlg-company" && fillCompany();
+  if (b.dataset.col) return showCol(b.dataset.col);
+  if (b.dataset.move) return openMove(b.dataset.move);
+  if ("close" in b.dataset) return b.closest("dialog")?.close();
+  if (b.id === "btn-new") return $("#sheet-new").showModal();
+  if (b.id === "btn-menu") return $("#sheet-menu").showModal();
+  if (b.dataset.open) {
+    b.closest("dialog.sheet")?.close();
+    $("#" + b.dataset.open).showModal();
+    if (b.dataset.open === "dlg-company") fillCompany();
+    return;
+  }
   if (b.dataset.collect) return openCollect(b.dataset.collect);
+  if (b.dataset.link) {
+    const f = $("#soc-form-" + b.dataset.link);
+    f.hidden = false;
+    b.hidden = true;
+    return $("input", f).focus();
+  }
+  if (b.dataset.savelink) {
+    const url = normUrl($("#soc-" + b.dataset.savelink).value);
+    if (!url) return toast("Incolla il link del profilo");
+    await saveSocial(b.dataset.savelink, url);
+    return toast(`${PLAT[b.dataset.savelink]} collegato`);
+  }
+  if (b.dataset.unlink) return saveSocial(b.dataset.unlink, "");
+  if (b.dataset.copyopen) {
+    const k = b.dataset.copyopen;
+    const p = state.posts.find((x) => x.id === postId);
+    await navigator.clipboard.writeText(fullText(p.variants[k])).catch(() => {});
+    const url = socialLink(k);
+    if (url) window.open(url, "_blank", "noopener");
+    return toast(url ? `Testo copiato: incollalo su ${PLAT[k]}` : `Testo copiato. Collega ${PLAT[k]} in Menu › Profili social per aprirlo con un tocco.`, 5000);
+  }
   if (b.dataset.copyText) { await navigator.clipboard.writeText(b.dataset.copyText); return toast("Copiato"); }
   if (b.dataset.unwatch) { await api(`api/watch/${b.dataset.unwatch}`, null, "DELETE"); return load(); }
   if (b.dataset.replyTo) {
@@ -373,22 +543,16 @@ document.addEventListener("click", async (ev) => {
     if (!platforms?.length) return toast("Scegli almeno un social");
     return busy(b, "Pubblico…", async () => {
       const { errors } = await api(`api/posts/${postId}/publish`, { platforms });
+      boardCol = "pub";
       await load();
       const manual = platforms.filter((k) => !state.config.social[k] && !errors[k]);
       const errs = Object.entries(errors).map(([k, e]) => `${PLAT[k]}: ${e}`);
-      toast(errs.length ? `Problemi → ${errs.join(" · ")}` : manual.length ? `Fatto. ${manual.map((k) => PLAT[k]).join(", ")}: incolla il testo copiato sul social.` : "Pubblicato!", 6000);
+      toast(errs.length ? `Problemi → ${errs.join(" · ")}` : manual.length ? `Pronto. Tocca «Copia e apri» per incollarlo su ${manual.map((k) => PLAT[k]).join(", ")}.` : "Pubblicato!", 6000);
     });
   }
   if ("schedule" in b.dataset) {
     await saveDraft(card);
-    const platforms = $$("[data-plat]:checked", card).map((x) => x.dataset.plat);
-    const at = $("[data-when]", card).value;
-    if (!at) return toast("Scegli giorno e ora");
-    return busy(b, "Programmo…", async () => {
-      await api(`api/posts/${postId}/schedule`, { at: new Date(at).toISOString(), platforms });
-      await load();
-      toast(`Programmato per ${fmt(at)}`);
-    });
+    return openMove(postId, "schedule", $$("[data-plat]:checked", card).map((x) => x.dataset.plat));
   }
   if ("unschedule" in b.dataset) { await api(`api/posts/${postId}/schedule`, null, "DELETE"); return load(); }
   if ("delete" in b.dataset) {
@@ -419,14 +583,17 @@ async function saveDraft(card) {
 $("#btn-analyze").onclick = (e) =>
   busy(e.currentTarget, "Leggo l'agenda…", async () => {
     const r = await api("api/events/analyze", {});
+    $("#sheet-new").close();
+    showView("board");
+    boardCol = "occ";
     await load();
-    toast(r.analyzed ? `Analizzati ${r.analyzed} appuntamenti` : "Niente di nuovo in agenda");
+    toast(r.analyzed ? `Ho letto ${r.analyzed} appuntamenti` : "Niente di nuovo in agenda");
   });
 
 $("#btn-reset").onclick = async () => {
   if (!confirm("Ricaricare i dati demo? Si perde quello che c'è ora.")) return;
+  $("#sheet-menu").close();
   await api("api/demo/reset", {});
-  $("#st-goals").value = $("#st-audience").value = "";
   await load();
 };
 
@@ -460,6 +627,7 @@ $("#btn-theme").onclick = (e) =>
     const date = $("#th-date").value ? new Date(`${$("#th-date").value}T10:00:00`).toISOString() : undefined;
     const r = await api("api/themes", { theme, count: $("#th-count").value, date });
     $("#dlg-theme").close();
+    boardCol = "occ";
     $("#th-theme").value = "";
     showView("board");
     await load();
@@ -557,7 +725,7 @@ function onColor(hex) {
 function fitText(ctx, text, maxW, maxLines, size, weight = 800) {
   let lines;
   do {
-    ctx.font = `${weight} ${size}px Geist, "Segoe UI", sans-serif`;
+    ctx.font = `${weight} ${size}px "Schibsted Grotesk", "Segoe UI", sans-serif`;
     lines = wrap(ctx, text, maxW);
     if (lines.length <= maxLines) break;
     size -= 4;
@@ -573,7 +741,7 @@ async function drawPost() {
   const [primary, accent, light] = brandColors();
   const headline = $("#img-headline").value.trim() || " ";
   const subline = $("#img-subline").value.trim();
-  await document.fonts.load('800 80px Geist').catch(() => {});
+  await document.fonts.load('800 80px "Schibsted Grotesk"').catch(() => {});
   const logoSrc = state.company?.brand?.logo ? `uploads/${state.company.brand.logo}` : null;
   const [logo, photo] = await Promise.all([
     logoSrc ? loadImg(logoSrc).catch(() => null) : null,
@@ -591,7 +759,7 @@ async function drawPost() {
       const w = logo.width * s, h = logo.height * s;
       ctx.drawImage(logo, align === "right" ? x - w : x, y + (maxH - h) / 2, w, h);
     } else if (name) {
-      ctx.font = `700 34px Geist, sans-serif`;
+      ctx.font = `700 34px "Schibsted Grotesk", sans-serif`;
       ctx.textBaseline = "middle";
       ctx.textAlign = align;
       ctx.fillText(name, x, y + maxH / 2);
@@ -621,7 +789,7 @@ async function drawPost() {
     let y = H - bandH + 60 + size;
     for (const l of lines) { ctx.fillText(l, pad, y); y += size * 1.08; }
     if (subline) {
-      ctx.font = `500 34px Geist, sans-serif`;
+      ctx.font = `500 34px "Schibsted Grotesk", sans-serif`;
       ctx.globalAlpha = 0.8;
       ctx.fillText(wrap(ctx, subline, W - pad * 2 - logoW - 30)[0] || "", pad, y + 14);
       ctx.globalAlpha = 1;
@@ -637,7 +805,7 @@ async function drawPost() {
     ctx.fill();
     const ink = onColor(primary);
     const logoH = 120;
-    ctx.font = `500 40px Geist, sans-serif`;
+    ctx.font = `500 40px "Schibsted Grotesk", sans-serif`;
     const subLines = subline ? wrap(ctx, subline, W - pad * 2).slice(0, 2) : [];
     const { lines, size } = fitText(ctx, headline, W - pad * 2, 4, 112);
     // Il blocco di testo sta sempre sopra il logo
@@ -646,12 +814,12 @@ async function drawPost() {
     ctx.fillStyle = accent;
     ctx.fillRect(pad, top, 120, 14);
     ctx.fillStyle = ink;
-    ctx.font = `800 ${size}px Geist, "Segoe UI", sans-serif`;
+    ctx.font = `800 ${size}px "Schibsted Grotesk", "Segoe UI", sans-serif`;
     let y = top + 60 + size * 0.8;
     ctx.textBaseline = "alphabetic";
     for (const l of lines) { ctx.fillText(l, pad, y); y += size * 1.05; }
     if (subLines.length) {
-      ctx.font = `500 40px Geist, sans-serif`;
+      ctx.font = `500 40px "Schibsted Grotesk", sans-serif`;
       ctx.globalAlpha = 0.8;
       y += 10;
       for (const l of subLines) { ctx.fillText(l, pad, y); y += 52; }
@@ -676,7 +844,7 @@ async function drawPost() {
     ctx.textBaseline = "alphabetic";
     for (const l of lines) { ctx.fillText(l, pad + 20, y); y += size * 1.15; }
     if (subline) {
-      ctx.font = `600 36px Geist, sans-serif`;
+      ctx.font = `600 36px "Schibsted Grotesk", sans-serif`;
       ctx.fillStyle = accent;
       ctx.fillRect(pad + 20, y - 4, 60, 6);
       ctx.fillStyle = onColor(light) === "#111111" ? "#333333" : "#ffffff";
@@ -732,6 +900,7 @@ $("#btn-generate").onclick = (e) =>
     const post = await api("api/posts", { eventId: collectEvent.id, notes: $("#collect-notes").value, photos });
     $("#dlg-collect").close();
     activeTab[post.id] = "linkedin";
+    boardCol = "draft";
     showView("board");
     await load();
     toast("Post pronti in “Da approvare”");
@@ -785,6 +954,7 @@ $("#btn-push").onclick = (e) =>
     await api("api/push/subscribe", sub.toJSON());
     await api("api/push/test", {});
     await load();
+    $("#sheet-menu").close();
     toast("Notifiche attive: ti avviso il giorno prima e subito dopo ogni occasione", 6000);
   });
 

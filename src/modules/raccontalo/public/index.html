@@ -5,61 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Raccontalo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="icon-192.png" />
-  <meta name="theme-color" content="#111111" />
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="theme-color" content="#ffffff" />
 </head>
 <body>
   <header class="top">
     <div class="brand">
-      <span class="logo" aria-hidden="true"></span>
+      <img class="logo" src="logo.svg" alt="" width="40" height="40" />
       <div>
         <h1>raccontalo</h1>
         <p id="company-line">L'assistente che racconta la tua azienda</p>
       </div>
     </div>
-    <div class="chips" id="chips"></div>
-    <nav class="actions">
-      <button class="ghost" data-open="dlg-company">Profilo e brand</button>
-      <button class="ghost" data-open="dlg-import">Collega agenda</button>
-      <button class="ghost" data-open="dlg-event">+ Evento</button>
-      <button class="ghost" data-open="dlg-theme">Proponi un tema</button>
-      <button class="ghost" id="btn-push" title="Promemoria sul telefono">Notifiche</button>
-      <button id="btn-analyze">Cerca occasioni</button>
+    <nav class="views" id="views" aria-label="Sezioni">
+      <button class="view-tab active" data-view="board">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>
+        <span>Bacheca</span><b class="badge" id="nav-badge" hidden></b>
+      </button>
+      <button class="view-tab" data-view="cal">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span>Calendario</span>
+      </button>
+      <button class="view-tab" data-view="listen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M8 10h8M8 13h5"/></svg>
+        <span>Ascolto</span>
+      </button>
+      <button class="view-tab" data-view="strategy">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <span>Strategia</span><small class="soon-tag">presto</small>
+      </button>
     </nav>
+    <div class="top-actions">
+      <button id="btn-new" class="btn-new" aria-haspopup="dialog"><span aria-hidden="true">+</span> Nuovo</button>
+      <button id="btn-menu" class="ghost icon-btn" aria-label="Menu e impostazioni" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      </button>
+    </div>
   </header>
-
-  <nav class="views" id="views">
-    <button class="view-tab active" data-view="board">Bacheca</button>
-    <button class="view-tab" data-view="cal">Calendario</button>
-    <button class="view-tab" data-view="listen">Ascolto</button>
-    <button class="view-tab" data-view="strategy">Strategia <span class="tag">fase 2</span></button>
-  </nav>
 
   <!-- Bacheca -->
   <div id="view-board" class="view">
     <section id="reminders" class="reminders" hidden></section>
 
-    <main class="board">
-      <section class="col">
-        <header><span class="num">01</span><h2>Occasioni</h2><span class="count" id="n-occ"></span></header>
-        <p class="hint">Cosa c'è in agenda da raccontare</p>
+    <div class="board-switch" id="board-switch" role="tablist" aria-label="Colonne">
+      <button class="bs active" data-col="occ" role="tab">Da raccontare <b id="bs-occ"></b></button>
+      <button class="bs" data-col="draft" role="tab">Da approvare <b id="bs-draft"></b></button>
+      <button class="bs" data-col="pub" role="tab">Pubblicati <b id="bs-pub"></b></button>
+    </div>
+
+    <main class="board" id="board" data-show="occ">
+      <section class="col c-occ">
+        <header><span class="num">1</span><h2>Da raccontare</h2><span class="count" id="n-occ"></span></header>
         <div id="col-occ" class="cards"></div>
         <details class="discarded">
           <summary>Non da raccontare <span id="n-disc"></span></summary>
           <div id="col-disc" class="cards"></div>
         </details>
       </section>
-      <section class="col">
-        <header><span class="num">02</span><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
-        <p class="hint">Post pronti: controlla, correggi, pubblica o programma</p>
+      <section class="col c-draft">
+        <header><span class="num">2</span><h2>Da approvare</h2><span class="count" id="n-draft"></span></header>
         <div id="col-draft" class="cards"></div>
       </section>
-      <section class="col">
-        <header><span class="num">03</span><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
-        <p class="hint">Cosa esce e come sta andando</p>
+      <section class="col c-pub">
+        <header><span class="num">3</span><h2>Pubblicati</h2><span class="count" id="n-pub"></span></header>
         <div id="sched-wrap" hidden>
           <div class="sub-h">In programma</div>
           <div id="col-sched" class="cards"></div>
@@ -79,6 +92,7 @@
       <button class="ghost small" id="cal-today">Oggi</button>
       <div class="legend"><span><i class="lg occ"></i>Occasione</span><span><i class="lg sched"></i>Programmato</span><span><i class="lg pub"></i>Pubblicato</span></div>
     </div>
+    <p class="cal-tip only-desk">Trascina un post programmato per cambiargli giorno.</p>
     <div class="cal-grid" id="cal-grid"></div>
   </div>
 
@@ -87,7 +101,6 @@
     <div class="two">
       <section class="panel">
         <h2>Profili da seguire</h2>
-        <p class="hint">Clienti, fiere, associazioni, persone influenti del settore: commentare i loro post fa conoscere l'azienda.</p>
         <div id="watch-list" class="watch-list"></div>
         <div class="watch-add">
           <input id="w-name" placeholder="Nome (es. Confapi Piacenza)" />
@@ -98,7 +111,6 @@
       </section>
       <section class="panel">
         <h2>Proponi un commento</h2>
-        <p class="hint">Incolla un post di un profilo che segui, o un commento ricevuto: l'assistente propone tre risposte.</p>
         <div class="seg" id="reply-kind">
           <button class="seg-b active" data-kind="commento">Commento a un post</button>
           <button class="seg-b" data-kind="risposta">Risposta a un commento</button>
@@ -113,29 +125,44 @@
     </div>
   </div>
 
-  <!-- Strategia -->
+  <!-- Strategia: prossimamente -->
   <div id="view-strategy" class="view" hidden>
-    <div class="two strat">
-      <section class="panel">
-        <h2>Strategia editoriale</h2>
-        <p class="hint">Fase 2: dagli obiettivi a un piano di post per le prossime settimane, con i filoni da seguire.</p>
-        <label>Obiettivi</label>
-        <textarea id="st-goals" rows="3" placeholder="Es. trovare nuovi clienti nell'agricoltura e attirare giovani operatori"></textarea>
-        <label>A chi parliamo</label>
-        <input id="st-audience" placeholder="Es. uffici acquisti, studenti degli ITIS della zona" />
-        <div class="grid2">
-          <div><label>Post a settimana</label><select id="st-per"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
-          <div><label>Settimane</label><select id="st-weeks"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
-        </div>
-        <menu class="end"><button id="btn-strategy">Crea la strategia</button></menu>
-      </section>
-      <section class="panel" id="strategy-out"></section>
+    <div class="soon">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+      <h2>Strategia</h2>
+      <p>Prossimamente: un piano di post costruito sui vostri obiettivi.</p>
     </div>
   </div>
 
-  <footer class="foot">
-    <button class="link" id="btn-reset">Ricarica dati demo</button>
-  </footer>
+  <!-- Hoja: crea qualcosa di nuovo -->
+  <dialog id="sheet-new" class="sheet">
+    <div class="dlg">
+      <h3>Cosa vuoi fare?</h3>
+      <div class="sheet-list">
+        <button class="sheet-item" id="btn-analyze"><b>Cerca occasioni in agenda</b></button>
+        <button class="sheet-item" data-open="dlg-event"><b>Aggiungi un evento</b></button>
+        <button class="sheet-item" data-open="dlg-theme"><b>Proponi un tema</b></button>
+        <button class="sheet-item" data-open="dlg-import"><b>Collega l'agenda</b></button>
+      </div>
+      <menu><button class="ghost" data-close>Chiudi</button></menu>
+    </div>
+  </dialog>
+
+  <!-- Hoja: menu e impostazioni -->
+  <dialog id="sheet-menu" class="sheet">
+    <div class="dlg">
+      <h3>Menu</h3>
+      <div class="chips" id="chips"></div>
+      <div class="sheet-list">
+        <button class="sheet-item" data-open="dlg-social"><b>Profili social</b></button>
+        <button class="sheet-item" data-open="dlg-company"><b>Profilo e brand</b></button>
+        <button class="sheet-item" data-open="dlg-import"><b>Collega l'agenda</b></button>
+        <button class="sheet-item" id="btn-push"><b>Notifiche sul telefono</b></button>
+        <button class="sheet-item quiet" id="btn-reset"><b>Ricarica dati demo</b></button>
+      </div>
+      <menu><button class="ghost" data-close>Chiudi</button></menu>
+    </div>
+  </dialog>
 
   <!-- Raccogli informazioni -->
   <dialog id="dlg-collect">
@@ -192,7 +219,7 @@
   <dialog id="dlg-theme">
     <form method="dialog" class="dlg">
       <h3>Proponi un tema</h3>
-      <p class="muted">Non serve un evento: scrivi di cosa vuoi parlare e l'assistente propone le idee di post, che finiscono tra le occasioni.</p>
+      
       <label>Tema</label><input id="th-theme" placeholder="Es. sicurezza in officina, sostenibilità, i nostri 40 anni" />
       <div class="grid2">
         <div><label>Quante idee</label><select id="th-count"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
@@ -209,7 +236,7 @@
   <dialog id="dlg-company">
     <form method="dialog" class="dlg">
       <h3>Profilo e brand</h3>
-      <p class="muted">Serve all'assistente per scrivere con la vostra voce e creare immagini riconoscibili.</p>
+      
       <label>Nome</label><input id="co-name" />
       <label>Settore</label><input id="co-sector" />
       <label>Città</label><input id="co-city" />
@@ -250,12 +277,40 @@
         <label>Titolo</label><input id="img-headline" maxlength="60" />
         <label>Sottotitolo</label><input id="img-subline" maxlength="80" />
         <label>Foto di base</label><div class="thumbs pick" id="img-photos"></div>
-        <p class="muted small-note">Logo e colori arrivano da “Profilo e brand”.</p>
+        
         <menu>
           <button value="cancel" class="ghost">Annulla</button>
           <button type="button" id="btn-img-save">Usa nel post</button>
         </menu>
       </div>
+    </form>
+  </dialog>
+
+  <!-- Profili social -->
+  <dialog id="dlg-social">
+    <form method="dialog" class="dlg">
+      <h3>Profili social</h3>
+      <div class="soc-list" id="soc-list"></div>
+      <menu>
+        <button value="cancel" class="ghost">Chiudi</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Sposta un post programmato -->
+  <dialog id="dlg-move">
+    <form method="dialog" class="dlg">
+      <h3 id="move-h">Sposta il post</h3>
+      <p class="muted" id="move-title"></p>
+      <label for="move-when">Giorno e ora</label><input id="move-when" type="datetime-local" />
+      <div id="move-plats-wrap" hidden>
+        <label>Dove</label>
+        <div class="plat-pills" id="move-plats"></div>
+      </div>
+      <menu>
+        <button value="cancel" class="ghost">Annulla</button>
+        <button type="button" id="btn-move">Sposta</button>
+      </menu>
     </form>
   </dialog>
 
